@@ -1,0 +1,125 @@
+// EntryView.swift
+import SwiftUI
+
+struct EntryView: View {
+  @State private var requestModel = RequestModel()
+  @State private var didGenerate = false
+  let spacing: CGFloat = 10
+  var body: some View {
+    GeometryReader { geo in
+      NavigationStack {
+        ZStack {
+          Color.black.opacity(0.7).ignoresSafeArea()
+          VStack {
+            Group {
+              Text("Welcome to LearnScrumble!")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .multilineTextAlignment(.center)
+              Text("Place where you can learn the words you need for your specific workplace.")
+                .font(.title3)
+                .fontWeight(.medium)
+                .multilineTextAlignment(.center)
+            }
+            .foregroundStyle(.white)
+            Spacer()
+            
+            VStack {
+              Text("Choose the language of origin.")
+                .font(.body)
+              Picker("Language", selection: $requestModel.language) {
+                ForEach(Languages.allCases, id: \.self) { language in
+                  Text(language.rawValue).tag(language)
+                }
+              }
+              .frame(width: geo.size.width - spacing)
+              .tint(Color.white)
+              .overlay {
+                RoundedRectangle(cornerRadius: 14)
+                  .stroke(style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+              }
+            }
+            .padding(.vertical, 20)
+            .foregroundStyle(.white)
+            
+            VStack {
+              Text("Enter the Occupancy (e.g. Construction, Waiter, Cook...), terminology of which you want to learn.")
+                .font(.body)
+              TextField(text: $requestModel.proffession) {
+                Text("Enter your proffession")
+                  .foregroundColor(.white.opacity(0.6))
+              }
+              .foregroundColor(.white)
+              .tint(.white)
+              .padding()
+              .frame(width: geo.size.width - spacing, height: 33)
+              .overlay {
+                RoundedRectangle(cornerRadius: 14)
+                  .stroke(style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+              }
+            }
+            .foregroundStyle(.white)
+            .padding(.vertical, 20)
+            
+            VStack {
+              Text("Choose the language You want to learn the words in.")
+                .font(.body)
+              Picker("Language", selection: $requestModel.selectedLanguage) {
+                ForEach(Languages.allCases, id: \.self) { language in
+                  Text(language.rawValue).tag(language)
+                }
+              }
+              .frame(width: geo.size.width - spacing)
+              .tint(Color.white)
+              .overlay {
+                RoundedRectangle(cornerRadius: 14)
+                  .stroke(style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+              }
+            }
+            .padding(.vertical, 20)
+            .foregroundStyle(.white)
+            Spacer()
+            
+            if let error = requestModel.errorMessage {
+              Text(error)
+                .foregroundStyle(.red)
+                .font(.footnote)
+                .multilineTextAlignment(.center)
+                .padding(.bottom, 8)
+            }
+            
+            Button {
+              Task {
+                await requestModel.generate()
+                if !requestModel.questions.isEmpty {
+                  didGenerate = true
+                }
+              }
+            } label: {
+                Text("Let's go!")
+                  .foregroundStyle(Color.white)
+                  .font(.title3)
+                  .fontWeight(.semibold)
+            }
+            .padding(.vertical, 10)
+            .padding(.horizontal, 20)
+            .background(Color.blue)
+            .clipShape(Capsule())
+            .disabled(requestModel.proffession.isEmpty || requestModel.isLoading)
+          }
+          .padding()
+        }
+        .navigationDestination(isPresented: $didGenerate) {
+          MainView(questions: requestModel.questions, requestModel: requestModel)
+        }
+        .fullScreenCover(isPresented: $requestModel.isLoading, content: {
+          LoadingView()
+        })
+      }
+    }
+  }
+}
+
+#Preview {
+  EntryView()
+}
