@@ -2,8 +2,8 @@
 import SwiftUI
 
 struct EntryView: View {
-  @AppStorage("nativeLanguage") var nativeLanguage: String = "en"
-  @AppStorage("pickedLanguage") var pickedLanguage: String = "en"
+  @AppStorage("nativeLanguage") var nativeLanguage: String = "en-US"
+  @AppStorage("pickedLanguage") var pickedLanguage: String = "en-US"
   @AppStorage("pickedProffession") var pickedProfession: String = ""
   @AppStorage("allSet") var allSet: Bool = false
   @Bindable var requestModel: RequestModel
@@ -30,7 +30,7 @@ struct EntryView: View {
                 .font(.body)
               Picker("Language", selection: $requestModel.language) {
                 ForEach(Languages.allCases, id: \.self) { language in
-                  Text(language.rawValue).tag(language)
+                  Text(language.displayName).tag(language)
                 }
               }
               .onChange(of: requestModel.language) { _ , newLanguage in
@@ -76,7 +76,7 @@ struct EntryView: View {
                 .font(.body)
               Picker("Language", selection: $requestModel.selectedLanguage) {
                 ForEach(Languages.allCases, id: \.self) { language in
-                  Text(language.rawValue).tag(language)
+                  Text(language.displayName).tag(language)
                 }
               }
               .frame(width: geo.size.width - spacing)

@@ -64,7 +64,7 @@ struct MainView: View {
               Button {
                 speechManager.speak(
                   word.targetWord,
-                  language: requestModel.selectedLanguage.rawValue
+                  language: requestModel.selectedLanguage.id
                 )
               } label: {
                 Image(systemName: "speaker.wave.2.fill")

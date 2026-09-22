@@ -4,8 +4,8 @@ import UIKit
 
 @Observable
 class RequestModel {
-  var language: Languages = .english
-  var selectedLanguage: Languages = .english
+  var language: Languages = .englishUS
+  var selectedLanguage: Languages = .englishUS
   var proffession: String = ""
   var questions: [QuestionModel] = []
   var isLoading = false
