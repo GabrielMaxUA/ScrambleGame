@@ -14,8 +14,8 @@ struct GuessedLetterView: View {
       .overlay(alignment: .bottom) {
         RoundedRectangle(cornerRadius: 14)
           .fill(Color.white)
-          .frame(height: 1)
-      }
+          .frame(height: 0.5)
+      }//lets see if this would work as intended
   }
 }
 
