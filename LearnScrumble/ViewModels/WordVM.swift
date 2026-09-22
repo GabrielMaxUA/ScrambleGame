@@ -12,6 +12,7 @@ class WordVM {
   var isFinished: Bool = false
   private var hasRequestedMore = false
   private let fetchMore: (([String]) async -> [QuestionModel])?
+  var overlayShown: Bool = false
   
   init(questions: [QuestionModel], fetchMore: (([String]) async -> [QuestionModel])? = nil) {
     self.questions = questions
@@ -41,14 +42,23 @@ class WordVM {
       scrumbledWord = []
       return
     }
-    let totalLetters = word.targetWord.filter { $0 != " " }.count
-    guessedWord = Array(repeating: nil, count: totalLetters)
-    scrumbledWord = word.targetWord
+    let letters = word.targetWord
       .filter { $0 != " " }
       .map { String($0).uppercased() }
+    
+    let totalLetters = letters.count
+    guessedWord = Array(repeating: nil, count: totalLetters)
+    
+    var shuffledLetters = letters
+    if totalLetters > 1 {
+      repeat {
+        shuffledLetters = letters.shuffled()
+      } while shuffledLetters == letters
+    } //making sure here that shuffled word isnt placing letteres same order as a target word
+    
+    scrumbledWord = shuffledLetters
       .enumerated()
       .map { LetterModel(id: $0.offset, letter: $0.element, isUsed: false) }
-      .shuffled()
   }
   
   func selectLetter(_ tile: LetterModel) {
@@ -69,6 +79,7 @@ class WordVM {
     guard isComplete, let word else { return }
     let isCorrect = resultWord == word.targetWord.filter({ $0 != " " }).uppercased()
     guessResult = isCorrect ? .correct : .incorrect
+    overlayShown = true
   }
   
   func nextWord() {
@@ -78,17 +89,9 @@ class WordVM {
     currentIndex += 1
     setupCurrentWord()
     requestMoreIfNeeded()
+    overlayShown = false
   }
   
-//  private func requestMoreIfNeeded() {
-//    guard !hasRequestedMore, currentIndex == 1, let fetchMore else { return }
-//    hasRequestedMore = true
-//    let existingWords = questions.map { $0.word.targetWord }
-//    Task {
-//      let newQuestions = await fetchMore(existingWords)
-//      questions.append(contentsOf: newQuestions)
-//    }
-//  }
   private func requestMoreIfNeeded() {
     print("index:", currentIndex,
           "requested:", hasRequestedMore,

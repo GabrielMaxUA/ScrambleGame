@@ -7,7 +7,11 @@
 
 import Foundation
 
-struct QuestionModel: Identifiable  {
+struct QuestionModel: Identifiable, Equatable  {
+  static func == (lhs: borrowing QuestionModel, rhs: borrowing QuestionModel) -> Bool {
+    lhs.id == rhs.id
+  }
+  
   let id: String
   let word: WordModel
   var imageData: Data?

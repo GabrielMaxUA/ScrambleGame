@@ -2,12 +2,15 @@
 import SwiftUI
 
 struct EntryView: View {
-  @State private var requestModel = RequestModel()
-  @State private var didGenerate = false
+  @AppStorage("nativeLanguage") var nativeLanguage: String = "en"
+  @AppStorage("pickedLanguage") var pickedLanguage: String = "en"
+  @AppStorage("pickedProffession") var pickedProfession: String = ""
+  @AppStorage("allSet") var allSet: Bool = false
+  @Bindable var requestModel: RequestModel
+  
   let spacing: CGFloat = 10
   var body: some View {
     GeometryReader { geo in
-      NavigationStack {
         ZStack {
           Color.black.opacity(0.7).ignoresSafeArea()
           VStack {
@@ -15,11 +18,9 @@ struct EntryView: View {
               Text("Welcome to LearnScrumble!")
                 .font(.largeTitle)
                 .fontWeight(.bold)
-                .multilineTextAlignment(.center)
               Text("Place where you can learn the words you need for your specific workplace.")
                 .font(.title3)
                 .fontWeight(.medium)
-                .multilineTextAlignment(.center)
             }
             .foregroundStyle(.white)
             Spacer()
@@ -31,6 +32,12 @@ struct EntryView: View {
                 ForEach(Languages.allCases, id: \.self) { language in
                   Text(language.rawValue).tag(language)
                 }
+              }
+              .onChange(of: requestModel.language) { _ , newLanguage in
+                nativeLanguage = newLanguage.rawValue
+              }
+              .onChange(of: requestModel.selectedLanguage) { _, newLanguage in
+                pickedLanguage = newLanguage.rawValue
               }
               .frame(width: geo.size.width - spacing)
               .tint(Color.white)
@@ -48,6 +55,9 @@ struct EntryView: View {
               TextField(text: $requestModel.proffession) {
                 Text("Enter your proffession")
                   .foregroundColor(.white.opacity(0.6))
+              }
+              .onChange(of: requestModel.proffession) { _, newProffession in
+                pickedProfession = newProffession
               }
               .foregroundColor(.white)
               .tint(.white)
@@ -73,7 +83,7 @@ struct EntryView: View {
               .tint(Color.white)
               .overlay {
                 RoundedRectangle(cornerRadius: 14)
-                  .stroke(style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+                  .stroke(.white, lineWidth: 1)
               }
             }
             .padding(.vertical, 20)
@@ -92,14 +102,15 @@ struct EntryView: View {
               Task {
                 await requestModel.generate()
                 if !requestModel.questions.isEmpty {
-                  didGenerate = true
+                  allSet = true
+                  print("SET allSet to true. Current UserDefaults value: \(UserDefaults.standard.bool(forKey: "allSet"))")
                 }
               }
             } label: {
-                Text("Let's go!")
-                  .foregroundStyle(Color.white)
-                  .font(.title3)
-                  .fontWeight(.semibold)
+              Text("Let's go!")
+                .foregroundStyle(Color.white)
+                .font(.title3)
+                .fontWeight(.semibold)
             }
             .padding(.vertical, 10)
             .padding(.horizontal, 20)
@@ -107,19 +118,26 @@ struct EntryView: View {
             .clipShape(Capsule())
             .disabled(requestModel.proffession.isEmpty || requestModel.isLoading)
           }
+          .multilineTextAlignment(.center)
           .padding()
         }
-        .navigationDestination(isPresented: $didGenerate) {
-          MainView(questions: requestModel.questions, requestModel: requestModel)
+        .frame(width: geo.size.width)
+        .onAppear {
+          if let restored = Languages(rawValue: nativeLanguage) {
+            requestModel.language = restored
+          }
+          if let restored = Languages(rawValue: pickedLanguage) {
+            requestModel.selectedLanguage = restored
+          }
+          requestModel.proffession = pickedProfession
         }
         .fullScreenCover(isPresented: $requestModel.isLoading, content: {
           LoadingView()
         })
-      }
-    }
-  }
+    }//geo
+  }//body
 }
 
 #Preview {
-  EntryView()
+  EntryView(requestModel: RequestModel())
 }
