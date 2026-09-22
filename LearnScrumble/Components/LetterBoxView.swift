@@ -27,6 +27,7 @@ struct LetterBoxView: View {
             .shadow(color: color, radius: 10, x: 10, y: 10)
             .shadow(color: color, radius: 10, x: -10, y: -10)
             .opacity(letter.isUsed ? 0.3 : 1)
+            
         }
     }
     .onTapGesture {
