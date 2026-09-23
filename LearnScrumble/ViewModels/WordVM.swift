@@ -1,7 +1,7 @@
 // WordVM.swift
 import SwiftUI
+import SwiftData
 
-enum GuessResult { case correct, incorrect }
 @Observable
 class WordVM {
   var questions: [QuestionModel]
@@ -12,9 +12,11 @@ class WordVM {
   var isFinished: Bool = false
   private var hasRequestedMore = false
   private let fetchMore: (([String]) async -> [QuestionModel])?
+  private let modelContext: ModelContext
   var overlayShown: Bool = false
   
   init(questions: [QuestionModel], fetchMore: (([String]) async -> [QuestionModel])? = nil) {
+    self.modelContext = PersistenceController.shared.context
     self.questions = questions
     self.fetchMore = fetchMore
     setupCurrentWord()
@@ -80,6 +82,8 @@ class WordVM {
     let isCorrect = resultWord == word.targetWord.filter({ $0 != " " }).uppercased()
     guessResult = isCorrect ? .correct : .incorrect
     overlayShown = true
+    //saving to device
+    recordGuess(for: word.targetWord, result: guessResult!)
   }
   
   func nextWord() {
@@ -98,7 +102,7 @@ class WordVM {
           "fetchMore:", fetchMore != nil)
     
     guard !hasRequestedMore,
-          currentIndex == questions.count - 7,
+          currentIndex == questions.count - 2,
           let fetchMore else { return }
     
     print("🔥 FETCH MORE TRIGGERED")
@@ -121,5 +125,27 @@ class WordVM {
       }
     }
     guessedWord = Array(repeating: nil, count: guessedWord.count)
+  }
+  
+  private func recordGuess(for concept: String, result: GuessResult) {
+    let predicate = #Predicate<SwiftDataWordModel> { $0.concept == concept }
+    let descriptor = FetchDescriptor<SwiftDataWordModel>(predicate: predicate)
+    
+    let record = (try? modelContext.fetch(descriptor))?.first ?? {
+      let new = SwiftDataWordModel(concept: concept)
+      modelContext.insert(new)
+      return new
+    }()
+    
+    switch result {
+    case .correct:
+      record.correct += 1
+    case .incorrect:
+      record.incorrect += 1
+    }
+    record.lastSeen = .now
+    
+    try? modelContext.save()
+    PersistenceController.shared.debugPrintAllWords()
   }
 }

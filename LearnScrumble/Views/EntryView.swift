@@ -7,8 +7,9 @@ struct EntryView: View {
   @AppStorage("pickedProffession") var pickedProfession: String = ""
   @AppStorage("allSet") var allSet: Bool = false
   @Bindable var requestModel: RequestModel
-  
+  let onSubmit: () async -> Void
   let spacing: CGFloat = 10
+  
   var body: some View {
     GeometryReader { geo in
         ZStack {
@@ -100,11 +101,7 @@ struct EntryView: View {
             
             Button {
               Task {
-                await requestModel.generate()
-                if !requestModel.questions.isEmpty {
-                  allSet = true
-                  print("SET allSet to true. Current UserDefaults value: \(UserDefaults.standard.bool(forKey: "allSet"))")
-                }
+                await onSubmit()
               }
             } label: {
               Text("Let's go!")
@@ -139,5 +136,5 @@ struct EntryView: View {
 }
 
 #Preview {
-  EntryView(requestModel: RequestModel())
+  EntryView(requestModel: RequestModel(), onSubmit: {})
 }

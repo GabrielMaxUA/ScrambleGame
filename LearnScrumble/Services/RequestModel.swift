@@ -1,6 +1,7 @@
 // RequestModel.swift
 import Foundation
 import UIKit
+import FirebaseFirestore
 
 @Observable
 class RequestModel {
@@ -11,6 +12,7 @@ class RequestModel {
   var isLoading = false
   var errorMessage: String?
   private let apiKey = "" // load from a plist/keychain — never hardcode, never paste in chat
+  
   init() {
     
     if let savedLang = UserDefaults.standard.string(forKey: "nativeLanguage"),
@@ -23,6 +25,127 @@ class RequestModel {
     }
     self.proffession = UserDefaults.standard.string(forKey: "pickedProffession") ?? ""
   }
+  
+  private func buildQuestions(from words: [WordModel]) async throws -> [QuestionModel] {
+    let existing = await FirebaseWordStore.fetchExisting(toolNames: words.map { $0.toolName })
+    let originLanguage = self.language
+    let targetLanguage = self.selectedLanguage
+    
+    return try await withThrowingTaskGroup(of: (Int, Data).self) { group in
+      for (index, word) in words.enumerated() {
+        group.addTask {
+          let data = try await self.generateImage(for: word.toolName) // still needed until Storage exists
+          
+          await FirebaseWordStore.saveIfNeeded(
+            toolName: word.toolName,
+            originLanguage: originLanguage,
+            originWord: word.originWord,
+            targetLanguage: targetLanguage,
+            targetWord: word.targetWord,
+            imageURL: ""
+          )
+          
+          return (index, data)
+        }
+      }
+      
+      var built = words.map { QuestionModel(id: UUID().uuidString, word: $0, imageData: nil) }
+      for try await (index, data) in group {
+        built[index].imageData = data
+      }
+      return built
+    }
+  }
+  
+//  @MainActor
+//  func generate() async {
+//    isLoading = true
+//    errorMessage = nil
+//    defer { isLoading = false }
+//    
+//    do {
+//      let words = try await generateWordList(
+//        profession: proffession,
+//        originLanguage: language,
+//        targetLanguage: selectedLanguage
+//      )
+//      
+//      try await withThrowingTaskGroup(of: (Int, Data).self) { group in
+//        for (index, word) in words.enumerated() {
+//          group.addTask {
+//            let data = try await self.generateImage(for: word.toolName)
+//            await self.syncToFirebase(
+//              word: word,
+//              originLanguage: self.language,
+//              targetLanguage: self.selectedLanguage,
+//              imageURL: "" // placeholder until Storage upload exists — see note below
+//            )
+//            return (index, data)
+//          }
+//        }
+//        
+//        var built = words.map { QuestionModel(id: UUID().uuidString, word: $0, imageData: nil) }
+//        for try await (index, data) in group {
+//          built[index].imageData = data
+//        }
+//        print("Generated \(built.count) questions: \(built.map { $0.word.targetWord })")
+//        self.questions = built
+//      }
+//    } catch {
+//      print("GENERATE ERROR:", error)
+//      
+//      if let urlError = error as? URLError {
+//        
+//        errorMessage = "Couldn't generate your set: Please try again."
+//        //"Couldn't generate your set: \(urlError.localizedDescription)"
+//        print("\(urlError.localizedDescription)")
+//      } else {
+//        errorMessage = "Couldn't generate your set: Please try again later."
+//        print("\(error.localizedDescription)")
+//        
+//      }
+//    }
+//  }
+//  
+//  @MainActor
+//  func generateMore(excluding existingWords: [String]) async -> [QuestionModel] {
+//    print("Generating more questions")
+//    do {
+//      let words = try await generateWordList(
+//        profession: proffession,
+//        originLanguage: language,
+//        targetLanguage: selectedLanguage,
+//        excluding: existingWords
+//      )
+//      
+//      // Client-side safety net — LLMs sometimes ignore the exclusion instruction
+//      let filtered = words.filter { !existingWords.contains($0.targetWord) }
+//      
+//      return try await withThrowingTaskGroup(of: (Int, Data).self) { group in
+//        for (index, word) in filtered.enumerated() {
+//          group.addTask {
+//            let data = try await self.generateImage(for: word.toolName)
+//            await self.syncToFirebase(
+//              word: word,
+//              originLanguage: self.language,
+//              targetLanguage: self.selectedLanguage,
+//              imageURL: "" // placeholder until Storage upload exists — see note below
+//            )
+//            return (index, data)
+//          }
+//        }
+//        var built = filtered.map { QuestionModel(id: UUID().uuidString, word: $0, imageData: nil) }
+//        for try await (index, data) in group {
+//          built[index].imageData = data
+//        }
+//        return built
+//      }
+//    } catch {
+//      print("generateMore failed: \(error)")
+//      return []
+//    }
+//  }
+  
   @MainActor
   func generate() async {
     isLoading = true
@@ -35,36 +158,17 @@ class RequestModel {
         originLanguage: language,
         targetLanguage: selectedLanguage
       )
-      
-      try await withThrowingTaskGroup(of: (Int, Data).self) { group in
-        for (index, word) in words.enumerated() {
-          group.addTask {
-            let data = try await self.generateImage(for: word.toolName)
-            return (index, data)
-          }
-        }
-        
-        var built = words.map { QuestionModel(id: UUID().uuidString, word: $0, imageData: nil) }
-        for try await (index, data) in group {
-          built[index].imageData = data
-        }
-        print("Generated \(built.count) questions: \(built.map { $0.word.targetWord })")
-        self.questions = built
-      }
+      let built = try await buildQuestions(from: words)
+      print("Generated \(built.count) questions: \(built.map { $0.word.targetWord })")
+      self.questions = built
     } catch {
       print("GENERATE ERROR:", error)
-      
       if let urlError = error as? URLError {
-        
-        errorMessage = "Couldn't generate your set: Please try again.\(urlError.localizedDescription)"
-        //"Couldn't generate your set: \(urlError.localizedDescription)"
-        
-      } else {
-        
         errorMessage = "Couldn't generate your set: Please try again."
-        //\(error.localizedDescription)
-        
-        
+        print("\(urlError.localizedDescription)")
+      } else {
+        errorMessage = "Couldn't generate your set: Please try again later."
+        print("\(error.localizedDescription)")
       }
     }
   }
@@ -79,23 +183,8 @@ class RequestModel {
         targetLanguage: selectedLanguage,
         excluding: existingWords
       )
-      
-      // Client-side safety net — LLMs sometimes ignore the exclusion instruction
       let filtered = words.filter { !existingWords.contains($0.targetWord) }
-      
-      return try await withThrowingTaskGroup(of: (Int, Data).self) { group in
-        for (index, word) in filtered.enumerated() {
-          group.addTask {
-            let data = try await self.generateImage(for: word.toolName)
-            return (index, data)
-          }
-        }
-        var built = filtered.map { QuestionModel(id: UUID().uuidString, word: $0, imageData: nil) }
-        for try await (index, data) in group {
-          built[index].imageData = data
-        }
-        return built
-      }
+      return try await buildQuestions(from: filtered)
     } catch {
       print("generateMore failed: \(error)")
       return []
@@ -116,14 +205,14 @@ class RequestModel {
     //  [{"toolName": "hammer", "originWord": "<word in \(originLanguage.rawValue)>", "targetWord": "<word in \(targetLanguage.rawValue)>"}]
     //  """
     let prompt = """
-    List exactly 10 common workplace items, objects, equipment, materials, or resources used by a \(profession).\(exclusionClause)
+    List exactly 5 common workplace items, objects, equipment, materials, or resources used by a \(profession).\(exclusionClause)
     Rules:    
-    - Return exactly 10 unique items.    
+    - Return exactly 5 unique items.    
     - Choose common and practical vocabulary that someone working as a \(profession) would actually encounter.    
     - Prefer concrete items that can be clearly represented by a single image.    
     - Include a mix of relevant physical objects, equipment, materials, or other recognizable workplace resources when appropriate for the profession.
     - Do not limit the results to tools.    
-    - The "toolName" must be a short, common English name for the concept, written in lowercase.    
+    - The "toolName" must be a short, common English name for the concept, written in lowercase — this is the canonical key, always in English regardless of the languages below. 
     - "originWord" must be the natural, commonly used word for the item in \(originLanguage.rawValue).
     - "targetWord" must be the natural, commonly used word for the item in \(targetLanguage.rawValue).
     - Do not include explanations, descriptions, categories, or definitions.    
@@ -214,5 +303,21 @@ class RequestModel {
       print("🖼️ Decoded image size: \(img.size)")
     }
     return imgData
+  }
+  
+  private func syncToFirebase(
+    word: WordModel,
+    originLanguage: Languages,
+    targetLanguage: Languages,
+    imageURL: String
+  ) async {
+    await FirebaseWordStore.saveIfNeeded(
+      toolName: word.toolName,
+      originLanguage: originLanguage,
+      originWord: word.originWord,
+      targetLanguage: targetLanguage,
+      targetWord: word.targetWord,
+      imageURL: imageURL
+    )
   }
 }

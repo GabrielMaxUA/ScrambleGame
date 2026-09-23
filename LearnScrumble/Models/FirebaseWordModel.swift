@@ -7,9 +7,9 @@
 
 import Foundation
 
-struct FirebaseWordModel {
+struct FirebaseWordModel: Codable, Identifiable {
     let id: String
     let word: String
-    let translation: [String : String]
+    var translation: [String : String]//"language code suck as "uk-UA"": "translated word to it"
     let image: String
 }

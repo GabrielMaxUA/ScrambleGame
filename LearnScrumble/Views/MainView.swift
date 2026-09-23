@@ -9,34 +9,15 @@ import SwiftUI
 import AVFoundation
 
 struct MainView: View {
-  @State private var vm: WordVM
+  let requestModel: RequestModel
+  let vm: WordVM
+  let onExitToSettings: () -> Void
   @State private var showPop: Bool = false
   @State private var showAlert: Bool = false
-  @AppStorage("allSet") private var allSet = false
-  var requestModel: RequestModel
+  
   let boxSize: CGFloat = 55
   let spacing: CGFloat = 8
-  
   let speechManager = SpeechManager()
-  
-  init(questions: [QuestionModel], requestModel: RequestModel) {
-    
-    self.requestModel = requestModel
-    
-    _vm = State(initialValue: WordVM(
-      // Creates the WordVM that will back this view's @State var vm
-      
-      questions: questions,
-      // Populates WordVM with the questions this view was handed at creation
-      
-      fetchMore: { existingWords in
-        // Defines what WordVM should do whenever IT decides it needs more questions later
-        
-          await requestModel.generateMore(excluding: existingWords)
-        // Fetches more questions from requestModel, skipping ones already shown (existingWords)
-      }
-    ))
-  }
   
   var body: some View {
     GeometryReader { geo in
@@ -150,16 +131,9 @@ struct MainView: View {
             }//vs Srcummble letters
             .frame(height: geo.size.height / 3.3)
           }//vsmain
-//          .navigationDestination(isPresented: $backToEntry){ EntryView(requestModel: requestModel)
-//          }
           .alert("Want to change the settings?", isPresented: $showAlert) {
-//            Button("OK", role: .destructive) {
-//              allSet = false
-//            }
             Button("OK", role: .destructive) {
-              print("🔥 OK BUTTON TAPPED")
-              allSet = false
-              print("🔥 allSet is now: \(allSet)")
+              onExitToSettings()
             }
             Button(role: .cancel) { }
           }
@@ -208,5 +182,9 @@ struct MainView: View {
 }
 
 #Preview {
-  MainView(questions: QuestionModel.mockQuestions, requestModel: RequestModel())
+  MainView(
+    requestModel: RequestModel(),
+    vm: WordVM(questions: QuestionModel.mockQuestions),
+    onExitToSettings: {}
+  )
 }

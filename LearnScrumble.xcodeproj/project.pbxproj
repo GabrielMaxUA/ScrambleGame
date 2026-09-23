@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3853E12D30634A2D00AE6251 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3853E12C30634A2D00AE6251 /* FirebaseCore */; };
+		3853E12F30634A2D00AE6251 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 3853E12E30634A2D00AE6251 /* FirebaseFirestore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		38D434513048C7720046E55F /* LearnScrumble.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LearnScrumble.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +28,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3853E12D30634A2D00AE6251 /* FirebaseCore in Frameworks */,
+				3853E12F30634A2D00AE6251 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +72,8 @@
 			);
 			name = LearnScrumble;
 			packageProductDependencies = (
+				3853E12C30634A2D00AE6251 /* FirebaseCore */,
+				3853E12E30634A2D00AE6251 /* FirebaseFirestore */,
 			);
 			productName = LearnScrumble;
 			productReference = 38D434513048C7720046E55F /* LearnScrumble.app */;
@@ -94,6 +103,9 @@
 			);
 			mainGroup = 38D434483048C7720046E55F;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 38D434523048C7720046E55F /* Products */;
 			projectDirPath = "";
@@ -357,6 +369,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.19.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3853E12C30634A2D00AE6251 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		3853E12E30634A2D00AE6251 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 38D434493048C7720046E55F /* Project object */;
 }
