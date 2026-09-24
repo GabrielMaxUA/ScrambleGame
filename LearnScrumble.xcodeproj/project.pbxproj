@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		3853E12D30634A2D00AE6251 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3853E12C30634A2D00AE6251 /* FirebaseCore */; };
 		3853E12F30634A2D00AE6251 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 3853E12E30634A2D00AE6251 /* FirebaseFirestore */; };
+		3853E1383064928300AE6251 /* SDWebImageWebPCoder in Frameworks */ = {isa = PBXBuildFile; productRef = 3853E1373064928300AE6251 /* SDWebImageWebPCoder */; };
+		3853E13D3064930300AE6251 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 3853E13C3064930300AE6251 /* FirebaseStorage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,17 +31,27 @@
 			buildActionMask = 2147483647;
 			files = (
 				3853E12D30634A2D00AE6251 /* FirebaseCore in Frameworks */,
+				3853E13D3064930300AE6251 /* FirebaseStorage in Frameworks */,
 				3853E12F30634A2D00AE6251 /* FirebaseFirestore in Frameworks */,
+				3853E1383064928300AE6251 /* SDWebImageWebPCoder in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3853E13B3064930300AE6251 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		38D434483048C7720046E55F = {
 			isa = PBXGroup;
 			children = (
 				38D434533048C7720046E55F /* LearnScrumble */,
+				3853E13B3064930300AE6251 /* Frameworks */,
 				38D434523048C7720046E55F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -74,6 +86,8 @@
 			packageProductDependencies = (
 				3853E12C30634A2D00AE6251 /* FirebaseCore */,
 				3853E12E30634A2D00AE6251 /* FirebaseFirestore */,
+				3853E1373064928300AE6251 /* SDWebImageWebPCoder */,
+				3853E13C3064930300AE6251 /* FirebaseStorage */,
 			);
 			productName = LearnScrumble;
 			productReference = 38D434513048C7720046E55F /* LearnScrumble.app */;
@@ -105,6 +119,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				3853E1363064928300AE6251 /* XCRemoteSwiftPackageReference "SDWebImageWebPCoder" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 38D434523048C7720046E55F /* Products */;
@@ -379,6 +394,14 @@
 				minimumVersion = 12.19.2;
 			};
 		};
+		3853E1363064928300AE6251 /* XCRemoteSwiftPackageReference "SDWebImageWebPCoder" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SDWebImage/SDWebImageWebPCoder";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.15.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -391,6 +414,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
+		};
+		3853E1373064928300AE6251 /* SDWebImageWebPCoder */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3853E1363064928300AE6251 /* XCRemoteSwiftPackageReference "SDWebImageWebPCoder" */;
+			productName = SDWebImageWebPCoder;
+		};
+		3853E13C3064930300AE6251 /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

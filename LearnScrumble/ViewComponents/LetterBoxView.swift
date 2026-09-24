@@ -17,13 +17,12 @@ struct LetterBoxView: View {
       Text(letter.isUsed ? " " : letter.letter)
         .font(.system(size: 20, weight: .semibold))
         .foregroundStyle(.white)
-        .padding()
-        .frame(width: 55, height: 55)
+        .frame(width: 40, height: 45)
         .overlay{
           RoundedRectangle(cornerRadius: 14)
             .stroke(lineWidth: 1)
             .fill(.white)
-            .frame(width: 40, height: 47)
+            .frame(width: 40, height: 45)
             .shadow(color: color, radius: 10, x: 10, y: 10)
             .shadow(color: color, radius: 10, x: -10, y: -10)
             .opacity(letter.isUsed ? 0.3 : 1)
@@ -46,7 +45,7 @@ struct LetterBoxView: View {
 
 #Preview {
   VStack{
-    LetterBoxView(letter: LetterModel(id: 1, letter: "W", isUsed: true)) { _ in }
+    LetterBoxView(letter: LetterModel(id: 1, letter: "μ", isUsed: false)) { _ in }
   }
   .frame(maxWidth: .infinity, maxHeight: .infinity)
   .background(Color.blue)

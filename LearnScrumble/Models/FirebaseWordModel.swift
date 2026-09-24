@@ -11,5 +11,5 @@ struct FirebaseWordModel: Codable, Identifiable {
     let id: String
     let word: String
     var translation: [String : String]//"language code suck as "uk-UA"": "translated word to it"
-    let image: String
+    var image: String
 }

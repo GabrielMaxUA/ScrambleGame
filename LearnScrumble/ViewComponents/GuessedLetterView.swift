@@ -3,25 +3,26 @@ import SwiftUI
 
 struct GuessedLetterView: View {
   let letter: LetterModel?
+  var size: CGFloat = 30
   let onTap: (LetterModel) -> Void
   
   var body: some View {
     Text(letter?.letter ?? "")
-      .font(.title3)
+      .font(.system(size: size * 0.6))
       .foregroundColor(.white)
-      .frame(width: 30, height: 45)
+      .frame(width: size, height: size * 1.5)
       .onTapGesture { if let letter { onTap(letter) } }
       .overlay(alignment: .bottom) {
         RoundedRectangle(cornerRadius: 14)
           .fill(Color.white)
           .frame(height: 1)
-      }//lets see if this would work as intended
+      }
   }
 }
 
 #Preview {
   VStack {
-    GuessedLetterView(letter: LetterModel(id: 1, letter: "W", isUsed: false)) { _ in }
+    GuessedLetterView(letter: LetterModel(id: 1, letter: "μ", isUsed: false)) { _ in }
     GuessedLetterView(letter: nil) { _ in }   // empty slot, for comparison
   }
   .frame(width: 100, height: 310)

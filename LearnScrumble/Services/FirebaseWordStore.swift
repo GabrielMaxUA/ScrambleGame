@@ -37,10 +37,10 @@ enum FirebaseWordStore {
         try docRef.setData(from: newWord)
         return
       }
-      //if word is in the base we check if it has users translation laready or not
+      //if word is in the base we check if it has users translation laready or not so as image
       let hasOrigin = existing.translation[originLanguage.rawValue] != nil
       let hasTarget = existing.translation[targetLanguage.rawValue] != nil
-      
+      let hasImage = !existing.image.isEmpty
       if hasOrigin && hasTarget {
         // Case 2: both translations already there — nothing to do
         return
@@ -49,7 +49,7 @@ enum FirebaseWordStore {
       // Case 3: word exists, but missing one or both translations — adding up 
       if !hasOrigin { existing.translation[originLanguage.rawValue] = originWord }
       if !hasTarget { existing.translation[targetLanguage.rawValue] = targetWord }
-      
+      if !hasImage && !imageURL.isEmpty { existing.image = imageURL }
       try docRef.setData(from: existing, merge: true)
       
     } catch {

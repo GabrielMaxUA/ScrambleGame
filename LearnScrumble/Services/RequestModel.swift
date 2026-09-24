@@ -14,7 +14,6 @@ class RequestModel {
   private let apiKey = "" // load from a plist/keychain — never hardcode, never paste in chat
   
   init() {
-    
     if let savedLang = UserDefaults.standard.string(forKey: "nativeLanguage"),
        let restored = Languages(rawValue: savedLang) {
       self.language = restored
@@ -31,120 +30,55 @@ class RequestModel {
     let originLanguage = self.language
     let targetLanguage = self.selectedLanguage
     
-    return try await withThrowingTaskGroup(of: (Int, Data).self) { group in
-      for (index, word) in words.enumerated() {
-        group.addTask {
-          let data = try await self.generateImage(for: word.toolName) // still needed until Storage exists
-          
-          await FirebaseWordStore.saveIfNeeded(
-            toolName: word.toolName,
-            originLanguage: originLanguage,
-            originWord: word.originWord,
-            targetLanguage: targetLanguage,
-            targetWord: word.targetWord,
-            imageURL: ""
-          )
-          
-          return (index, data)
+    var built = words.map { QuestionModel(id: UUID().uuidString, word: $0, imageData: nil) }
+    let maxConcurrent = 2 // throttled — 5-at-once was spiking CPU and stalling the main thread on generateMore
+    
+    var index = 0
+    while index < words.count {
+      let chunk = Array(words[index..<min(index + maxConcurrent, words.count)])
+      let chunkStart = index
+      
+      try await withThrowingTaskGroup(of: (Int, Data).self) { group in
+        for (offset, word) in chunk.enumerated() {
+          let globalIndex = chunkStart + offset
+          group.addTask {
+            if let existingWord = existing[word.toolName],
+               !existingWord.image.isEmpty,
+               let url = URL(string: existingWord.image) {
+              do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                await FirebaseWordStore.saveIfNeeded(
+                  toolName: word.toolName, originLanguage: originLanguage, originWord: word.originWord,
+                  targetLanguage: targetLanguage, targetWord: word.targetWord, imageURL: existingWord.image
+                )
+                return (globalIndex, data)
+              } catch {
+                print("Cached image fetch failed for \(word.toolName), regenerating: \(error)")
+              }
+            }
+            
+            let pngData = try await self.generateImage(for: word.toolName)
+            var imageURL = ""
+            do {
+              imageURL = try await FirebaseImageStore.uploadWebP(pngData, toolName: word.toolName)
+            } catch {
+              print("WebP upload failed for \(word.toolName): \(error)")
+            }
+            await FirebaseWordStore.saveIfNeeded(
+              toolName: word.toolName, originLanguage: originLanguage, originWord: word.originWord,
+              targetLanguage: targetLanguage, targetWord: word.targetWord, imageURL: imageURL
+            )
+            return (globalIndex, pngData)
+          }
+        }
+        for try await (idx, data) in group {
+          built[idx].imageData = data
         }
       }
-      
-      var built = words.map { QuestionModel(id: UUID().uuidString, word: $0, imageData: nil) }
-      for try await (index, data) in group {
-        built[index].imageData = data
-      }
-      return built
+      index += maxConcurrent
     }
+    return built
   }
-  
-//  @MainActor
-//  func generate() async {
-//    isLoading = true
-//    errorMessage = nil
-//    defer { isLoading = false }
-//    
-//    do {
-//      let words = try await generateWordList(
-//        profession: proffession,
-//        originLanguage: language,
-//        targetLanguage: selectedLanguage
-//      )
-//      
-//      try await withThrowingTaskGroup(of: (Int, Data).self) { group in
-//        for (index, word) in words.enumerated() {
-//          group.addTask {
-//            let data = try await self.generateImage(for: word.toolName)
-//            await self.syncToFirebase(
-//              word: word,
-//              originLanguage: self.language,
-//              targetLanguage: self.selectedLanguage,
-//              imageURL: "" // placeholder until Storage upload exists — see note below
-//            )
-//            return (index, data)
-//          }
-//        }
-//        
-//        var built = words.map { QuestionModel(id: UUID().uuidString, word: $0, imageData: nil) }
-//        for try await (index, data) in group {
-//          built[index].imageData = data
-//        }
-//        print("Generated \(built.count) questions: \(built.map { $0.word.targetWord })")
-//        self.questions = built
-//      }
-//    } catch {
-//      print("GENERATE ERROR:", error)
-//      
-//      if let urlError = error as? URLError {
-//        
-//        errorMessage = "Couldn't generate your set: Please try again."
-//        //"Couldn't generate your set: \(urlError.localizedDescription)"
-//        print("\(urlError.localizedDescription)")
-//      } else {
-//        errorMessage = "Couldn't generate your set: Please try again later."
-//        print("\(error.localizedDescription)")
-//        
-//      }
-//    }
-//  }
-//  
-//  @MainActor
-//  func generateMore(excluding existingWords: [String]) async -> [QuestionModel] {
-//    print("Generating more questions")
-//    do {
-//      let words = try await generateWordList(
-//        profession: proffession,
-//        originLanguage: language,
-//        targetLanguage: selectedLanguage,
-//        excluding: existingWords
-//      )
-//      
-//      // Client-side safety net — LLMs sometimes ignore the exclusion instruction
-//      let filtered = words.filter { !existingWords.contains($0.targetWord) }
-//      
-//      return try await withThrowingTaskGroup(of: (Int, Data).self) { group in
-//        for (index, word) in filtered.enumerated() {
-//          group.addTask {
-//            let data = try await self.generateImage(for: word.toolName)
-//            await self.syncToFirebase(
-//              word: word,
-//              originLanguage: self.language,
-//              targetLanguage: self.selectedLanguage,
-//              imageURL: "" // placeholder until Storage upload exists — see note below
-//            )
-//            return (index, data)
-//          }
-//        }
-//        var built = filtered.map { QuestionModel(id: UUID().uuidString, word: $0, imageData: nil) }
-//        for try await (index, data) in group {
-//          built[index].imageData = data
-//        }
-//        return built
-//      }
-//    } catch {
-//      print("generateMore failed: \(error)")
-//      return []
-//    }
-//  }
   
   @MainActor
   func generate() async {
@@ -199,11 +133,6 @@ class RequestModel {
     ? ""
     : "\nDo not repeat any of these words already used: \(existingWords.joined(separator: ", "))."
     
-    //    let prompt = """
-    //  List 10 common tools or resources used by a \(profession).\(exclusionClause)
-    //  Respond ONLY with a JSON array, no prose, no markdown fences, in this exact shape:
-    //  [{"toolName": "hammer", "originWord": "<word in \(originLanguage.rawValue)>", "targetWord": "<word in \(targetLanguage.rawValue)>"}]
-    //  """
     let prompt = """
     List exactly 5 common workplace items, objects, equipment, materials, or resources used by a \(profession).\(exclusionClause)
     Rules:    
@@ -239,9 +168,7 @@ class RequestModel {
     ])
     
     let (data, response) = try await URLSession.shared.data(for: request)
-    //    guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-    //      throw URLError(.badServerResponse)
-    //    }
+
     guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
       let status = (response as? HTTPURLResponse)?.statusCode ?? -1
       let body = String(data: data, encoding: .utf8) ?? "no body"

@@ -23,17 +23,20 @@ struct MainView: View {
     GeometryReader { geo in
       let perRow = max(Int((geo.size.width + spacing) / (boxSize + spacing)), 1)
       let totalLetters = vm.word?.targetWord.filter { $0 != " " }.count ?? 0
-      let guessedSlotRows = stride(from: 0, to: totalLetters, by: perRow).map {
-        Array($0..<min($0 + perRow, totalLetters))
-      }
+      let targetWord = vm.word?.targetWord ?? ""
+      
       let scrambledRows = stride(from: 0, to: vm.scrumbledWord.count, by: perRow).map {
         Array(vm.scrumbledWord[$0..<min($0 + perRow, vm.scrumbledWord.count)])
       }
-        ZStack(alignment: .topTrailing){
-          Color.black.opacity(0.7).ignoresSafeArea()
-          if let word = vm.word {
-            HStack {
-              Button {
+      ZStack(alignment: .topTrailing){
+        Color.black.opacity(0.7).ignoresSafeArea()
+        if vm.isLoadingMore && vm.word == nil {
+          LoadingView ()
+            .tint(.white)
+            .frame(width: geo.size.width, height: geo.size.height)
+        } else if let word = vm.word {
+          HStack {
+            Button {
               showAlert = true
             } label: {
               Image(systemName: "gear")
@@ -41,135 +44,152 @@ struct MainView: View {
                 .foregroundStyle(.white)
                 .glassEffect(.clear, in: .circle)
             }
-              Spacer()
-              Button {
-                speechManager.speak(
-                  word.targetWord,
-                  language: requestModel.selectedLanguage.id
-                )
-              } label: {
-                Image(systemName: "speaker.wave.2.fill")
-                  .frame(width: 50, height: 50)
-                  .foregroundStyle(.white)
-                  .glassEffect(.clear, in: .circle)
-              }
-            }
-            .padding(.horizontal)
-            .offset(y: -5)
-          }
-          VStack(alignment: .center) {
             Spacer()
-            VStack {
-              Group {
-                if let uiImage = vm.image {
-                  Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFit()
-                    .padding()
-                } else {
-                  RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.gray, lineWidth: 2)
-                    .fill(.clear)
-                }
-              }
-              .frame(width: 250, height: 250)
-              .clipShape(RoundedRectangle(cornerRadius: 14))
-              .padding(.horizontal)
-              .padding(.bottom)
-              .overlay(alignment: .topLeading){
-                Button {
-                  showPop = true
-                } label: {
-                  Image(systemName: "questionmark.circle.fill")
-                    .frame(width: 60, height: 60)
-                    .foregroundStyle(.white)
-                }
-                .popover(isPresented: $showPop) {
-                  Text(vm.hintWord)
-                    .padding()
-                    .presentationCompactAdaptation(.popover) // keeps it a small popover even on iPhone
-                }
-              }
-              Text(vm.resultWord)
-                .font(.title)
-                .fontWeight(.bold)
-                .foregroundStyle(vm.overlayShown ? .white.opacity(0.05) : .white)
-                .padding(.bottom)
-                .frame(height: 35)
-                .padding(.bottom)
-                .minimumScaleFactor(0.8)
-              Spacer()
+            Button {
+              speechManager.speak(
+                word.targetWord,
+                language: requestModel.selectedLanguage.id
+              )
+            } label: {
+              Image(systemName: "speaker.wave.2.fill")
+                .frame(width: 50, height: 50)
+                .foregroundStyle(.white)
+                .glassEffect(.clear, in: .circle)
             }
-            .frame(height: geo.size.height / 3.1)
-            
-            VStack(spacing: spacing) {
-              ForEach(guessedSlotRows.indices, id: \.self) { i in
-                HStack(spacing: 16) {
-                  ForEach(guessedSlotRows[i], id: \.self) { slotIndex in
-                    let letter = slotIndex < vm.guessedWord.count ? vm.guessedWord[slotIndex] : nil
-                    GuessedLetterView(letter: letter) { vm.deselectLetter($0) }
-                      .foregroundStyle(vm.overlayShown ? .white.opacity(0.05) : .white)
-                  }
-                }
+          }//hs buttons speak and options
+          .padding(.horizontal)
+        }
+        VStack(alignment: .center) {
+          Spacer()
+          VStack(spacing: spacing) {
+            Group {
+              if let uiImage = vm.image {
+                Image(uiImage: uiImage)
+                  .resizable()
+                  .scaledToFit()
+                  .padding()
+              } else {
+                RoundedRectangle(cornerRadius: 14)
+                  .stroke(Color.gray, lineWidth: 2)
+                  .fill(.clear)
               }
-              Spacer()
             }
-            .frame(height: geo.size.height / 3.6)
+            .frame(width: 250, height: 250)
+            .overlay(alignment: .topLeading){
+              Button {
+                showPop = true
+              } label: {
+                Image(systemName: "questionmark.circle.fill")
+                  .frame(width: 60, height: 60)
+                  .foregroundStyle(.white)
+              }
+              .popover(isPresented: $showPop) {
+                Text(vm.hintWord)
+                  .padding()
+                  .presentationCompactAdaptation(.popover) // keeps it a small popover even on iPhone
+              }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .padding(.horizontal)
             .padding(.bottom)
             
-            VStack {
-              ForEach(scrambledRows.indices, id: \.self) { i in
-                HStack(spacing: spacing) {
-                  ForEach(scrambledRows[i]) { letter in
-                    LetterBoxView(letter: letter) { vm.selectLetter($0) }
-                      .foregroundStyle(vm.overlayShown ? .white.opacity(0.05) : .white)
-                  }
-                }
-                .frame(maxWidth: .infinity)
-              }
-              Spacer()
-            }//vs Srcummble letters
-            .frame(height: geo.size.height / 3.3)
-          }//vsmain
-          .alert("Want to change the settings?", isPresented: $showAlert) {
-            Button("OK", role: .destructive) {
-              onExitToSettings()
-            }
-            Button(role: .cancel) { }
-          }
-        }//zs
-        .overlay{
-          if let result = vm.guessResult {
-            VStack {
-              Spacer()
-              Text(result == .correct ? "Correct!" : "Incorrect")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .foregroundStyle(result == .correct ? .green : .red)
-                .padding(.bottom)
-              if result == .incorrect, let word = vm.word {
-                Text("Correct answer was: \(word.targetWord)")
-                  .font(.title2)
-                  .foregroundStyle(.white.opacity(0.8))
-                  .padding(.bottom)
-              } else {
-                Spacer().frame(height: 8)
-              }
+            Text(vm.resultWord)
+              .font(.title)
+              .fontWeight(.bold)
+              .foregroundStyle(vm.overlayShown ? .white.opacity(0.05) : .white)
+              .padding(.bottom)
+              .frame(height: 35)
+              .padding(.bottom)
+              .minimumScaleFactor(0.8)
+            HStack{
               Spacer()
               Button {
-                vm.nextWord()
+                vm.resetGuess()
               } label: {
-                Text("Next")
-                  .padding()
+                Text("Reset")
+                  .padding(.vertical, 7)
+                  .padding(.horizontal, 14)
                   .foregroundStyle(.white)
                   .glassEffect(.clear, in: .buttonBorder)
               }
-              Spacer()
-            }
-            .frame(width: geo.size.width, height: geo.size.height)
-            .background(Color.black.opacity(0.7))
+            }//vs reset
+            .padding(.trailing)
           }
+          Spacer()
+          VStack(spacing: spacing) {
+            ForEach(vm.segmentRanges.indices, id: \.self) { segIdx in
+              let segIndices = Array(vm.segmentRanges[segIdx])
+              let segCount = segIndices.count
+              let availableWidth = geo.size.width - 32 // side padding
+              let letterSpacing: CGFloat = segCount > 12 ? 4 : 16
+              let spacingTotal = CGFloat(max(segCount - 1, 0)) * letterSpacing
+              let rawSize = (availableWidth - spacingTotal) / CGFloat(max(segCount, 1))
+              let slotSize = min(30, max(rawSize, 12)) // never bigger than default, floor so it stays tappable
+              
+              HStack(spacing: letterSpacing) {
+                ForEach(segIndices, id: \.self) { slotIndex in
+                  let letter = slotIndex < vm.guessedWord.count ? vm.guessedWord[slotIndex] : nil
+                  GuessedLetterView(letter: letter, size: slotSize) { vm.deselectLetter($0) }
+                    .foregroundStyle(vm.overlayShown ? .white.opacity(0.05) : .white)
+                }
+              }
+            }//FE guessed
+          }//guessed vs
+          .padding(.bottom)
+          Spacer()
+          VStack {
+            ForEach(scrambledRows.indices, id: \.self) { i in
+              HStack(spacing: spacing) {
+                ForEach(scrambledRows[i]) { letter in
+                  LetterBoxView(letter: letter) { vm.selectLetter($0) }
+                    .foregroundStyle(vm.overlayShown ? .white.opacity(0.05) : .white)
+                }
+              }
+              .frame(maxWidth: .infinity)
+            }
+            Spacer()
+          }//vs Srcummble letters
+          Spacer()
+        }//vsmain
+        .alert("Want to change the settings?", isPresented: $showAlert) {
+          Button("OK", role: .destructive) {
+            onExitToSettings()
+          }
+          Button(role: .cancel) { }
         }
+      }//zs
+      .overlay{
+        if let result = vm.guessResult {
+          VStack {
+            Spacer()
+            Text(result == .correct ? "Correct!" : "Incorrect")
+              .font(.largeTitle)
+              .fontWeight(.bold)
+              .foregroundStyle(result == .correct ? .green : .red)
+              .padding(.bottom)
+            if result == .incorrect, let word = vm.word {
+              Text("Correct answer was: \(word.targetWord)")
+                .font(.title2)
+                .foregroundStyle(.white.opacity(0.8))
+                .padding(.bottom)
+            } else {
+              Spacer().frame(height: 8)
+            }
+            Spacer()
+            Button {
+              vm.nextWord()
+            } label: {
+              Text("Next")
+                .padding()
+                .foregroundStyle(.white)
+                .glassEffect(.clear, in: .buttonBorder)
+            }
+            Spacer()
+          }
+          .frame(width: geo.size.width, height: geo.size.height)
+          .background(Color.black.opacity(0.7))
+        }
+      }
       .onChange(of: requestModel.questions) { _, newQuestions in
         vm.questions = newQuestions // or however WordVM expects to be updated
         vm.setupCurrentWord()
