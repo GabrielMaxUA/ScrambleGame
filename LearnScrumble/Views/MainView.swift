@@ -204,7 +204,7 @@ struct MainView: View {
 #Preview {
   MainView(
     requestModel: RequestModel(),
-    vm: WordVM(questions: QuestionModel.mockQuestions),
+    vm: WordVM(questions: QuestionModel.mockQuestions, targetLanguage: "uk-UA"),
     onExitToSettings: {}
   )
 }

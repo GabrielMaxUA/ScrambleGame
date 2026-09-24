@@ -12,7 +12,8 @@ class RequestModel {
   var isLoading = false
   var errorMessage: String?
   private let apiKey = "" // load from a plist/keychain — never hardcode, never paste in chat
-  
+  private let maxGenerationAttempts = 3
+
   init() {
     if let savedLang = UserDefaults.standard.string(forKey: "nativeLanguage"),
        let restored = Languages(rawValue: savedLang) {
@@ -24,20 +25,20 @@ class RequestModel {
     }
     self.proffession = UserDefaults.standard.string(forKey: "pickedProffession") ?? ""
   }
-  
+
   private func buildQuestions(from words: [WordModel]) async throws -> [QuestionModel] {
     let existing = await FirebaseWordStore.fetchExisting(toolNames: words.map { $0.toolName })
     let originLanguage = self.language
     let targetLanguage = self.selectedLanguage
-    
+
     var built = words.map { QuestionModel(id: UUID().uuidString, word: $0, imageData: nil) }
     let maxConcurrent = 2 // throttled — 5-at-once was spiking CPU and stalling the main thread on generateMore
-    
+
     var index = 0
     while index < words.count {
       let chunk = Array(words[index..<min(index + maxConcurrent, words.count)])
       let chunkStart = index
-      
+
       try await withThrowingTaskGroup(of: (Int, Data).self) { group in
         for (offset, word) in chunk.enumerated() {
           let globalIndex = chunkStart + offset
@@ -56,7 +57,7 @@ class RequestModel {
                 print("Cached image fetch failed for \(word.toolName), regenerating: \(error)")
               }
             }
-            
+
             let pngData = try await self.generateImage(for: word.toolName)
             var imageURL = ""
             do {
@@ -79,18 +80,20 @@ class RequestModel {
     }
     return built
   }
-  
+
   @MainActor
   func generate() async {
     isLoading = true
     errorMessage = nil
     defer { isLoading = false }
-    
+
     do {
-      let words = try await generateWordList(
+      let seen = PersistenceController.shared.seenToolNames(targetLanguage: selectedLanguage.rawValue)
+      let words = try await generateUniqueWordList(
         profession: proffession,
         originLanguage: language,
-        targetLanguage: selectedLanguage
+        targetLanguage: selectedLanguage,
+        excludingToolNames: seen
       )
       let built = try await buildQuestions(from: words)
       print("Generated \(built.count) questions: \(built.map { $0.word.targetWord })")
@@ -106,33 +109,65 @@ class RequestModel {
       }
     }
   }
-  
+
   @MainActor
-  func generateMore(excluding existingWords: [String]) async -> [QuestionModel] {
+  func generateMore(excluding existingToolNames: [String]) async -> [QuestionModel] {
     print("Generating more questions")
     do {
-      let words = try await generateWordList(
+      let seen = PersistenceController.shared.seenToolNames(targetLanguage: selectedLanguage.rawValue)
+      let exclusion = seen.union(existingToolNames)
+      let words = try await generateUniqueWordList(
         profession: proffession,
         originLanguage: language,
         targetLanguage: selectedLanguage,
-        excluding: existingWords
+        excludingToolNames: exclusion
       )
-      let filtered = words.filter { !existingWords.contains($0.targetWord) }
-      return try await buildQuestions(from: filtered)
+      return try await buildQuestions(from: words)
     } catch {
       print("generateMore failed: \(error)")
       return []
     }
   }
-  
+
+  /// Retries generateWordList, filtering by toolName, until it has 5 unique
+  /// unseen words or maxGenerationAttempts is exhausted (whichever first).
+  private func generateUniqueWordList(
+    profession: String,
+    originLanguage: Languages,
+    targetLanguage: Languages,
+    excludingToolNames initialExclusion: Set<String>
+  ) async throws -> [WordModel] {
+    var exclusion = initialExclusion
+    var collected: [WordModel] = []
+
+    for _ in 0..<maxGenerationAttempts {
+      let batch = try await generateWordList(
+        profession: profession,
+        originLanguage: originLanguage,
+        targetLanguage: targetLanguage,
+        excluding: Array(exclusion)
+      )
+      let fresh = batch.filter { !exclusion.contains($0.toolName) }
+      collected.append(contentsOf: fresh)
+      exclusion.formUnion(batch.map { $0.toolName }) // don't let a retry re-offer this round's rejects either
+
+      if collected.count >= 5 { break }
+    }
+
+    return Array(collected.prefix(5))
+    // NOTE: if the profession/language pool is nearly exhausted, this can return
+    // fewer than 5 — buildQuestions/WordVM handle a short batch fine, but flag if
+    // you'd rather surface an error instead.
+  }
+
   private func generateWordList(profession: String,
                                 originLanguage: Languages,
                                 targetLanguage: Languages,
-                                excluding existingWords: [String] = []) async throws -> [WordModel] {
-    let exclusionClause = existingWords.isEmpty
+                                excluding existingToolNames: [String] = []) async throws -> [WordModel] {
+    let exclusionClause = existingToolNames.isEmpty
     ? ""
-    : "\nDo not repeat any of these words already used: \(existingWords.joined(separator: ", "))."
-    
+    : "\nDo not repeat any of these items already used: \(existingToolNames.joined(separator: ", "))."
+
     let prompt = """
     List exactly 5 common workplace items, objects, equipment, materials, or resources used by a \(profession).\(exclusionClause)
     Rules:    
@@ -157,7 +192,7 @@ class RequestModel {
         }
       ]
     """
-    
+
     var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
     request.httpMethod = "POST"
     request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
@@ -166,7 +201,7 @@ class RequestModel {
       "model": "gpt-4.1",
       "messages": [["role": "user", "content": prompt]]
     ])
-    
+
     let (data, response) = try await URLSession.shared.data(for: request)
 
     guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
@@ -182,9 +217,8 @@ class RequestModel {
     }
     return try JSONDecoder().decode([WordModel].self, from: contentString)
   }
-  
+
   private func generateImage(for toolName: String) async throws -> Data {
-    //    let prompt = "A single \(toolName), isolated icon style, no text, no labels, no background"
     let prompt = """
       A single photorealistic \(toolName),
       clearly recognizable, isolated object,
@@ -194,9 +228,9 @@ class RequestModel {
       centered with equal white space on all four sides,
       the entire object fully contained within the canvas boundaries,
       no text, no labels, transparent background.
-    
+
     """
-    
+
     var request = URLRequest(url: URL(string: "https://api.openai.com/v1/images/generations")!)
     request.httpMethod = "POST"
     request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
@@ -210,11 +244,8 @@ class RequestModel {
       "output_format": "png",
       "n": 1
     ])
-    
+
     let (data, response) = try await URLSession.shared.data(for: request)
-    //    guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-    //      throw URLError(.badServerResponse)
-    //    }
     guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
       let status = (response as? HTTPURLResponse)?.statusCode ?? -1
       let body = String(data: data, encoding: .utf8) ?? "no body"
@@ -231,7 +262,7 @@ class RequestModel {
     }
     return imgData
   }
-  
+
   private func syncToFirebase(
     word: WordModel,
     originLanguage: Languages,

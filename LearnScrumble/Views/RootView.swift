@@ -28,6 +28,8 @@ struct RootView: View {
       )
     case .failed(let message):
      ErrorView(message: message, onRetry: { await manager.startGame() })
+    case .result(let vm):
+      ResultView(vm: vm, onContinue: { vm.continueFromCheckpoint() })
     }
   }
 }

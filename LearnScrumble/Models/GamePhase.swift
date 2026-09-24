@@ -12,4 +12,5 @@ enum GamePhase{
   case generating
   case playing(WordVM)
   case failed(String)
+  case result(WordVM)
 }
