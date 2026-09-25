@@ -36,6 +36,6 @@ final class SwiftDataWordModel {
     }
     
     var isStruggle: Bool {
-        attempts >= 3 && accuracy < 0.75
+      incorrect > 0 && accuracy < 0.75
     }
 }

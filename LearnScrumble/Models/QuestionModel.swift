@@ -17,6 +17,6 @@ struct QuestionModel: Identifiable, Equatable  {
   var imageData: Data?
   
   static let mockQuestions = [
-    QuestionModel(id: "1", word: WordModel(toolName: "hammer", originWord: "пукавичка для нарізання", targetWord: "пукавичка для нарізання"), imageData: nil)
+    QuestionModel(id: "1", word: WordModel(toolName: "hammer", originWord: "пукавичка", targetWord: "пукавичка ", imagePrompt: ""), imageData: nil)
   ]
 }

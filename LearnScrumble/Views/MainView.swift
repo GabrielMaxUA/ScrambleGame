@@ -134,9 +134,9 @@ struct MainView: View {
                 }
               }
             }//FE guessed
+            Spacer()
           }//guessed vs
           .padding(.bottom)
-          Spacer()
           VStack {
             ForEach(scrambledRows.indices, id: \.self) { i in
               HStack(spacing: spacing) {
@@ -147,9 +147,8 @@ struct MainView: View {
               }
               .frame(maxWidth: .infinity)
             }
-            Spacer()
           }//vs Srcummble letters
-          Spacer()
+          .padding(.bottom, 30)
         }//vsmain
         .alert("Want to change the settings?", isPresented: $showAlert) {
           Button("OK", role: .destructive) {

@@ -27,9 +27,19 @@ struct RootView: View {
         }
       )
     case .failed(let message):
-     ErrorView(message: message, onRetry: { await manager.startGame() })
+      ErrorView(message: message, onRetry: { await manager.startGame() })
     case .result(let vm):
-      ResultView(vm: vm, onContinue: { vm.continueFromCheckpoint() })
+      ResultView(
+        vm: vm,
+        onContinue: {
+          if vm.isFinished {
+            Task { await manager.startGame() }   // struggle review just finished — nothing to continue, start a fresh normal session
+          } else {
+            vm.continueFromCheckpoint()          // normal checkpoint — resume this same session
+          }
+        },
+        onRetry: { Task { await manager.startStruggleReview() }},
+        exitToSettings: { vm.exit() })
     }
   }
 }

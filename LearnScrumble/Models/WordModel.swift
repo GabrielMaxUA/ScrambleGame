@@ -10,5 +10,6 @@ import Foundation
 struct WordModel: Codable {
   let toolName: String        // canonical English/internal name, used for the image prompt
   let originWord: String      // word in language of origin (helper)
-  let targetWord: String  
+  let targetWord: String
+  let imagePrompt: String
 }
