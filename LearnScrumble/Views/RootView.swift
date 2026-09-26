@@ -24,6 +24,9 @@ struct RootView: View {
         vm: vm,
         onExitToSettings: {
           manager.exitToSettings()
+        },
+        onReviewStruggle: {
+          Task{ await manager.startStruggleReview() }
         }
       )
     case .failed(let message):
@@ -39,7 +42,7 @@ struct RootView: View {
           }
         },
         onRetry: { Task { await manager.startStruggleReview() }},
-        exitToSettings: { vm.exit() })
+        exitToSettings: { manager.exitToSettings() })
     }
   }
 }

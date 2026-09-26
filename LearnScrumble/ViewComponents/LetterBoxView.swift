@@ -34,9 +34,13 @@ struct LetterBoxView: View {
       color = .white
       onTap(letter)
       Task {
-        try await Task.sleep(for: .seconds(0.1))
-        withAnimation {
-          color = .clear
+        do {
+          try await Task.sleep(for: .seconds(0.1))
+          withAnimation {
+            color = .clear
+          }
+        } catch {
+          // task was cancelled (e.g. view disappeared mid-animation) — nothing to clean up
         }
       }
     }

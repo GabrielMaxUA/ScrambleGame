@@ -66,9 +66,6 @@ final class AppManager {
         guard let self, let vm = self.activeVM else { return }
         print("▶️ startGame.onResume — isLoadingMore=\(vm.isLoadingMore), routing to \(vm.isLoadingMore ? ".generating" : ".playing")") // NEW
         self.phase = vm.isLoadingMore ? .generating : .playing(vm)    // if the next batch isn't ready yet, show LoadingView briefly; otherwise go straight back to play
-      },
-      exitToSettings: { [weak self] in   // NEW
-        self?.exitToSettings()
       }
     )
     activeVM = vm                                                     // keep a weak reference so the callbacks above can reach this vm later
@@ -110,9 +107,6 @@ final class AppManager {
         guard let self, let vm = self.activeVM else { return }
         print("▶️ startStruggleReview.onResume — isLoadingMore=\(vm.isLoadingMore)") // NEW
         self.phase = vm.isLoadingMore ? .generating : .playing(vm)
-      },
-      exitToSettings: { [weak self] in   // NEW
-        self?.exitToSettings()
       }
     )
     activeVM = vm

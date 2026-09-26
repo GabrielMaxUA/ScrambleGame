@@ -70,8 +70,7 @@ class WordVM {
   private(set) var isAtCheckpoint = false                        // true while ResultView is showing, between finishing word N*10 and tapping Continue
   private let checkpointMode: CheckpointMode                            // how many words make up one batch/checkpoint cycle
   private var hasRequestedMore = false                           // guards against firing requestMoreNow() twice for the same batch boundary
-  private let fetchMore: (([String]) async -> [QuestionModel])?  // closure back to RequestModel.generateMore, injected by AppManager
-  private let exitToSettings: (() -> Void)?                      //exiting to Entry view/settings view
+  private let fetchMore: (([String]) async -> [QuestionModel])?  // closure back to RequestModel.generateMore, injected by AppManager                    //exiting to Entry view/settings view
   private let onCheckpoint: (() -> Void)?                        // closure back to AppManager: "show ResultView now"
   private let onResume: (() -> Void)?                            // closure back to AppManager: "return to playing (or generating if still loading)"
   private let modelContext: ModelContext                         // SwiftData context, shared singleton from PersistenceController
@@ -115,7 +114,6 @@ class WordVM {
        fetchMore: (([String]) async -> [QuestionModel])? = nil,   // how to fetch more words when running low; nil = fixed-size session (e.g. struggle review)
        onCheckpoint: (() -> Void)? = nil,                         // callback fired every 10th word — AppManager wires this to show ResultView
        onResume: (() -> Void)? = nil,                             // callback fired when leaving the checkpoint — AppManager wires this to resume play
-       exitToSettings: (() -> Void)? = nil
   ) {
     self.modelContext = PersistenceController.shared.context      // grab the shared SwiftData context once, up front
     self.questions = questions                                    // store the starting batch
@@ -124,7 +122,6 @@ class WordVM {
     self.fetchMore = fetchMore                                    // store the injected fetch closure (or nil)
     self.onCheckpoint = onCheckpoint                               // store the injected checkpoint callback (or nil)
     self.onResume = onResume                                        // store the injected resume callback (or nil)
-    self.exitToSettings = exitToSettings
     print("🟢 WordVM.init — \(questions.count) starting questions, targetLanguage=\(targetLanguage), fetchMore=\(fetchMore != nil)") // NEW
     setupCurrentWord()                                             // scramble letters for the very first word immediately
   }
@@ -358,10 +355,5 @@ class WordVM {
     
     try? modelContext.save()                                           // persist the change to disk
     print("💾 recordGuess — saved. '\(toolName)' now correct=\(record.correct) incorrect=\(record.incorrect) accuracy=\(record.accuracy)") // NEW
-  }
-  
-  func exit() {// called by ResultView's exit button
-    print("🚪 WordVM.exit — user backed out, notifying AppManager")
-    exitToSettings?()
   }
 }
