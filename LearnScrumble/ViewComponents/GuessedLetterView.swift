@@ -7,16 +7,20 @@ struct GuessedLetterView: View {
   let onTap: (LetterModel) -> Void
   
   var body: some View {
-    Text(letter?.letter ?? "")
-      .font(.system(size: size * 0.6))
-      .foregroundColor(.white)
-      .frame(width: size, height: size * 1.5)
-      .onTapGesture { if let letter { onTap(letter) } }
-      .overlay(alignment: .bottom) {
-        RoundedRectangle(cornerRadius: 14)
-          .fill(Color.white)
-          .frame(height: 1)
-      }
+    Button {
+      if let letter { onTap(letter) }
+    } label: {
+      Text(letter?.letter.capitalized(with: .none) ?? "")
+        .font(.system(size: size * 0.6))
+        .frame(width: size, height: size * 1.5)
+        .overlay(alignment: .bottom) {
+          RoundedRectangle(cornerRadius: 14)
+            .frame(height: 1)
+        }
+        .contentShape(Rectangle()) // whole slot is tappable
+    }
+    .buttonStyle(.plain)
+    .disabled(letter == nil)
   }
 }
 

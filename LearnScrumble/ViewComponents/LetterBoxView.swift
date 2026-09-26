@@ -13,37 +13,29 @@ struct LetterBoxView: View {
   let onTap:(LetterModel) -> Void
   
   var body: some View {
-    Group{
-      Text(letter.isUsed ? " " : letter.letter)
-        .font(.system(size: 20, weight: .semibold))
-        .foregroundStyle(.white)
-        .frame(width: 40, height: 45)
-        .overlay{
-          RoundedRectangle(cornerRadius: 14)
-            .stroke(lineWidth: 1)
-            .fill(.white)
-            .frame(width: 40, height: 45)
-            .shadow(color: color, radius: 10, x: 10, y: 10)
-            .shadow(color: color, radius: 10, x: -10, y: -10)
-            .opacity(letter.isUsed ? 0.3 : 1)
-            
-        }
-    }
-    .onTapGesture {
+    Button {
       guard !letter.isUsed else { return }
       color = .white
       onTap(letter)
       Task {
-        do {
-          try await Task.sleep(for: .seconds(0.1))
-          withAnimation {
-            color = .clear
-          }
-        } catch {
-          // task was cancelled (e.g. view disappeared mid-animation) — nothing to clean up
-        }
+        try? await Task.sleep(for: .seconds(0.1))
+        withAnimation { color = .clear }
       }
+    } label: {
+      Text(letter.isUsed ? " " : letter.letter)
+        .font(.system(size: 20, weight: .semibold))
+        .frame(width: 40, height: 45)
+        .overlay {
+          RoundedRectangle(cornerRadius: 14)
+            .stroke(lineWidth: 1)
+            .shadow(color: color, radius: 10, x: 10, y: 10)
+            .shadow(color: color, radius: 10, x: -10, y: -10)
+            .opacity(letter.isUsed ? 0.3 : 1)
+        }
+        .contentShape(RoundedRectangle(cornerRadius: 14)) // whole box is tappable
     }
+    .buttonStyle(.plain)
+
   }
 }
 

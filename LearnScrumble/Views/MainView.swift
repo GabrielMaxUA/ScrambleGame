@@ -42,7 +42,7 @@ struct MainView: View {
           LoadingView ()
             .tint(.white)
             .frame(width: geo.size.width, height: geo.size.height)
-        } else if let word = vm.word {
+        } else if vm.word != nil {
           VStack(spacing: spacing) {
             HStack {
               ButtonsTopRow(showMenu: $showMenu, speechManager: speechManager, requestModel: requestModel, word: targetWord, onExitToSettings: onExitToSettings, onReviewStruggle: onReviewStruggle)
