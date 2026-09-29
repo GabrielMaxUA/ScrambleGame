@@ -66,6 +66,12 @@ final class AppManager {
         guard let self, let vm = self.activeVM else { return }
         print("▶️ startGame.onResume — isLoadingMore=\(vm.isLoadingMore), routing to \(vm.isLoadingMore ? ".generating" : ".playing")") // NEW
         self.phase = vm.isLoadingMore ? .generating : .playing(vm)    // if the next batch isn't ready yet, show LoadingView briefly; otherwise go straight back to play
+      },
+      onFetchFailed: { [weak self] in
+          guard let self, self.activeVM != nil else { return }
+          print("❌ startGame.onFetchFailed — showing ErrorView")
+          self.activeVM = nil
+          self.phase = .failed(self.requestModel.errorMessage ?? "Couldn't load more words. Please try again.")
       }
     )
     activeVM = vm                                                     // keep a weak reference so the callbacks above can reach this vm later
@@ -86,11 +92,11 @@ final class AppManager {
     
     print("🎯 startStruggleReview — reviewing \(toolNames.count) struggle words: \(toolNames)") // NEW
     let reviewQuestions = await requestModel.generateStruggleReview(toolNames: toolNames) // resolve these known toolNames via Firebase (no GPT word-list call)
-    guard !reviewQuestions.isEmpty else {                              // resolution failed entirely (e.g. Firebase docs missing the current target translation)
-      print("🎯 startStruggleReview — resolution produced 0 questions") // NEW
-      phase = .failed("Couldn't load your struggle words. Try again.")
-      return
-    }
+      guard !reviewQuestions.isEmpty else {
+        print("🎯 startStruggleReview — resolution produced 0 questions")
+        phase = .failed(requestModel.errorMessage ?? "Couldn't load your struggle words. Try again.")
+        return
+      }
     
     print("🎯 startStruggleReview — built \(reviewQuestions.count) reviewable questions, building WordVM") // NEW
     let vm = WordVM(

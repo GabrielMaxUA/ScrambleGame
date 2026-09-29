@@ -19,7 +19,7 @@ struct ResultView: View {
     
     var body: some View {
         ZStack {
-            Color.black.opacity(0.7).ignoresSafeArea()
+            Color.black.opacity(0.9).ignoresSafeArea()
             VStack(spacing: 24) {
                 if !vm.hasStruggleWords {
                     Spacer()

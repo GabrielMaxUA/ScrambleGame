@@ -7,236 +7,300 @@ import FirebaseFirestore
 // RequestModel is the generation/data layer: it talks to GPT for word lists
 // and images, and to Firebase for cached translations/images. It has no idea
 // about checkpoints, sessions, or SwiftUI phases — WordVM and AppManager sit
-// on top of it and just call these two entry points:
+// on top of it and just call these entry points:
 //
 //   generate()                    <- called ONCE by AppManager.startGame(),
 //                                     builds the very first batch of questions
-//   generateMore(excluding:)      <- called by WordVM whenever it needs a new
-//                                     batch (prefetch near end-of-buffer, or
-//                                     the safety-net fetch if the buffer ran dry)
+//   generateMore(excluding:)      <- called by WordVM whenever it needs a new batch
+//   generateStruggleReview(...)   <- called by AppManager for a struggle review
 //
-// Internal chain for building ANY batch (used by both entry points above):
-//   generateUniqueWordList() -> generateWordList() (GPT) -> filter out
-//     anything already seen (SwiftData, scoped to targetLanguage) or already
-//     in the current session -> retry up to maxGenerationAttempts if short
-//   buildQuestions(from:) -> for each surviving word:
-//     - check Firebase (fetchExisting, keyed by toolName)
-//     - if a cached image exists, reuse it, and fill any missing translation
-//     - if not, generate a new image via GPT, upload it, and save/fill
-//       whatever translation slots (origin/target) were missing
+// Internal chain for building ANY batch:
+//   generateUniqueWordList() -> generateWordList() (GPT) -> filter out seen words
+//   buildQuestions(from:) -> resolveImage() per word (Firebase cache or GPT image)
 //
-// So one call to generate()/generateMore() = one round trip through:
-// SwiftData (exclusion) -> GPT (word list) -> Firebase (cache check/fill) ->
-// GPT (image, only if needed) -> Firebase (save) -> [QuestionModel] returned
+// ERROR HANDLING
+// - Every network call goes through send(), which maps failures to GenerationError,
+//   retries 429/5xx a couple of times, and respects Task cancellation.
+// - One word failing (bad image, moderation refusal, upload issue) never kills
+//   the batch — that word is skipped. Only an EMPTY batch is treated as a failure.
+// - On failure, errorMessage holds a user-facing message. generate() never
+//   leaves stale questions behind; the other two return [] + set errorMessage.
+
+// MARK: - Errors
+
+
 
 @Observable
 class RequestModel {
-  var language: Languages = .englishUS                           // the user's native/origin language — shown as the hint, never tested
-  var selectedLanguage: Languages = .englishUS                   // the language being learned — this is what gets scored and spelled
-  var proffession: String = ""                                   // drives which vocabulary GPT is asked for
-  var questions: [QuestionModel] = []                             // the current session's question list, populated by generate()
-  var isLoading = false                                          // true while generate() is running (drives EntryView/LoadingView)
-  var errorMessage: String?                                       // set if generate() fails, surfaced by AppManager as phase = .failed
-  private let apiKey = "" // load from a plist/keychain — never hardcode, never paste in chat
-  private let maxGenerationAttempts = 3                           // how many times to re-ask GPT if it keeps returning already-seen words
-  
-  init() {
-    if let savedLang = UserDefaults.standard.string(forKey: "nativeLanguage"),   // restore the user's last-picked origin language...
-       let restored = Languages(rawValue: savedLang) {
-      self.language = restored                                    // ...if it's still a valid Languages case
+    var language: Languages = .englishUS                           // the user's native/origin language — shown as the hint, never tested
+    var selectedLanguage: Languages = .englishUS                   // the language being learned — this is what gets scored and spelled
+    var proffession: String = ""                                   // drives which vocabulary GPT is asked for
+    var questions: [QuestionModel] = []                            // the current session's question list, populated by generate()
+    var isLoading = false                                          // true while generate() is running
+    var errorMessage: String?                                      // user-facing message, set when any entry point fails
+    private let apiKey = "" // load from a plist/keychain — never hardcode, never paste in chat
+    private let maxGenerationAttempts = 3                          // how many times to re-ask GPT if it keeps returning already-seen words
+
+    private static let session: URLSession = {                     // one session with sane timeouts instead of URLSession.shared's 60s default
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 90                      // image generation can legitimately take 30–60s
+        config.timeoutIntervalForResource = 180                    // hard cap so the user is never stuck on the loading screen
+        return URLSession(configuration: config)
+    }()
+
+    private static let chatURL = URL(string: "https://api.openai.com/v1/chat/completions")!
+    private static let imageURL = URL(string: "https://api.openai.com/v1/images/generations")!
+
+    init() {
+        if let savedLang = UserDefaults.standard.string(forKey: "nativeLanguage"),
+           let restored = Languages(rawValue: savedLang) {
+            self.language = restored
+        }
+        if let savedTarget = UserDefaults.standard.string(forKey: "pickedLanguage"),
+           let restored = Languages(rawValue: savedTarget) {
+            self.selectedLanguage = restored
+        }
+        self.proffession = UserDefaults.standard.string(forKey: "pickedProffession") ?? ""
+        print("🟢 RequestModel.init — restored origin=\(language.rawValue), target=\(selectedLanguage.rawValue), profession='\(proffession)'")
     }
-    if let savedTarget = UserDefaults.standard.string(forKey: "pickedLanguage"), // restore the user's last-picked target language...
-       let restored = Languages(rawValue: savedTarget) {
-      self.selectedLanguage = restored                             // ...if it's still valid
-    }
-    self.proffession = UserDefaults.standard.string(forKey: "pickedProffession") ?? "" // restore last-picked profession, or empty if none saved
-    print("🟢 RequestModel.init — restored origin=\(language.rawValue), target=\(selectedLanguage.rawValue), profession='\(proffession)'") // NEW
-  }
-  
-  private func buildQuestions(from words: [WordModel]) async throws -> [QuestionModel] { // turns GPT's word list into fully-loaded, playable questions
-    print("🏗️ buildQuestions — starting for \(words.count) words: \(words.map { $0.toolName })") // NEW
-    let existing = await FirebaseWordStore.fetchExisting(toolNames: words.map { $0.toolName }) // one batched lookup: what's already cached in Firebase for these toolNames
-    print("🔥 buildQuestions — Firebase already has \(existing.count)/\(words.count) of these words cached") // NEW
-    let originLanguage = self.language                             // capture current origin language for this batch
-    let targetLanguage = self.selectedLanguage                     // capture current target language for this batch
-    
-    var built = words.map { QuestionModel(id: UUID().uuidString, word: $0, imageData: nil) } // placeholder questions, images filled in below
-    let maxConcurrent = 2 // throttled — 5-at-once was spiking CPU and stalling the main thread on generateMore
-    
-    var index = 0                                                  // walks through `words` in chunks of maxConcurrent
-    while index < words.count {
-      let chunk = Array(words[index..<min(index + maxConcurrent, words.count)]) // this round's slice of words to process concurrently
-      let chunkStart = index                                        // remember where this chunk starts, to map back to `built`'s indices
-      
-      try await withThrowingTaskGroup(of: (Int, Data).self) { group in // run this chunk's image work in parallel, capped at maxConcurrent
-        for (offset, word) in chunk.enumerated() {
-          let globalIndex = chunkStart + offset                      // this word's real index in `words`/`built`
-          group.addTask {
-            if let existingWord = existing[word.toolName],            // Firebase already has a doc for this word...
-               !existingWord.image.isEmpty,                           // ...and it already has an image URL...
-               let url = URL(string: existingWord.image) {            // ...and that URL is well-formed
-              do {
-                let (data, _) = try await URLSession.shared.data(from: url) // download the cached image bytes
-                print("📦 buildQuestions — reused cached image for '\(word.toolName)'") // NEW
-                await FirebaseWordStore.saveIfNeeded(                  // still call this — fills any missing translation slot even though image was cached
-                  toolName: word.toolName, originLanguage: originLanguage, originWord: word.originWord,
-                  targetLanguage: targetLanguage, targetWord: word.targetWord, imageURL: existingWord.image
-                )
-                return (globalIndex, data)                            // done — no image generation needed for this word
-              } catch {
-                print("Cached image fetch failed for \(word.toolName), regenerating: \(error)") // cached URL is stale/unreachable — fall through to generate a fresh one
-              }
-            }
-            
-            print("🎨 buildQuestions — no usable cached image for '\(word.toolName)', generating a new one") // NEW
-            let pngData = try await self.generateImage(for: word.toolName, description: word.imagePrompt) // no cached image (or fetch failed) — generate one via GPT
-            var imageURL = ""                                         // will hold the uploaded image's URL, if upload succeeds
-            do {
-              imageURL = try await FirebaseImageStore.uploadWebP(pngData, toolName: word.toolName) // upload the freshly generated image
-              print("☁️ buildQuestions — uploaded new image for '\(word.toolName)' -> \(imageURL)") // NEW
-            } catch {
-              print("WebP upload failed for \(word.toolName): \(error)") // upload failed — proceed with empty imageURL rather than failing the whole batch
-            }
-            await FirebaseWordStore.saveIfNeeded(                      // save/fill translation + (if upload succeeded) image URL
-              toolName: word.toolName, originLanguage: originLanguage, originWord: word.originWord,
-              targetLanguage: targetLanguage, targetWord: word.targetWord, imageURL: imageURL
+
+    // MARK: - Entry points
+
+    @MainActor
+    func generate() async {                                            // builds the very first batch of the session
+        isLoading = true
+        errorMessage = nil
+        questions = []                                                   // never leave a previous session's questions behind on failure
+        defer { isLoading = false }
+
+        do {
+            let seen = PersistenceController.shared.seenToolNames(targetLanguage: selectedLanguage.rawValue)
+            print("🧠 generate() — \(seen.count) toolNames already seen in \(selectedLanguage.rawValue)")
+            let words = try await generateUniqueWordList(
+                profession: proffession,
+                originLanguage: language,
+                targetLanguage: selectedLanguage,
+                excludingToolNames: seen
             )
-            return (globalIndex, pngData)                              // hand back the freshly generated image bytes
-          }
+            let built = try await buildQuestions(from: words)
+            guard !built.isEmpty else { throw GenerationError.noWordsAvailable }
+            print("Generated \(built.count) questions: \(built.map { $0.word.targetWord })")
+            self.questions = built
+        } catch is CancellationError {
+            print("generate() cancelled")                                // user left the screen — not an error to show
+        } catch {
+            print("GENERATE ERROR:", error)
+            errorMessage = GenerationError.from(error).errorDescription
         }
-        for try await (idx, data) in group {                          // collect this chunk's results as they complete
-          built[idx].imageData = data                                 // attach each word's image bytes to its QuestionModel
+    }
+
+    @MainActor
+    func generateMore(excluding existingToolNames: [String]) async -> [QuestionModel] { // mid-session batch (prefetch or safety-net)
+        print("Generating more questions")
+        errorMessage = nil
+        do {
+            let seen = PersistenceController.shared.seenToolNames(targetLanguage: selectedLanguage.rawValue)
+            let exclusion = seen.union(existingToolNames)
+            let words = try await generateUniqueWordList(
+                profession: proffession,
+                originLanguage: language,
+                targetLanguage: selectedLanguage,
+                excludingToolNames: exclusion
+            )
+            return try await buildQuestions(from: words)
+        } catch is CancellationError {
+            return []
+        } catch {
+            print("generateMore failed: \(error)")
+            errorMessage = GenerationError.from(error).errorDescription  // caller decides whether to surface it (only matters if the buffer is empty)
+            return []
         }
-      }
-      index += maxConcurrent                                          // move on to the next chunk
     }
-    print("🏗️ buildQuestions — finished, \(built.count) questions fully built") // NEW
-    return built                                                       // every question now has translations + image data ready
-  }
-  
-  @MainActor
-  func generate() async {                                            // builds the very first batch of the session — called once by AppManager.startGame()
-    isLoading = true                                                  // signal EntryView/LoadingView that generation is underway
-    errorMessage = nil                                                // clear any stale error from a previous attempt
-    defer { isLoading = false }                                       // always clear the loading flag on exit, success or failure
-    
-    do {
-      let seen = PersistenceController.shared.seenToolNames(targetLanguage: selectedLanguage.rawValue) // words already practiced in this target language, ever
-      print("🧠 generate() — \(seen.count) toolNames already seen in \(selectedLanguage.rawValue): \(seen)") // NEW
-      let words = try await generateUniqueWordList(                    // ask GPT for 5 words, excluding anything in `seen`
-        profession: proffession,
-        originLanguage: language,
-        targetLanguage: selectedLanguage,
-        excludingToolNames: seen
-      )
-      let built = try await buildQuestions(from: words)                // resolve translations/images for the final word list
-      print("Generated \(built.count) questions: \(built.map { $0.word.targetWord })")
-      self.questions = built                                           // publish the finished batch — AppManager reads this next
-    } catch {
-      print("GENERATE ERROR:", error)
-      if let urlError = error as? URLError {                           // network-specific failure — likely transient
-        errorMessage = "Couldn't generate your set: Please try again."
-        print("\(urlError.localizedDescription)")
-      } else {                                                         // anything else (decode failure, bad response, etc.)
-        errorMessage = "Couldn't generate your set: Please try again later."
-        print("\(error.localizedDescription)")
-      }
+
+    @MainActor
+    func generateStruggleReview(toolNames: [String]) async -> [QuestionModel] { // review session from KNOWN toolNames — no GPT word-list call
+        errorMessage = nil
+        guard !toolNames.isEmpty else {
+            errorMessage = GenerationError.reviewUnavailable.errorDescription
+            return []
+        }
+        print("🎯 generateStruggleReview — resolving \(toolNames.count) struggle words")
+        let existing = await FirebaseWordStore.fetchExisting(toolNames: toolNames)
+        let originLanguage = self.language
+        let targetLanguage = self.selectedLanguage
+
+        let words: [WordModel] = toolNames.compactMap { toolName in
+            guard let doc = existing[toolName],
+                  let targetWord = doc.translation[targetLanguage.rawValue] else {
+                print("⚠️ generateStruggleReview — '\(toolName)' missing its \(targetLanguage.rawValue) translation, skipping")
+                return nil
+            }
+            let originWord = doc.translation[originLanguage.rawValue] ?? targetWord
+            return WordModel(toolName: toolName, originWord: originWord, targetWord: targetWord, imagePrompt: toolName)
+        }
+
+        do {
+            let built = try await buildQuestions(from: words)
+            guard !built.isEmpty else { throw GenerationError.reviewUnavailable }
+            print("🎯 generateStruggleReview — built \(built.count) reviewable questions")
+            return built
+        } catch is CancellationError {
+            return []
+        } catch {
+            print("generateStruggleReview failed: \(error)")
+            errorMessage = GenerationError.from(error).errorDescription
+            return []
+        }
     }
-  }
-  
-  @MainActor
-  func generateMore(excluding existingToolNames: [String]) async -> [QuestionModel] { // fetches an additional batch mid-session (prefetch or safety-net)
-    print("Generating more questions")
-    do {
-      let seen = PersistenceController.shared.seenToolNames(targetLanguage: selectedLanguage.rawValue) // all-time seen words for this target language
-      let exclusion = seen.union(existingToolNames)                    // combine with this session's in-memory list (covers words shown but not yet scored)
-      print("🧠 generateMore() — excluding \(seen.count) SwiftData-seen + \(existingToolNames.count) session toolNames, total \(exclusion.count)") // NEW
-      let words = try await generateUniqueWordList(                    // ask GPT for the next 5 words, excluding the combined set
-        profession: proffession,
-        originLanguage: language,
-        targetLanguage: selectedLanguage,
-        excludingToolNames: exclusion
-      )
-      return try await buildQuestions(from: words)                     // resolve translations/images, same as the initial batch
-    } catch {
-      print("generateMore failed: \(error)")
-      return []                                                        // empty batch on failure — WordVM's advance() will still handle this gracefully
+
+    // MARK: - Building questions
+
+    private func buildQuestions(from words: [WordModel]) async throws -> [QuestionModel] {
+        guard !words.isEmpty else { return [] }
+        print("🏗️ buildQuestions — starting for \(words.count) words: \(words.map { $0.toolName })")
+        let existing = await FirebaseWordStore.fetchExisting(toolNames: words.map { $0.toolName })
+        print("🔥 buildQuestions — Firebase already has \(existing.count)/\(words.count) cached")
+        let originLanguage = self.language
+        let targetLanguage = self.selectedLanguage
+
+        var built = words.map { QuestionModel(id: UUID().uuidString, word: $0, imageData: nil) }
+        let maxConcurrent = 2 // throttled — 5-at-once was spiking CPU and stalling the main thread on generateMore
+
+        var index = 0
+        while index < words.count {
+            try Task.checkCancellation()                                   // stop early if the user left
+            let chunk = Array(words[index..<min(index + maxConcurrent, words.count)])
+            let chunkStart = index
+
+            try await withThrowingTaskGroup(of: (Int, Data?).self) { group in
+                for (offset, word) in chunk.enumerated() {
+                    let globalIndex = chunkStart + offset
+                    let cachedImageURL = existing[word.toolName]?.image
+                    group.addTask {
+                        do {
+                            let data = try await self.resolveImage(
+                                for: word,
+                                cachedImageURL: cachedImageURL,
+                                originLanguage: originLanguage,
+                                targetLanguage: targetLanguage
+                            )
+                            return (globalIndex, data)
+                        } catch is CancellationError {
+                            throw CancellationError()                         // cancellation stops everything
+                        } catch {
+                            print("⚠️ buildQuestions — skipping '\(word.toolName)': \(error)") // any other failure only drops THIS word
+                            return (globalIndex, nil)
+                        }
+                    }
+                }
+                for try await (idx, data) in group {
+                    built[idx].imageData = data
+                }
+            }
+            index += maxConcurrent
+        }
+
+        let playable = built.filter { $0.imageData != nil }                // only questions that actually have an image
+        print("🏗️ buildQuestions — finished, \(playable.count)/\(built.count) questions playable")
+        if playable.isEmpty { throw GenerationError.badResponse }          // every word failed — that IS an error
+        return playable
     }
-  }
-  
-  
-  @MainActor
-  func generateStruggleReview(toolNames: [String]) async -> [QuestionModel] { // builds a review session from KNOWN toolNames — no GPT word-list call
-    guard !toolNames.isEmpty else { return [] }
-    print("🎯 generateStruggleReview — resolving \(toolNames.count) struggle words: \(toolNames)")
-    let existing = await FirebaseWordStore.fetchExisting(toolNames: toolNames) // pull cached translations/images for exactly these words
-    let originLanguage = self.language
-    let targetLanguage = self.selectedLanguage
-    
-    let words: [WordModel] = toolNames.compactMap { toolName in
-      guard let doc = existing[toolName],
-            let targetWord = doc.translation[targetLanguage.rawValue] else {
-        print("⚠️ generateStruggleReview — '\(toolName)' missing its \(targetLanguage.rawValue) translation in Firebase, skipping")
-        return nil // can't review a word we can't display in the current target language
-      }
-      let originWord = doc.translation[originLanguage.rawValue] ?? targetWord // fallback hint if origin translation isn't cached
-      return WordModel(toolName: toolName, originWord: originWord, targetWord: targetWord, imagePrompt: toolName)
+
+    /// Returns image bytes for one word: reuses the Firebase-cached image if it's
+    /// valid, otherwise generates a new one, uploads it, and saves translations.
+    private func resolveImage(
+        for word: WordModel,
+        cachedImageURL: String?,
+        originLanguage: Languages,
+        targetLanguage: Languages
+    ) async throws -> Data {
+        if let cachedImageURL, !cachedImageURL.isEmpty, let url = URL(string: cachedImageURL) {
+            do {
+                let data = try await send(URLRequest(url: url), retries: 1)
+                guard UIImage(data: data) != nil else { throw GenerationError.badResponse } // a 404 page is not an image
+                print("📦 resolveImage — reused cached image for '\(word.toolName)'")
+                await FirebaseWordStore.saveIfNeeded(
+                    toolName: word.toolName, originLanguage: originLanguage, originWord: word.originWord,
+                    targetLanguage: targetLanguage, targetWord: word.targetWord, imageURL: cachedImageURL
+                )
+                return data
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                print("Cached image unusable for \(word.toolName), regenerating: \(error)")
+            }
+        }
+
+        print("🎨 resolveImage — generating a new image for '\(word.toolName)'")
+        let pngData = try await generateImage(for: word.toolName, description: word.imagePrompt)
+        var imageURL = ""
+        do {
+            imageURL = try await FirebaseImageStore.uploadWebP(pngData, toolName: word.toolName)
+            print("☁️ resolveImage — uploaded new image for '\(word.toolName)'")
+        } catch {
+            print("WebP upload failed for \(word.toolName): \(error)") // user still gets the image this session
+        }
+        await FirebaseWordStore.saveIfNeeded(
+            toolName: word.toolName, originLanguage: originLanguage, originWord: word.originWord,
+            targetLanguage: targetLanguage, targetWord: word.targetWord, imageURL: imageURL
+        )
+        return pngData
     }
-    
-    do {
-      let built = try await buildQuestions(from: words) // reuses the same image/translation-fill pipeline as normal generation
-      print("🎯 generateStruggleReview — built \(built.count) reviewable questions")
-      return built
-    } catch {
-      print("generateStruggleReview failed: \(error)")
-      return []
+
+    // MARK: - Word list
+
+    /// Retries generateWordList until it has 5 unique unseen words or
+    /// maxGenerationAttempts is exhausted. Throws .noWordsAvailable if it found none.
+    private func generateUniqueWordList(
+        profession: String,
+        originLanguage: Languages,
+        targetLanguage: Languages,
+        excludingToolNames initialExclusion: Set<String>
+    ) async throws -> [WordModel] {
+        var exclusion = initialExclusion
+        var collected: [WordModel] = []
+
+        for attempt in 1...maxGenerationAttempts {
+            print("🎲 generateUniqueWordList — attempt \(attempt)/\(maxGenerationAttempts), have \(collected.count)/5")
+            let batch: [WordModel]
+            do {
+                batch = try await generateWordList(
+                    profession: profession,
+                    originLanguage: originLanguage,
+                    targetLanguage: targetLanguage,
+                    excluding: Array(exclusion)
+                )
+            } catch GenerationError.badResponse where attempt < maxGenerationAttempts {
+                print("🎲 generateUniqueWordList — GPT reply unreadable, retrying")  // malformed JSON is worth another try; network errors are not
+                continue
+            }
+
+            for word in batch {
+                let isValid = !word.toolName.isEmpty && !word.targetWord.isEmpty
+                if isValid && !exclusion.contains(word.toolName) {           // also catches duplicates inside the same batch
+                    collected.append(word)
+                }
+                exclusion.insert(word.toolName)
+            }
+            if collected.count >= 5 { break }
+        }
+
+        if collected.isEmpty { throw GenerationError.noWordsAvailable }    // word pool exhausted — tell the user instead of showing an empty game
+        if collected.count < 5 {
+            print("⚠️ generateUniqueWordList — only found \(collected.count)/5 unique words")
+        }
+        return Array(collected.prefix(5))
     }
-  }
-  /// Retries generateWordList, filtering by toolName, until it has 5 unique
-  /// unseen words or maxGenerationAttempts is exhausted (whichever first).
-  private func generateUniqueWordList(                                 // wraps generateWordList with client-side dedup + retry
-    profession: String,
-    originLanguage: Languages,
-    targetLanguage: Languages,
-    excludingToolNames initialExclusion: Set<String>
-  ) async throws -> [WordModel] {
-    var exclusion = initialExclusion                                   // grows with every attempt so retries don't re-offer the same rejects
-    var collected: [WordModel] = []                                    // accumulates unique words across attempts
-    
-    for attempt in 1...maxGenerationAttempts {                         // NEW — numbered for logging (was 0..<maxGenerationAttempts)
-      print("🎲 generateUniqueWordList — attempt \(attempt)/\(maxGenerationAttempts), excluding \(exclusion.count) toolNames, have \(collected.count)/5 so far") // NEW
-      let batch = try await generateWordList(                          // ask GPT for 5 candidate words
-        profession: profession,
-        originLanguage: originLanguage,
-        targetLanguage: targetLanguage,
-        excluding: Array(exclusion)
-      )
-      let fresh = batch.filter { !exclusion.contains($0.toolName) }    // enforce the exclusion client-side — GPT won't always honor the prompt clause
-      print("🎲 generateUniqueWordList — GPT returned \(batch.map { $0.toolName }), \(fresh.count) were actually new") // NEW
-      collected.append(contentsOf: fresh)                              // add this attempt's genuinely new words
-      exclusion.formUnion(batch.map { $0.toolName }) // don't let a retry re-offer this round's rejects either
-      
-      if collected.count >= 5 { break }                                // got enough — stop retrying early
-    }
-    
-    if collected.count < 5 {                                           // NEW — flag when we're returning a short batch
-      print("⚠️ generateUniqueWordList — only found \(collected.count)/5 unique words after \(maxGenerationAttempts) attempts") // NEW
-    }
-    return Array(collected.prefix(5))                                  // cap at 5 even if an attempt overshot
-    // NOTE: if the profession/language pool is nearly exhausted, this can return
-    // fewer than 5 — buildQuestions/WordVM handle a short batch fine, but flag if
-    // you'd rather surface an error instead.
-  }
-  
-  private func generateWordList(profession: String,                   // the raw GPT call — asks for exactly 5 words, no dedup/retry logic here
-                                originLanguage: Languages,
-                                targetLanguage: Languages,
-                                excluding existingToolNames: [String] = []) async throws -> [WordModel] {
-    let exclusionClause = existingToolNames.isEmpty                    // only add the exclusion instruction if there's something to exclude
-    ? ""
-    : "\nDo not repeat any of these items already used: \(existingToolNames.joined(separator: ", "))."
-    
-    let prompt = """
+
+    private func generateWordList(profession: String,
+                                  originLanguage: Languages,
+                                  targetLanguage: Languages,
+                                  excluding existingToolNames: [String] = []) async throws -> [WordModel] {
+        let exclusionClause = existingToolNames.isEmpty
+        ? ""
+        : "\nDo not repeat any of these items already used: \(existingToolNames.joined(separator: ", "))."
+
+        let prompt = """
       List exactly 5 common workplace items, objects, equipment, materials, or resources used by a \(profession).\(exclusionClause)
       Rules:    
       - Return exactly 5 unique items.    
@@ -262,37 +326,40 @@ class RequestModel {
           }
         ]
     """
-    
-    var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!) // GPT chat-completions endpoint for the word list
-    request.httpMethod = "POST"
-    request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = try JSONSerialization.data(withJSONObject: [
-      "model": "gpt-4.1",
-      "messages": [["role": "user", "content": prompt]]
-    ])
-    
-    print("🌐 generateWordList — calling GPT for profession='\(profession)' \(originLanguage.rawValue)->\(targetLanguage.rawValue), excluding \(existingToolNames.count)") // NEW
-    let (data, response) = try await URLSession.shared.data(for: request) // fire the request and await the raw response
-    
-    guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { // any non-200 is treated as a hard failure
-      let status = (response as? HTTPURLResponse)?.statusCode ?? -1
-      let body = String(data: data, encoding: .utf8) ?? "no body"
-      print("Bad response: status=\(status), body=\(body)")
-      throw URLError(.badServerResponse)
+
+        var request = URLRequest(url: Self.chatURL)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: [
+            "model": "gpt-4.1",
+            "messages": [["role": "user", "content": prompt]]
+        ])
+
+        print("🌐 generateWordList — calling GPT for '\(profession)' \(originLanguage.rawValue)->\(targetLanguage.rawValue)")
+        let data = try await send(request)
+
+        struct Envelope: Decodable { struct Choice: Decodable { struct Msg: Decodable { let content: String }; let message: Msg }; let choices: [Choice] }
+        do {
+            let envelope = try JSONDecoder().decode(Envelope.self, from: data)
+            guard let content = envelope.choices.first?.message.content else { throw GenerationError.badResponse }
+            let cleaned = content                                          // GPT sometimes adds ```json fences despite the prompt
+                .replacingOccurrences(of: "```json", with: "")
+                .replacingOccurrences(of: "```", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let decoded = try JSONDecoder().decode([WordModel].self, from: Data(cleaned.utf8))
+            print("🌐 generateWordList — GPT returned \(decoded.count) words: \(decoded.map { $0.toolName })")
+            return decoded
+        } catch {
+            print("generateWordList decode failed: \(error)")
+            throw GenerationError.badResponse
+        }
     }
-    struct Envelope: Decodable { struct Choice: Decodable { struct Msg: Decodable { let content: String }; let message: Msg }; let choices: [Choice] } // matches OpenAI's chat completion JSON shape
-    let envelope = try JSONDecoder().decode(Envelope.self, from: data)  // decode the outer response envelope
-    guard let contentString = envelope.choices.first?.message.content.data(using: .utf8) else { // pull out GPT's actual message text (should be a raw JSON array string)
-      throw URLError(.cannotParseResponse)
-    }
-    let decoded = try JSONDecoder().decode([WordModel].self, from: contentString) // decode GPT's JSON-array reply into WordModel structs
-    print("🌐 generateWordList — GPT returned \(decoded.count) words: \(decoded.map { $0.toolName })") // NEW
-    return decoded
-  }
-  
-  private func generateImage(for toolName: String, description: String) async throws -> Data { // generates a single illustration image for one concept via GPT
-    let prompt = """
+
+    // MARK: - Image
+
+    private func generateImage(for toolName: String, description: String) async throws -> Data {
+        let prompt = """
     A single photorealistic \(description),
     clearly recognizable, isolated object,
     centered, clean studio lighting,
@@ -303,38 +370,67 @@ class RequestModel {
     no text, no labels, transparent background.
   
   """
-    
-    var request = URLRequest(url: URL(string: "https://api.openai.com/v1/images/generations")!) // GPT image-generation endpoint
-    request.httpMethod = "POST"
-    request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = try JSONSerialization.data(withJSONObject: [
-      "model": "gpt-image-1-mini",
-      "prompt": prompt,
-      "size": "1024x1024",
-      "quality": "low",
-      "background": "transparent",
-      "output_format": "png",
-      "n": 1
-    ])
-    
-    print("🌐 generateImage — requesting image for '\(toolName)'") // NEW
-    let (data, response) = try await URLSession.shared.data(for: request) // fire the request and await the raw response
-    guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { // any non-200 is treated as a hard failure
-      let status = (response as? HTTPURLResponse)?.statusCode ?? -1
-      let body = String(data: data, encoding: .utf8) ?? "no body"
-      print("Bad response: status=\(status), body=\(body)")
-      throw URLError(.badServerResponse)
+
+        var request = URLRequest(url: Self.imageURL)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: [
+            "model": "gpt-image-1-mini",
+            "prompt": prompt,
+            "size": "1024x1024",
+            "quality": "low",
+            "background": "transparent",
+            "output_format": "png",
+            "n": 1
+        ])
+
+        print("🌐 generateImage — requesting image for '\(toolName)'")
+        let data = try await send(request)
+
+        struct ImgResponse: Decodable { struct Item: Decodable { let b64_json: String }; let data: [Item] }
+        guard let decoded = try? JSONDecoder().decode(ImgResponse.self, from: data),
+              let b64 = decoded.data.first?.b64_json,
+              let imgData = Data(base64Encoded: b64),
+              UIImage(data: imgData) != nil else {                        // bytes must actually form an image
+            throw GenerationError.badResponse
+        }
+        return imgData
     }
-    struct ImgResponse: Decodable { struct Item: Decodable { let b64_json: String }; let data: [Item] } // matches OpenAI's image-generation JSON shape
-    let decoded = try JSONDecoder().decode(ImgResponse.self, from: data) // decode the response envelope
-    guard let b64 = decoded.data.first?.b64_json, let imgData = Data(base64Encoded: b64) else { // pull out and decode the base64 image payload
-      throw URLError(.cannotParseResponse)
+
+    // MARK: - Networking
+
+    /// Single place for every HTTP call: maps errors to GenerationError,
+    /// retries 429/5xx with a short backoff, and honors Task cancellation.
+    private func send(_ request: URLRequest, retries: Int = 2) async throws -> Data {
+        var attempt = 0
+        while true {
+            try Task.checkCancellation()
+
+            let result: (Data, URLResponse)
+            do {
+                result = try await Self.session.data(for: request)
+            } catch let urlError as URLError where urlError.code == .cancelled {
+                throw CancellationError()
+            } catch {
+                throw GenerationError.from(error)
+            }
+            let (data, response) = result
+            let status = (response as? HTTPURLResponse)?.statusCode ?? -1
+
+            switch status {
+            case 200..<300:
+                return data
+            case 429, 500...599:                                           // rate limited or server hiccup — worth a retry
+                guard attempt < retries else { throw GenerationError.serverBusy }
+                attempt += 1
+                print("⏳ send — status \(status), retry \(attempt)/\(retries)")
+                try await Task.sleep(nanoseconds: UInt64(attempt) * 2_000_000_000)
+            default:                                                       // 400/401/403 etc. — retrying won't help
+                let body = String(data: data, encoding: .utf8) ?? "no body"
+                print("Bad response: status=\(status), body=\(body)")
+                throw GenerationError.badResponse
+            }
+        }
     }
-    if let img = UIImage(data: imgData) {                               // sanity-check the bytes actually form a valid image
-      print("🖼️ Decoded image size: \(img.size)")
-    }
-    return imgData                                                      // raw PNG bytes, ready for upload
-  }
-  
 }

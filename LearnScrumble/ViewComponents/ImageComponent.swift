@@ -8,45 +8,65 @@
 import SwiftUI
 
 struct ImageComponent: View {
-  let image: UIImage?
-  @State private var showHint = false
-  let hint: String
+    let image: UIImage?
+    let hint: String
+    @State private var showHint = false
+
     var body: some View {
-      Group {
-        if let uiImage = image {
-          Image(uiImage: uiImage)
-            .resizable()
-            .scaledToFit()
-            .padding()
-        } else {
-          RoundedRectangle(cornerRadius: 14)
-            .stroke(Color.gray, lineWidth: 2)
-            .fill(.clear)
+        ZStack {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .padding(24)
+                    .accessibilityLabel("Picture of the word to spell")
+            } else {
+                Image(systemName: "person")
+                    .font(.largeTitle)
+                    .foregroundStyle(.white.opacity(0.3))
+                    .accessibilityLabel("Picture unavailable")
+            }
         }
-      }
-      .frame(width: 250, height: 250)
-      .overlay(alignment: .topLeading){
+        .frame(maxWidth: 280, maxHeight: 280)
+        .aspectRatio(1, contentMode: .fit)                              // always a square card, shrinks on small screens
+        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 20))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(.white.opacity(0.2), lineWidth: 1)
+        }
+        .overlay(alignment: .topTrailing) {
+            hintButton.padding(10)
+        }
+        .onChange(of: hint) { showHint = false }                        // close a leftover popover when the word changes
+    }
+
+    private var hintButton: some View {
         Button {
-          showHint = true
+            showHint = true
         } label: {
-          Image(systemName: "questionmark.circle.fill")
-            .frame(width: 60, height: 60)
-            .foregroundStyle(.white)
+            Image(systemName: "lightbulb.max.fill")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 44, height: 44)                           // Apple's minimum tap size
         }
+        //.glassEffect(.clear, in: .circle)
+        .accessibilityLabel("Show hint")
         .popover(isPresented: $showHint) {
-          Text(hint)
+            VStack(spacing: 4) {
+                Text("Hint")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(hint)
+                    .font(.headline)
+            }
             .padding()
-            .presentationCompactAdaptation(.popover) // keeps it a small popover even on iPhone
+            .presentationCompactAdaptation(.popover)                    // keeps it a small popover even on iPhone
         }
-      }//imageOverlay
-      .clipShape(RoundedRectangle(cornerRadius: 14))
-      .padding(.horizontal)
-      .padding(.bottom)
     }
 }
 
 #Preview {
-  VStack{
-    ImageComponent(image: UIImage(named: "cat"), hint: "Word")
-  }.background(.black)
+    ImageComponent(image: nil, hint: "Word")
+        .padding()
+        .background(.black)
 }

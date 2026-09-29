@@ -13,7 +13,7 @@ struct ErrorView: View {
   var onExit: () -> Void
   var body: some View {
       ZStack(alignment: .topLeading){
-      Color.black.opacity(0.7)
+      Color.black.opacity(0.9)
         .ignoresSafeArea()
           HStack{
               Button {

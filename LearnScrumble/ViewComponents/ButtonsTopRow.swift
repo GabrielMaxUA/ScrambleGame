@@ -1,37 +1,37 @@
 import SwiftUI
 
 struct ButtonsTopRow: View {
-  @Binding var showMenu: Bool
-  @State private var showAlert = false
+  @State private var showMenu: Bool = false
+  @State private var showAlert: Bool = false
   @State private var type: MenuAlert = .settings
+    
   let speechManager: SpeechManager
   let requestModel: RequestModel
-  let showSettings: Bool
-  let showStruggle: Bool
   let word: String?
   let onExitToSettings: () -> Void
   let onReviewStruggle: () -> Void
-
-  private var isSingle: Bool { showSettings != showStruggle }   // exactly one action available
+  let buttons: MenuButtonsEnum
 
   var body: some View {
     HStack {
       GlassEffectContainer {
         HStack {
-          if isSingle {
-            // one action: show it directly, no chevron
-            if showSettings { settingsButton }
-            if showStruggle { struggleButton }
-          } else {
-            // both actions: chevron toggles the pair
-            if showMenu {
-              settingsButton
-              struggleButton.offset(x: -7)
+            switch buttons {
+            case .struggle:
+                struggleButton
+            case .settings:
+                settingsButton
+            case .menu:
+                if showMenu{
+                    settingsButton
+                    struggleButton
+                        .offset(x: showMenu ? -7 : 0)
+                }
+                    chevronButton
+                    .offset(x: showMenu ? -14 : 0)
             }
-            chevronButton.offset(x: showMenu ? -14 : 0)
-          }
-        }
-      }
+        }//hs
+      }//glass Container
       Spacer()
       if let word {
         glassButton("speaker.wave.2.fill") {
@@ -77,6 +77,7 @@ struct ButtonsTopRow: View {
 }
 
 #Preview {
-  ButtonsTopRow(showMenu: .constant(true), speechManager: SpeechManager(), requestModel: RequestModel(), showSettings: false, showStruggle: false, word: "Hello", onExitToSettings: {}, onReviewStruggle: {})
+    ButtonsTopRow(speechManager: SpeechManager(), requestModel: RequestModel(), word: "Hello",
+                  onExitToSettings: {} , onReviewStruggle: {}, buttons: .menu)
     .background(.black)
 }

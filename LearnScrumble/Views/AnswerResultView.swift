@@ -42,7 +42,7 @@ struct AnswerResultView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black.opacity(0.7))
+        .background(Color.black.opacity(0.9))
     }
 }
 

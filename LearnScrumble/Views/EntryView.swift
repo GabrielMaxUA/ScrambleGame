@@ -2,136 +2,163 @@
 import SwiftUI
 
 struct EntryView: View {
-    @AppStorage("nativeLanguage") var nativeLanguage: String = "en-US"
-    @AppStorage("pickedLanguage") var pickedLanguage: String = "en-US"
-    @AppStorage("pickedProffession") var pickedProfession: String = ""
-    @AppStorage("allSet") var allSet: Bool = false
+    @AppStorage("nativeLanguage") private var nativeLanguage = "en-US"
+    @AppStorage("pickedLanguage") private var pickedLanguage = "en-US"
+    @AppStorage("pickedProffession") private var pickedProfession = ""
     @Bindable var requestModel: RequestModel
     let onSubmit: () async -> Void
-    let spacing: CGFloat = 10
-    
+
+    @FocusState private var professionFocused: Bool
+    private let maxProfessionLength = 40                              // keeps prompts short and blocks pasted essays
+    private let privacyURL = URL(string: "https://your-site.com/privacy")! // TODO: replace with your real privacy policy URL
+
+    private var trimmedProfession: String {
+        requestModel.proffession.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    private var sameLanguage: Bool {
+        requestModel.language == requestModel.selectedLanguage
+    }
+    private var canStart: Bool {
+        !trimmedProfession.isEmpty && !sameLanguage && !requestModel.isLoading
+    }
+
     var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                Color.black.opacity(0.7).ignoresSafeArea()
-                VStack {
-                    Group {
-                        Text("Welcome to LearnScrumble!")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                        Text("Place where you can learn the words you need for your specific workplace.")
-                            .font(.title3)
-                            .fontWeight(.medium)
-                    }
-                    .foregroundStyle(.white)
-                    Spacer()
-                    
-                    VStack {
-                        Text("Choose the language of origin.")
-                            .font(.body)
-                        Picker("Language", selection: $requestModel.language) {
-                            ForEach(Languages.allCases, id: \.self) { language in
-                                Text(language.displayName).tag(language)
-                            }
-                        }
-                        .onChange(of: requestModel.language) { _ , newLanguage in
-                            nativeLanguage = newLanguage.rawValue
-                        }
-                        .onChange(of: requestModel.selectedLanguage) { _, newLanguage in
-                            pickedLanguage = newLanguage.rawValue
-                        }
-                        .frame(width: geo.size.width - spacing)
-                        .tint(Color.white)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-                        }
-                    }
-                    .padding(.vertical, 20)
-                    .foregroundStyle(.white)
-                    
-                    VStack {
-                        Text("Enter the Occupancy (e.g. Construction, Waiter, Cook...), terminology of which you want to learn.")
-                            .font(.body)
-                        TextField(text: $requestModel.proffession) {
-                            Text("Enter your proffession")
-                                .foregroundColor(.white.opacity(0.6))
-                        }
-                        .onChange(of: requestModel.proffession) { _, newProffession in
-                            pickedProfession = newProffession
-                        }
-                        .foregroundColor(.white)
-                        .tint(.white)
-                        .padding()
-                        .frame(width: geo.size.width - spacing, height: 33)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-                        }
-                    }
-                    .foregroundStyle(.white)
-                    .padding(.vertical, 20)
-                    
-                    VStack {
-                        Text("Choose the language You want to learn the words in.")
-                            .font(.body)
-                        Picker("Language", selection: $requestModel.selectedLanguage) {
-                            ForEach(Languages.allCases, id: \.self) { language in
-                                Text(language.displayName).tag(language)
-                            }
-                        }
-                        .frame(width: geo.size.width - spacing)
-                        .tint(Color.white)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(.white, lineWidth: 1)
-                        }
-                    }
-                    .padding(.vertical, 20)
-                    .foregroundStyle(.white)
-                    Spacer()
-                    
-                    if let error = requestModel.errorMessage {
-                        Text(error)
-                            .foregroundStyle(.red)
+        ScrollView {
+            VStack(spacing: 32) {
+                header
+
+                VStack(spacing: 20) {
+                    languageField(title: "I speak", icon: "person.wave.2", selection: $requestModel.language)
+                    professionField
+                    languageField(title: "I want to learn", icon: "character.book.closed", selection: $requestModel.selectedLanguage)
+
+                    if sameLanguage {
+                        Label("Pick two different languages.", systemImage: "exclamationmark.circle")
                             .font(.footnote)
-                            .multilineTextAlignment(.center)
-                            .padding(.bottom, 8)
+                            .foregroundStyle(.orange)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    
-                    Button {
-                        Task {
-                            await onSubmit()
-                        }
-                    } label: {
-                        Text("Let's go!")
-                            .foregroundStyle(Color.white)
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                    }
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 20)
-                    .glassEffect(.clear, in: .capsule)
-                    .disabled(requestModel.proffession.isEmpty || requestModel.isLoading)
                 }
-                .multilineTextAlignment(.center)
-                .padding()
             }
-            .frame(width: geo.size.width)
-            .onAppear {
-                if let restored = Languages(rawValue: nativeLanguage) {
-                    requestModel.language = restored
-                }
-                if let restored = Languages(rawValue: pickedLanguage) {
-                    requestModel.selectedLanguage = restored
-                }
-                requestModel.proffession = pickedProfession
+            .padding(.horizontal, 20)
+            .padding(.top, 72)                                        // room for the top button row RootView places above
+            .padding(.bottom, 24)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .background(.black)
+        .safeAreaInset(edge: .bottom) { footer }                     // button stays pinned above the keyboard / home indicator
+        .onChange(of: requestModel.language) { _, new in
+            nativeLanguage = new.rawValue
+        }
+        .onChange(of: requestModel.selectedLanguage) { _, new in
+            pickedLanguage = new.rawValue
+        }
+        .onChange(of: requestModel.proffession) { _, new in
+            if new.count > maxProfessionLength {
+                requestModel.proffession = String(new.prefix(maxProfessionLength))
             }
-            .fullScreenCover(isPresented: $requestModel.isLoading, content: {
-                LoadingView()
-            })
-        }//geo
-    }//body
+            pickedProfession = requestModel.proffession
+        }
+    }
+
+    // MARK: - Sections
+
+    private var header: some View {
+        VStack(spacing: 8) {
+            Text("Welcome to LearnScrumble")
+                .font(.largeTitle.bold())
+                .foregroundStyle(.white)
+            Text("Learn the words you actually use at work.")
+                .font(.title3)
+                .foregroundStyle(.white.opacity(0.7))
+        }
+        .multilineTextAlignment(.center)
+    }
+
+    private var professionField: some View {
+        fieldCard(title: "My profession", icon: "briefcase") {
+            TextField(
+                "Profession",                                         // spoken by VoiceOver
+                text: $requestModel.proffession,
+                prompt: Text("e.g. Carpenter, Server, Chef").foregroundStyle(.white.opacity(0.5))
+            )
+            .foregroundStyle(.white)
+            .tint(.white)
+            .textInputAutocapitalization(.words)
+            .autocorrectionDisabled()
+            .submitLabel(.done)
+            .focused($professionFocused)
+            .onSubmit { professionFocused = false }
+        }
+    }
+
+    private var footer: some View {
+        VStack(spacing: 12) {
+            Button {
+                professionFocused = false
+                requestModel.proffession = trimmedProfession
+                Task { await onSubmit() }
+            } label: {
+                Text("Start Learning")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+            }
+            .glassEffect(.clear.interactive(), in: .capsule)
+            .disabled(!canStart)
+            .opacity(canStart ? 1 : 0.5)
+
+            VStack(spacing: 4) {
+                Text("Words and images are generated by AI and may contain mistakes.")
+                Link("Privacy Policy", destination: privacyURL)
+                    .underline()
+            }
+            .font(.footnote)
+            .foregroundStyle(.white.opacity(0.5))
+            .multilineTextAlignment(.center)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .background(.black)
+    }
+
+    // MARK: - Building blocks
+
+    private func languageField(title: String, icon: String, selection: Binding<Languages>) -> some View {
+        fieldCard(title: title, icon: icon) {
+            Picker(title, selection: selection) {
+                ForEach(Languages.allCases, id: \.self) { language in
+                    Text(language.displayName).tag(language)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(.white)
+            .labelsHidden()
+        }
+    }
+
+    private func fieldCard<Content: View>(
+        title: String,
+        icon: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label(title, systemImage: icon)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white.opacity(0.7))
+            content()
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(.white.opacity(0.2), lineWidth: 1)
+                }
+        }
+    }
 }
 
 #Preview {
