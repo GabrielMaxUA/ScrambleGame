@@ -32,6 +32,11 @@ final class AppManager {
   var phase: GamePhase = .onboarding                               // drives what RootView renders — the single UI state machine for the app
   let requestModel: RequestModel                                   // shared generation/data layer, same instance across the whole app lifetime
   private weak var activeVM: WordVM?                                // weak on purpose — `phase`'s associated value is the real owner, this is just a way for callbacks to reach it
+  var nativeLanguage: Languages { requestModel.nativeLanguage }
+  var locale: Locale { nativeLanguage.locale }
+  var layoutDirection: LayoutDirection {
+    nativeLanguage.isRtL ? .rightToLeft : .leftToRight
+  }
   
   init(requestModel: RequestModel) {
     self.requestModel = requestModel

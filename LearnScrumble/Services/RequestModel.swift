@@ -32,7 +32,7 @@ import FirebaseFirestore
 
 @Observable
 class RequestModel {
-    var language: Languages = .englishUS                           // the user's native/origin language — shown as the hint, never tested
+    var nativeLanguage: Languages = .englishUS                           // the user's native/origin language — shown as the hint, never tested
     var selectedLanguage: Languages = .englishUS                   // the language being learned — this is what gets scored and spelled
     var proffession: String = ""                                   // drives which vocabulary GPT is asked for
     var questions: [QuestionModel] = []                            // the current session's question list, populated by generate()
@@ -54,14 +54,14 @@ class RequestModel {
     init() {
         if let savedLang = UserDefaults.standard.string(forKey: "nativeLanguage"),
            let restored = Languages(rawValue: savedLang) {
-            self.language = restored
+            self.nativeLanguage = restored
         }
         if let savedTarget = UserDefaults.standard.string(forKey: "pickedLanguage"),
            let restored = Languages(rawValue: savedTarget) {
             self.selectedLanguage = restored
         }
         self.proffession = UserDefaults.standard.string(forKey: "pickedProffession") ?? ""
-        print("🟢 RequestModel.init — restored origin=\(language.rawValue), target=\(selectedLanguage.rawValue), profession='\(proffession)'")
+        print("🟢 RequestModel.init — restored origin=\(nativeLanguage.rawValue), target=\(selectedLanguage.rawValue), profession='\(proffession)'")
     }
 
     // MARK: - Entry points
@@ -78,7 +78,7 @@ class RequestModel {
             print("🧠 generate() — \(seen.count) toolNames already seen in \(selectedLanguage.rawValue)")
             let words = try await generateUniqueWordList(
                 profession: proffession,
-                originLanguage: language,
+                originLanguage: nativeLanguage,
                 targetLanguage: selectedLanguage,
                 excludingToolNames: seen
             )
@@ -103,7 +103,7 @@ class RequestModel {
             let exclusion = seen.union(existingToolNames)
             let words = try await generateUniqueWordList(
                 profession: proffession,
-                originLanguage: language,
+                originLanguage: nativeLanguage,
                 targetLanguage: selectedLanguage,
                 excludingToolNames: exclusion
             )
@@ -126,7 +126,7 @@ class RequestModel {
         }
         print("🎯 generateStruggleReview — resolving \(toolNames.count) struggle words")
         let existing = await FirebaseWordStore.fetchExisting(toolNames: toolNames)
-        let originLanguage = self.language
+        let originLanguage = self.nativeLanguage
         let targetLanguage = self.selectedLanguage
 
         let words: [WordModel] = toolNames.compactMap { toolName in
@@ -160,7 +160,7 @@ class RequestModel {
         print("🏗️ buildQuestions — starting for \(words.count) words: \(words.map { $0.toolName })")
         let existing = await FirebaseWordStore.fetchExisting(toolNames: words.map { $0.toolName })
         print("🔥 buildQuestions — Firebase already has \(existing.count)/\(words.count) cached")
-        let originLanguage = self.language
+        let originLanguage = self.nativeLanguage
         let targetLanguage = self.selectedLanguage
 
         var built = words.map { QuestionModel(id: UUID().uuidString, word: $0, imageData: nil) }

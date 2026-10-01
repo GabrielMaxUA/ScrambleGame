@@ -13,11 +13,11 @@ struct MainView: View {
     private let spacing: CGFloat = 8
     private let horizontalPadding: CGFloat = 20
     private let trayPadding: CGFloat = 12
-
+  
     var body: some View {
         GeometryReader { geo in
             let contentWidth = geo.size.width - horizontalPadding * 2
-
+          let answerDirection: LayoutDirection = vm.isRightToleft ? .rightToLeft : .leftToRight
             Group {
                 if vm.word == nil {
                     LoadingView()                                        // next word not ready yet
@@ -27,6 +27,7 @@ struct MainView: View {
                             .layoutPriority(-1)                          // the image shrinks first on small screens, letters never get cut off
 
                         ResultWordRow(result: vm.resultWord, resetGuess: vm.resetGuess)
+                        .environment(\.layoutDirection, answerDirection)
 
                         VStack(spacing: 10) {
                             ForEach(vm.segmentRanges.indices, id: \.self) { segIdx in
@@ -39,7 +40,7 @@ struct MainView: View {
                                 )
                             }
                         }
-
+                        .environment(\.layoutDirection, answerDirection)
                         Spacer(minLength: 0)
 
                         letterTray(width: contentWidth - trayPadding * 2)

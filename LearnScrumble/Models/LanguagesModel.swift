@@ -1,9 +1,11 @@
 import Foundation
-import AVFoundation
-import Speech
 
 enum Languages: String, CaseIterable, Codable, Identifiable {
-
+  var id: String { rawValue }
+  var locale: Locale { Locale(identifier: rawValue) }
+  var isRtL: Bool {
+    locale.language.characterDirection == .rightToLeft
+  }
     // MARK: - Albanian
 
     case albanian = "sq-AL"
@@ -202,250 +204,88 @@ enum Languages: String, CaseIterable, Codable, Identifiable {
 
     // MARK: - Display
 
-    var id: String {
-        rawValue
+  var displayName: String {
+    switch self {
+    case .albanian:           "Shqip"
+    case .arabic:             "العربية"
+    case .assamese:           "অসমীয়া"
+    case .basque:             "Euskara"
+    case .catalan:            "Català"
+    case .galician:           "Galego"
+    case .valencian:          "Valencià"
+    case .bengaliIndia:       "বাংলা (ভারত)"
+    case .bhojpuriIndia:      "भोजपुरी"
+    case .bodo:               "बड़ो"
+    case .dogri:              "डोगरी"
+    case .gujarati:           "ગુજરાતી"
+    case .hindi:              "हिन्दी"
+    case .kannada:            "ಕನ್ನಡ"
+    case .konkani:            "कोंकणी"
+    case .maithili:           "मैथिली"
+    case .malayalam:          "മലയാളം"
+    case .manipuri:           "মণিপুরী"
+    case .marathi:            "मराठी"
+    case .nepali:             "नेपाली"
+    case .odia:               "ଓଡ଼ିଆ"
+    case .punjabi:            "ਪੰਜਾਬੀ"
+    case .sanskrit:           "संस्कृतम्"
+    case .tamil:              "தமிழ்"
+    case .telugu:             "తెలుగు"
+    case .bulgarian:          "Български"
+    case .chineseMainland:    "中文（中国大陆）"
+    case .chineseLiaoning:    "中文（辽宁）"
+    case .chineseShaanxi:     "中文（陕西）"
+    case .chineseSichuan:     "中文（四川）"
+    case .chineseTaiwan:      "中文（台灣）"
+    case .cantoneseHongKong:  "粵語（香港）"
+    case .shanghainese:       "上海话"
+    case .croatian:           "Hrvatski"
+    case .czech:              "Čeština"
+    case .danish:             "Dansk"
+    case .dutchBelgium:       "Nederlands (België)"
+    case .dutchNetherlands:   "Nederlands (Nederland)"
+    case .englishAustralia:   "English (Australia)"
+    case .englishIndia:       "English (India)"
+    case .englishIreland:     "English (Ireland)"
+    case .englishScotland:    "English (Scotland)"
+    case .englishSouthAfrica: "English (South Africa)"
+    case .englishUK:          "English (UK)"
+    case .englishUS:          "English (US)"
+    case .farsi:              "فارسی"
+    case .finnish:            "Suomi"
+    case .frenchBelgium:      "Français (Belgique)"
+    case .frenchCanada:       "Français (Canada)"
+    case .frenchFrance:       "Français (France)"
+    case .german:             "Deutsch"
+    case .greek:              "Ελληνικά"
+    case .hebrew:             "עברית"
+    case .hungarian:          "Magyar"
+    case .indonesian:         "Bahasa Indonesia"
+    case .italian:            "Italiano"
+    case .japanese:           "日本語"
+    case .kazakh:             "Қазақ тілі"
+    case .korean:             "한국어"
+    case .lithuanian:         "Lietuvių"
+    case .malay:              "Bahasa Melayu"
+    case .norwegian:          "Norsk"
+    case .polish:             "Polski"
+    case .portugueseBrazil:   "Português (Brasil)"
+    case .portuguesePortugal: "Português (Portugal)"
+    case .romanian:           "Română"
+    case .russian:            "Русский"
+    case .slovak:             "Slovenčina"
+    case .slovenian:          "Slovenščina"
+    case .spanishArgentina:   "Español (Argentina)"
+    case .spanishChile:       "Español (Chile)"
+    case .spanishColombia:    "Español (Colombia)"
+    case .spanishMexico:      "Español (México)"
+    case .spanishSpain:       "Español (España)"
+    case .swedish:            "Svenska"
+    case .thai:               "ไทย"
+    case .turkish:            "Türkçe"
+    case .ukrainian:          "Українська"
+    case .vietnamese:         "Tiếng Việt"
     }
-
-    var displayName: String {
-        switch self {
-
-        case .albanian:
-            "Albanian"
-
-        case .arabic:
-            "Arabic"
-
-        case .assamese:
-            "Assamese"
-
-        case .basque:
-            "Basque"
-
-        case .catalan:
-            "Catalan"
-
-        case .galician:
-            "Galician"
-
-        case .valencian:
-            "Valencian"
-
-        case .bengaliIndia:
-            "Bengali (India)"
-
-        case .bhojpuriIndia:
-            "Bhojpuri (India)"
-
-        case .bodo:
-            "Bodo"
-
-        case .dogri:
-            "Dogri"
-
-        case .gujarati:
-            "Gujarati"
-
-        case .hindi:
-            "Hindi"
-
-        case .kannada:
-            "Kannada"
-
-        case .konkani:
-            "Konkani"
-
-        case .maithili:
-            "Maithili"
-
-        case .malayalam:
-            "Malayalam"
-
-        case .manipuri:
-            "Manipuri"
-
-        case .marathi:
-            "Marathi"
-
-        case .nepali:
-            "Nepali"
-
-        case .odia:
-            "Odia"
-
-        case .punjabi:
-            "Punjabi"
-
-        case .sanskrit:
-            "Sanskrit"
-
-        case .tamil:
-            "Tamil"
-
-        case .telugu:
-            "Telugu"
-
-        case .bulgarian:
-            "Bulgarian"
-
-        case .chineseMainland:
-            "Chinese (China Mainland)"
-
-        case .chineseLiaoning:
-            "Chinese (Liaoning)"
-
-        case .chineseShaanxi:
-            "Chinese (Shaanxi)"
-
-        case .chineseSichuan:
-            "Chinese (Sichuan)"
-
-        case .chineseTaiwan:
-            "Chinese (Taiwan)"
-
-        case .cantoneseHongKong:
-            "Cantonese (Hong Kong)"
-
-        case .shanghainese:
-            "Shanghainese"
-
-        case .croatian:
-            "Croatian"
-
-        case .czech:
-            "Czech"
-
-        case .danish:
-            "Danish"
-
-        case .dutchBelgium:
-            "Dutch (Belgium)"
-
-        case .dutchNetherlands:
-            "Dutch (Netherlands)"
-
-        case .englishAustralia:
-            "English (Australia)"
-
-        case .englishIndia:
-            "English (India)"
-
-        case .englishIreland:
-            "English (Ireland)"
-
-        case .englishScotland:
-            "English (Scotland)"
-
-        case .englishSouthAfrica:
-            "English (South Africa)"
-
-        case .englishUK:
-            "English (UK)"
-
-        case .englishUS:
-            "English (US)"
-
-        case .farsi:
-            "Farsi"
-
-        case .finnish:
-            "Finnish"
-
-        case .frenchBelgium:
-            "French (Belgium)"
-
-        case .frenchCanada:
-            "French (Canada)"
-
-        case .frenchFrance:
-            "French (France)"
-
-        case .german:
-            "German"
-
-        case .greek:
-            "Greek"
-
-        case .hebrew:
-            "Hebrew"
-
-        case .hungarian:
-            "Hungarian"
-
-        case .indonesian:
-            "Indonesian"
-
-        case .italian:
-            "Italian"
-
-        case .japanese:
-            "Japanese"
-
-        case .kazakh:
-            "Kazakh"
-
-        case .korean:
-            "Korean"
-
-        case .lithuanian:
-            "Lithuanian"
-
-        case .malay:
-            "Malay"
-
-        case .norwegian:
-            "Norwegian"
-
-        case .polish:
-            "Polish"
-
-        case .portugueseBrazil:
-            "Portuguese (Brazil)"
-
-        case .portuguesePortugal:
-            "Portuguese (Portugal)"
-
-        case .romanian:
-            "Romanian"
-
-        case .russian:
-            "Russian"
-
-        case .slovak:
-            "Slovak"
-
-        case .slovenian:
-            "Slovenian"
-
-        case .spanishArgentina:
-            "Spanish (Argentina)"
-
-        case .spanishChile:
-            "Spanish (Chile)"
-
-        case .spanishColombia:
-            "Spanish (Colombia)"
-
-        case .spanishMexico:
-            "Spanish (Mexico)"
-
-        case .spanishSpain:
-            "Spanish (Spain)"
-
-        case .swedish:
-            "Swedish"
-
-        case .thai:
-            "Thai"
-
-        case .turkish:
-            "Turkish"
-
-        case .ukrainian:
-            "Ukrainian"
-
-        case .vietnamese:
-            "Vietnamese"
-        }
-    }
+  }
     
 }

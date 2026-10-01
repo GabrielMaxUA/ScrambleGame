@@ -79,7 +79,9 @@ class WordVM {
     var overlayShown: Bool = false                                 // controls the correct/incorrect result overlay shown after checkAnswer()
     var isLoadingMore = false                                      // true while requestMoreNow()'s background Task is in flight
     private var pendingAdvance = false                             // true when the user is waiting on advance() but the next batch hasn't landed yet
-    
+    var isRightToleft: Bool {
+      Languages(rawValue: targetLanguage)?.isRtL ?? false
+    }
     var wordSegments: [String] {                                   // splits the target word into space-separated segments (for multi-word answers)
         guard let word else { return [] }                             // no current word (e.g. end of questions) -> nothing to segment
         return word.targetWord.split(separator: " ").map(String.init) // e.g. "cutting board" -> ["cutting", "board"]

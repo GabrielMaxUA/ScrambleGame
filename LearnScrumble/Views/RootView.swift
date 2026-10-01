@@ -8,7 +8,9 @@ struct RootView: View {
     @AppStorage("pickedLanguage") private var pickedLanguage = ""
     @Query(filter: #Predicate<SwiftDataWordModel> { $0.incorrect > 0 })
     private var missed: [SwiftDataWordModel]
-    
+    var direction: Bool {
+      manager.layoutDirection == .leftToRight ? true : false
+    }
     private var hasStruggle: Bool {
         missed.contains { $0.targetLanguage == pickedLanguage && $0.isStruggle }
     }
@@ -25,7 +27,7 @@ struct RootView: View {
             case .playing(let vm):
                 MainView(vm: vm)
             case .failed(let message):
-                ErrorView(message: message, onRetry: { await manager.startGame() }, onExit: { manager.exitToSettings()})
+              ErrorView(message: LocalizedStringKey(message), direction: direction, onRetry: { await manager.startGame() }, onExit: { manager.exitToSettings()})
             case .result(let vm):
                 ResultView(
                     vm: vm,
@@ -40,23 +42,25 @@ struct RootView: View {
                     exitToSettings: { manager.exitToSettings() })
             }
             topRow
-        }
+        }//zs
+        .environment(\.locale, manager.locale)
+        .environment(\.layoutDirection, manager.layoutDirection)
     }
     
     @ViewBuilder
     private var topRow: some View {
         switch manager.phase {
         case .onboarding where hasStruggle:
-            row(word: nil, buttons: .struggle)
-        case .playing(let vm) where hasStruggle:
-            row(word: vm.word?.targetWord, buttons: hasStruggle ? .menu : .settings)
+            row(word: nil, buttons: .struggle, manager: manager)
+        case .playing(let vm) where vm.guessResult == nil:
+            row(word: vm.word?.targetWord, buttons: hasStruggle ? .menu : .settings, manager: manager)
         default:
             EmptyView()
         }
     }
     
-    private func row(word: String?, buttons: MenuButtonsEnum) -> some View {
-        ButtonsTopRow(speechManager: speechManager, requestModel: manager.requestModel , word: word, onExitToSettings: { manager.exitToSettings()}, onReviewStruggle: { Task { await  manager.startStruggleReview() }}, buttons: buttons)
+  private func row(word: String?, buttons: MenuButtonsEnum, manager: AppManager) -> some View {
+    ButtonsTopRow(speechManager: speechManager, requestModel: manager.requestModel, word: word, direction: direction, onExitToSettings: { manager.exitToSettings()}, onReviewStruggle: { Task { await  manager.startStruggleReview() }}, buttons: buttons)
         .padding(.horizontal)
     }
 }

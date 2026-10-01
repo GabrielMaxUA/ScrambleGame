@@ -8,6 +8,7 @@ struct ButtonsTopRow: View {
   let speechManager: SpeechManager
   let requestModel: RequestModel
   let word: String?
+  let direction: Bool
   let onExitToSettings: () -> Void
   let onReviewStruggle: () -> Void
   let buttons: MenuButtonsEnum
@@ -23,20 +24,20 @@ struct ButtonsTopRow: View {
                 settingsButton
             case .menu:
                 if showMenu{
-                    settingsButton
-                    struggleButton
-                        .offset(x: showMenu ? -7 : 0)
+                  settingsButton
+                  struggleButton
+                    .offset(x: showMenu ? -7 : 0)
                 }
-                    chevronButton
-                    .offset(x: showMenu ? -14 : 0)
+                chevronButton
+                  .offset(x: showMenu ? -14 : 0)
             }
         }//hs
       }//glass Container
       Spacer()
       if let word {
-        glassButton("speaker.wave.2.fill") {
-          speechManager.speak(word, language: requestModel.selectedLanguage.id)
-        }
+          glassButton("speaker.wave.2.fill") {
+            speechManager.speak(word, language: requestModel.selectedLanguage.id)
+          }
       }
     }
     .alert(type.title, isPresented: $showAlert) {
@@ -61,8 +62,14 @@ struct ButtonsTopRow: View {
   }
 
   private var chevronButton: some View {
-    glassButton(showMenu ? "chevron.left" : "chevron.right") {
-      withAnimation { showMenu.toggle() }
+    if direction {
+      glassButton(showMenu ? "chevron.right" : "chevron.left") {
+        withAnimation { showMenu.toggle() }
+      } }
+    else {
+        glassButton(showMenu ? "chevron.left" : "chevron.right") {
+          withAnimation { showMenu.toggle() }
+      }
     }
   }
 
@@ -77,7 +84,14 @@ struct ButtonsTopRow: View {
 }
 
 #Preview {
-    ButtonsTopRow(speechManager: SpeechManager(), requestModel: RequestModel(), word: "Hello",
-                  onExitToSettings: {} , onReviewStruggle: {}, buttons: .menu)
+  ButtonsTopRow(
+    speechManager: SpeechManager(),
+    requestModel: RequestModel(),
+    word: "Hello",
+    direction: true,
+    onExitToSettings: {},
+    onReviewStruggle: {},
+    buttons: .menu)
     .background(.black)
+    .environment(\.layoutDirection, .rightToLeft)
 }
