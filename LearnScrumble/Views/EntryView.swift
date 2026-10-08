@@ -11,6 +11,7 @@ struct EntryView: View {
   private let  professionPick: LocalizedStringKey = "My profession"
   private let  wantToLearnPick: LocalizedStringKey = "I want to learn"
   private let  languageAlertMessage: LocalizedStringKey = "Pick two different languages."
+  private let enterOccupation: LocalizedStringKey = "Type your profession"
   @FocusState private var professionFocused: Bool
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var dogX: CGFloat = -600                          // dog's horizontal position relative to the button center
@@ -73,10 +74,16 @@ struct EntryView: View {
       pickedProfession = requestModel.proffession
     }
     .onChange(of: canStart) { _, active in
-      active ? dogArrives() : dogLeaves()
+      if !active { dogLeaves() }                            // leave right away when the form becomes incomplete
+      else if !professionFocused { dogArrives() }           // arrive only when the user isn't typing
+    }
+    .onChange(of: professionFocused) { _, focused in
+      if !focused && canStart { dogArrives() }              // typing finished and the form is ready: dog runs in
     }
     .onAppear {
-      if canStart { dogArrives() }                              // restored profession: dog runs in right away
+        if canStart {
+          dogArrives()              // restored profession: dog runs in right away
+      }
     }
     .onAppear {
       let saved = requestModel.proffession
@@ -103,7 +110,7 @@ struct EntryView: View {
   }
   
   private var professionField: some View {
-    fieldCard(title: "Type your profession", icon: "applepencil.and.scribble") {
+    fieldCard(title: enterOccupation, icon: "applepencil.and.scribble") {
       TextField(
         "Profession",                                         // spoken by VoiceOver
         text: $requestModel.proffession,
@@ -188,6 +195,7 @@ struct EntryView: View {
           .alignmentGuide(.top) { $0[.bottom] - 2 }       // paws rest on top of the button
           .offset(x: dogX)
           .allowsHitTesting(false)                        // never blocks the button
+          .environment(\.layoutDirection, .leftToRight)
       }
       
       VStack(spacing: 4) {

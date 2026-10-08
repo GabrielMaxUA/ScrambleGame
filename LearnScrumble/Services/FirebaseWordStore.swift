@@ -25,6 +25,11 @@ import FirebaseFirestore
 // fill-if-partial) in one function. Left in as unused/dead code for now.
 
 enum FirebaseWordStore {
+  // Firestore document IDs can't contain "/" (it separates path levels), so "a/c unit" -> "a-c unit".
+  // Only "/" changes, so every ID already saved stays exactly the same.
+  private static func documentID(for toolName: String) -> String {
+    toolName.replacingOccurrences(of: "/", with: "-")
+  }
   
   static func saveIfNeeded(                                          // create-or-fill: the single entry point buildQuestions actually uses
     toolName: String,
@@ -34,7 +39,7 @@ enum FirebaseWordStore {
     targetWord: String,
     imageURL: String
   ) async {
-    let docRef = Firestore.firestore().collection("words").document(toolName) // one doc per toolName — this word's canonical Firebase record
+    let docRef = Firestore.firestore().collection("words").document(documentID(for: toolName)) // one doc per toolName — this word's canonical Firebase record
     print("🔥 saveIfNeeded — checking '\(toolName)' (origin=\(originLanguage.rawValue), target=\(targetLanguage.rawValue))") // NEW
     
     do {
@@ -84,7 +89,7 @@ enum FirebaseWordStore {
     do {
       let snapshot = try await Firestore.firestore()                    // single query for all requested toolNames at once, not one-by-one
         .collection("words")
-        .whereField(FieldPath.documentID(), in: toolNames)
+        .whereField(FieldPath.documentID(), in: toolNames.map { documentID(for: $0) })
         .getDocuments()
       
       var result: [String: FirebaseWordModel] = [:]                     // toolName -> decoded doc, for whichever ones actually exist

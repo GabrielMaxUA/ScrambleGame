@@ -7,6 +7,7 @@ struct RootView: View {
     @State private var speechManager = SpeechManager()
     @State private var launching: Bool = true
     @AppStorage("pickedLanguage") private var pickedLanguage = "en-US"
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @Query(filter: #Predicate<SwiftDataWordModel> { $0.incorrect > 0 })
     private var missed: [SwiftDataWordModel]
     var direction: Bool {
@@ -53,6 +54,11 @@ struct RootView: View {
         .environment(\.locale, manager.locale)
         .environment(\.layoutDirection, manager.layoutDirection)
         .task {
+          if hasCompletedOnboarding && !manager.requestModel.proffession.isEmpty {
+            Task{
+              await manager.startGame()  // returning user: start building words behind the launch screen
+            }
+          }
           try? await Task.sleep(for: .seconds(5))
           withAnimation(.easeOut(duration: 0.8)) {
             launching = false

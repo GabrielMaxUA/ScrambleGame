@@ -53,6 +53,12 @@
             "value" : "Μηχανικός αυτοκινήτων"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto mechanic"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -375,6 +381,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Πίσω στις Ρυθμίσεις"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to Settings"
           }
         },
         "es" : {
@@ -701,6 +713,12 @@
             "value" : "Ακύρωση"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1021,6 +1039,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Φροντιστής"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caregiver"
           }
         },
         "es" : {
@@ -1345,6 +1369,12 @@
             "value" : "Ξυλουργός"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carpenter"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1617,329 +1647,6 @@
         }
       }
     },
-    "Choose your occupation" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اختر مهنتك"
-          }
-        },
-        "bg" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Изберете професията си"
-          }
-        },
-        "bn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "আপনার পেশা বেছে নিন"
-          }
-        },
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tria la teva professió"
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vyberte svou profesi"
-          }
-        },
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vælg dit erhverv"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wähle deinen Beruf"
-          }
-        },
-        "el" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Διάλεξε το επάγγελμά σου"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selecciona tu profesión"
-          }
-        },
-        "eu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aukeratu zure lanbidea"
-          }
-        },
-        "fa" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "شغل خود را انتخاب کنید"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Valitse ammattisi"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sélectionnez votre métier"
-          }
-        },
-        "gl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escolle a túa profesión"
-          }
-        },
-        "gu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "તમારો વ્યવસાય પસંદ કરો"
-          }
-        },
-        "he" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "בחרו את המקצוע שלכם"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "अपना पेशा चुनें"
-          }
-        },
-        "hr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odaberite svoje zanimanje"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Válaszd ki a foglalkozásodat"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pilih profesimu"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seleziona la tua professione"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "職業を選択してください"
-          }
-        },
-        "kk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Мамандығыңызды таңдаңыз"
-          }
-        },
-        "kn" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ನಿಮ್ಮ ವೃತ್ತಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "직업을 선택하세요"
-          }
-        },
-        "lt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pasirinkite savo profesiją"
-          }
-        },
-        "ml" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "നിങ്ങളുടെ തൊഴിൽ തിരഞ്ഞെടുക്കൂ"
-          }
-        },
-        "mr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "तुमचा व्यवसाय निवडा"
-          }
-        },
-        "ms" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pilih profesion anda"
-          }
-        },
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Velg yrket ditt"
-          }
-        },
-        "ne" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "आफ्नो पेसा छान्नुहोस्"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kies je beroep"
-          }
-        },
-        "or" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ଆପଣଙ୍କ ବୃତ୍ତି ବାଛନ୍ତୁ"
-          }
-        },
-        "pa" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ਆਪਣਾ ਕਿੱਤਾ ਚੁਣੋ"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wybierz swój zawód"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selecione sua profissão"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selecione a sua profissão"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alege-ți profesia"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Выберите профессию"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vyberte svoju profesiu"
-          }
-        },
-        "sl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Izberite svoj poklic"
-          }
-        },
-        "sq" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zgjidh profesionin tënd"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Välj ditt yrke"
-          }
-        },
-        "ta" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "உங்கள் தொழிலைத் தேர்ந்தெடுக்கவும்"
-          }
-        },
-        "te" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "మీ వృత్తిని ఎంచుకోండి"
-          }
-        },
-        "th" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "เลือกอาชีพของคุณ"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mesleğini seç"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Виберіть професію"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chọn nghề của bạn"
-          }
-        },
-        "wuu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选择你的职业"
-          }
-        },
-        "yue" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "選擇你的職業"
-          }
-        },
-        "zh" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选择你的职业"
-          }
-        },
-        "zh-TW" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "選擇你的職業"
-          }
-        }
-      }
-    },
     "Cleaner" : {
       "localizations" : {
         "ar" : {
@@ -1988,6 +1695,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Καθαριστής"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaner"
           }
         },
         "es" : {
@@ -2314,6 +2027,12 @@
             "value" : "Συγχαρητήρια!"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Congratulations!"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2638,6 +2357,12 @@
             "value" : "Εργάτης οικοδομών"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Construction worker"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2958,6 +2683,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Μάγειρας"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cook"
           }
         },
         "es" : {
@@ -3284,6 +3015,12 @@
             "value" : "Η σωστή απάντηση ήταν: %@"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correct answer was: %@"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3606,6 +3343,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Σωστό!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correct!"
           }
         },
         "es" : {
@@ -3932,6 +3675,12 @@
             "value" : "Δεν ήταν δυνατή η φόρτωση περισσότερων λέξεων. Δοκίμασε ξανά."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load more words. Please try again."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4256,6 +4005,12 @@
             "value" : "Δεν ήταν δυνατή η φόρτωση των δύσκολων λέξεων. Δοκίμασε ξανά."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load your struggle words. Try again."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4576,6 +4331,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Οδηγός διανομών"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delivery driver"
           }
         },
         "es" : {
@@ -4902,6 +4663,12 @@
             "value" : "π.χ. ξυλουργός, σερβιτόρος, μάγειρας"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. Carpenter, Server, Chef"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5222,6 +4989,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ηλεκτρολόγος"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Electrician"
           }
         },
         "es" : {
@@ -5548,6 +5321,12 @@
             "value" : "Έξοδος"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exit"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5868,6 +5647,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Εργάτης εργοστασίου"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Factory worker"
           }
         },
         "es" : {
@@ -6192,6 +5977,12 @@
             "value" : "Εργάτης γης"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farm worker"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6514,6 +6305,12 @@
             "value" : "Εργάτης παραγωγής τροφίμων"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Food production worker"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6834,6 +6631,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Χειριστής κλαρκ"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forklift operator"
           }
         },
         "es" : {
@@ -7160,6 +6963,12 @@
             "value" : "Κηπουρός"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gardener"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7480,6 +7289,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Κομμωτής"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hairdresser"
           }
         },
         "es" : {
@@ -7806,6 +7621,12 @@
             "value" : "Υπόδειξη"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hint"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8128,6 +7949,12 @@
             "value" : "Καθαριστής δωματίων ξενοδοχείου"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hotel housekeeper"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8400,6 +8227,666 @@
         }
       }
     },
+    "I speak" : {
+      "comment" : "A label for the user to select a language.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أتحدث"
+          }
+        },
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Говоря"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আমি বলি"
+          }
+        },
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parlo"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mluvím"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeg taler"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ich spreche"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Μιλάω"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I speak"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hablo"
+          }
+        },
+        "eu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hitz egiten dut"
+          }
+        },
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "من صحبت می‌کنم"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puhun"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je parle"
+          }
+        },
+        "gl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falo"
+          }
+        },
+        "gu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "હું બોલું છું"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "השפה שלי"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेरी भाषा"
+          }
+        },
+        "hr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Govorim"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ezen a nyelven beszélek"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saya berbicara"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parlo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "話せる言語"
+          }
+        },
+        "kk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мен сөйлеймін"
+          }
+        },
+        "kn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ನಾನು ಮಾತನಾಡುವ ಭಾಷೆ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용하는 언어"
+          }
+        },
+        "lt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalbu"
+          }
+        },
+        "ml" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ഞാൻ സംസാരിക്കുന്ന ഭാഷ"
+          }
+        },
+        "mr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "माझी भाषा"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saya bertutur"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeg snakker"
+          }
+        },
+        "ne" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "म बोल्छु"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ik spreek"
+          }
+        },
+        "or" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ମୁଁ କହେ"
+          }
+        },
+        "pa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ਮੇਰੀ ਭਾਸ਼ਾ"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mówię"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eu falo"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eu falo"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorbesc"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Я говорю"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hovorím"
+          }
+        },
+        "sl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Govorim"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unë flas"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jag talar"
+          }
+        },
+        "ta" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "நான் பேசும் மொழி"
+          }
+        },
+        "te" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "నేను మాట్లాడే భాష"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ฉันพูดภาษา"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konuştuğum dil"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Я розмовляю"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tôi nói"
+          }
+        },
+        "wuu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我说"
+          }
+        },
+        "yue" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我說"
+          }
+        },
+        "zh" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我说"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我說"
+          }
+        }
+      }
+    },
+    "I want to learn" : {
+      "comment" : "A label for a language selection field.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أريد أن أتعلم"
+          }
+        },
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Искам да уча"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আমি শিখতে চাই"
+          }
+        },
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vull aprendre"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chci se učit"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeg vil lære"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ich möchte lernen"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Θέλω να μάθω"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I want to learn"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quiero aprender"
+          }
+        },
+        "eu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ikasi nahi dut"
+          }
+        },
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "می‌خواهم یاد بگیرم"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haluan oppia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je veux apprendre"
+          }
+        },
+        "gl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quero aprender"
+          }
+        },
+        "gu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "હું શીખવા માંગુ છું"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "אני רוצה ללמוד"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मुझे सीखनी है"
+          }
+        },
+        "hr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Želim učiti"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ezt szeretném tanulni"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saya ingin belajar"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voglio imparare"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "学びたい言語"
+          }
+        },
+        "kk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Үйренгім келеді"
+          }
+        },
+        "kn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ನಾನು ಕಲಿಯಲು ಬಯಸುತ್ತೇನೆ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배우고 싶은 언어"
+          }
+        },
+        "lt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noriu išmokti"
+          }
+        },
+        "ml" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "എനിക്ക് പഠിക്കേണ്ടത്"
+          }
+        },
+        "mr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मला शिकायची आहे"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saya mahu belajar"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeg vil lære"
+          }
+        },
+        "ne" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "म सिक्न चाहन्छु"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ik wil leren"
+          }
+        },
+        "or" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ମୁଁ ଶିଖିବାକୁ ଚାହେଁ"
+          }
+        },
+        "pa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ਮੈਨੂੰ ਸਿੱਖਣੀ ਹੈ"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chcę się nauczyć"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quero aprender"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quero aprender"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vreau să învăț"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хочу выучить"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chcem sa učiť"
+          }
+        },
+        "sl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Želim se učiti"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dua të mësoj"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jag vill lära mig"
+          }
+        },
+        "ta" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "நான் கற்க விரும்புவது"
+          }
+        },
+        "te" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "నేను నేర్చుకోవాలనుకునేది"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ฉันอยากเรียน"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öğrenmek istediğim dil"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хочу вивчити"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tôi muốn học"
+          }
+        },
+        "wuu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我想学"
+          }
+        },
+        "yue" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我想學"
+          }
+        },
+        "zh" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我想学"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我想學"
+          }
+        }
+      }
+    },
     "Improve previous!" : {
       "comment" : "A button that allows the user to retry the previous session.",
       "isCommentAutoGenerated" : true,
@@ -8450,6 +8937,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Βελτίωσε τις προηγούμενες!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Improve previous!"
           }
         },
         "es" : {
@@ -8776,6 +9269,12 @@
             "value" : "Λάθος"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incorrect"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9096,6 +9595,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Βοηθός κουζίνας"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kitchen assistant"
           }
         },
         "es" : {
@@ -9422,6 +9927,12 @@
             "value" : "Μάθε περισσότερες λέξεις!"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Learn more words!"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9744,6 +10255,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Μάθε τις λέξεις"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Learn the words"
           }
         },
         "es" : {
@@ -10070,6 +10587,12 @@
             "value" : "Μάθε τις λέξεις που χρησιμοποιείς πραγματικά στη δουλειά."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Learn the words you actually use at work."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10394,6 +10917,12 @@
             "value" : "Φόρτωση"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10716,6 +11245,12 @@
             "value" : "Χειριστής μηχανημάτων"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Machine operator"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10988,6 +11523,336 @@
         }
       }
     },
+    "My profession" : {
+      "comment" : "A label for the user's profession.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مهنتي"
+          }
+        },
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Моята професия"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আমার পেশা"
+          }
+        },
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La meva professió"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moje profese"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit erhverv"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mein Beruf"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Το επάγγελμά μου"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My profession"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi profesión"
+          }
+        },
+        "eu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nire lanbidea"
+          }
+        },
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شغل من"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ammattini"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mon métier"
+          }
+        },
+        "gl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A miña profesión"
+          }
+        },
+        "gu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "મારો વ્યવસાય"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "המקצוע שלי"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेरा पेशा"
+          }
+        },
+        "hr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moje zanimanje"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A foglalkozásom"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profesi saya"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mia professione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自分の職業"
+          }
+        },
+        "kk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Менің мамандығым"
+          }
+        },
+        "kn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ನನ್ನ ವೃತ್ತಿ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내 직업"
+          }
+        },
+        "lt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mano profesija"
+          }
+        },
+        "ml" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "എന്റെ തൊഴിൽ"
+          }
+        },
+        "mr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "माझा व्यवसाय"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profesion saya"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yrket mitt"
+          }
+        },
+        "ne" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेरो पेसा"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mijn beroep"
+          }
+        },
+        "or" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ମୋ ବୃତ୍ତି"
+          }
+        },
+        "pa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ਮੇਰਾ ਕਿੱਤਾ"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mój zawód"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minha profissão"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A minha profissão"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profesia mea"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Моя профессия"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moje povolanie"
+          }
+        },
+        "sl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moj poklic"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profesioni im"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mitt yrke"
+          }
+        },
+        "ta" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "என் தொழில்"
+          }
+        },
+        "te" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "నా వృత్తి"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "อาชีพของฉัน"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mesleğim"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Моя професія"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nghề của tôi"
+          }
+        },
+        "wuu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我的职业"
+          }
+        },
+        "yue" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我的職業"
+          }
+        },
+        "zh" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我的职业"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我的職業"
+          }
+        }
+      }
+    },
     "Next" : {
       "comment" : "A button that triggers the next question.",
       "isCommentAutoGenerated" : true,
@@ -11038,6 +11903,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Επόμενο"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
           }
         },
         "es" : {
@@ -11364,6 +12235,12 @@
             "value" : "Δεν υπάρχουν ακόμα δύσκολες λέξεις — συνέχισε την εξάσκηση!"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No struggle words yet — keep practicing!"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11684,6 +12561,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Δεν είναι στη λίστα;"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not listed?"
           }
         },
         "es" : {
@@ -12010,6 +12893,12 @@
             "value" : "Επάγγελμα"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Occupation"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12329,6 +13218,12 @@
           }
         },
         "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
@@ -12658,6 +13553,12 @@
             "value" : "Οι διακομιστές μας είναι απασχολημένοι αυτή τη στιγμή. Δοκίμασε ξανά σε λίγο."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Our servers are busy right now. Please try again in a moment."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12982,6 +13883,12 @@
             "value" : "Συνολικά"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overall"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13302,6 +14209,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ελαιοχρωματιστής"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painter"
           }
         },
         "es" : {
@@ -13628,6 +14541,12 @@
             "value" : "Διάλεξε δύο διαφορετικές γλώσσες."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick two different languages."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13950,6 +14869,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Εικόνα της λέξης προς συλλαβισμό"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picture of the word to spell"
           }
         },
         "es" : {
@@ -14276,6 +15201,12 @@
             "value" : "Η εικόνα δεν είναι διαθέσιμη"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picture unavailable"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14600,6 +15531,12 @@
             "value" : "Παίξε ξανά!"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play again!"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14920,6 +15857,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Υδραυλικός"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plumber"
           }
         },
         "es" : {
@@ -15246,6 +16189,12 @@
             "value" : "Εξασκήσου στις λέξεις που έκανες λάθος."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practice the words you got wrong."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15568,6 +16517,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Πολιτική απορρήτου"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy Policy"
           }
         },
         "es" : {
@@ -15894,6 +16849,12 @@
             "value" : "Επάγγελμα"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profession"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16216,6 +17177,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ξαναδοκίμασε!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry!"
           }
         },
         "es" : {
@@ -16542,6 +17509,12 @@
             "value" : "Επανάληψη δύσκολων λέξεων"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review Problematic Words"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16862,6 +17835,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Τεχνίτης στεγών"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roofer"
           }
         },
         "es" : {
@@ -17188,6 +18167,12 @@
             "value" : "Διάλεξε το επάγγελμά σου"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select your profession"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17508,6 +18493,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Υπάλληλος καταστήματος"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shop assistant"
           }
         },
         "es" : {
@@ -17834,6 +18825,12 @@
             "value" : "Εμφάνιση υπόδειξης"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show hint"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18156,6 +19153,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Κάτι πήγε στραβά"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something went wrong"
           }
         },
         "es" : {
@@ -18482,6 +19485,12 @@
             "value" : "Κάτι πήγε στραβά κατά την προετοιμασία των λέξεων. Δοκίμασε ξανά."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something went wrong while preparing your words. Please try again."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18804,6 +19813,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Κάτι πήγε στραβά. Δοκίμασε ξανά."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something went wrong. Please try again."
           }
         },
         "es" : {
@@ -19130,6 +20145,12 @@
             "value" : "Ξεκίνα τη μάθηση"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Learning"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19452,6 +20473,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Αυτό διαρκεί περισσότερο από το αναμενόμενο. Δοκίμασε ξανά."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is taking longer than expected. Please try again."
           }
         },
         "es" : {
@@ -19778,6 +20805,12 @@
             "value" : "Αυτό το σετ"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This set"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20100,6 +21133,12 @@
             "value" : "Οδηγός φορτηγού"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Truck driver"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20372,6 +21411,336 @@
         }
       }
     },
+    "Type your profession" : {
+      "comment" : "A label for the profession field.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اكتب مهنتك"
+          }
+        },
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Въведете професията си"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আপনার পেশা লিখুন"
+          }
+        },
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escriu la teva professió"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zadejte svou profesi"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skriv dit erhverv"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib deinen Beruf ein"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Γράψε το επάγγελμά σου"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type your profession"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escribe tu profesión"
+          }
+        },
+        "eu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idatzi zure lanbidea"
+          }
+        },
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شغل خود را بنویسید"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kirjoita ammattisi"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez votre métier"
+          }
+        },
+        "gl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escribe a túa profesión"
+          }
+        },
+        "gu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "તમારો વ્યવસાય લખો"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הקלידו את המקצוע שלכם"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपना पेशा लिखें"
+          }
+        },
+        "hr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upišite svoje zanimanje"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Írd be a foglalkozásodat"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ketik profesimu"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scrivi la tua professione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "職業を入力してください"
+          }
+        },
+        "kk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мамандығыңызды жазыңыз"
+          }
+        },
+        "kn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ನಿಮ್ಮ ವೃತ್ತಿಯನ್ನು ಟೈಪ್ ಮಾಡಿ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "직업을 입력하세요"
+          }
+        },
+        "lt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Įveskite savo profesiją"
+          }
+        },
+        "ml" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "നിങ്ങളുടെ തൊഴിൽ ടൈപ്പ് ചെയ്യൂ"
+          }
+        },
+        "mr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "तुमचा व्यवसाय लिहा"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taip profesion anda"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skriv inn yrket ditt"
+          }
+        },
+        "ne" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आफ्नो पेसा लेख्नुहोस्"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Typ je beroep"
+          }
+        },
+        "or" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ଆପଣଙ୍କ ବୃତ୍ତି ଲେଖନ୍ତୁ"
+          }
+        },
+        "pa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ਆਪਣਾ ਕਿੱਤਾ ਲਿਖੋ"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wpisz swój zawód"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite sua profissão"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escreva a sua profissão"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scrie-ți profesia"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите профессию"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zadajte svoju profesiu"
+          }
+        },
+        "sl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vnesite svoj poklic"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shkruaj profesionin tënd"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skriv ditt yrke"
+          }
+        },
+        "ta" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "உங்கள் தொழிலைத் தட்டச்சு செய்யவும்"
+          }
+        },
+        "te" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "మీ వృత్తిని టైప్ చేయండి"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "พิมพ์อาชีพของคุณ"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mesleğini yaz"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть професію"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nhập nghề của bạn"
+          }
+        },
+        "wuu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入你的职业"
+          }
+        },
+        "yue" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輸入你的職業"
+          }
+        },
+        "zh" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入你的职业"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輸入你的職業"
+          }
+        }
+      }
+    },
     "v 1.0.0" : {
       "comment" : "The version number of the app.",
       "isCommentAutoGenerated" : true,
@@ -20427,6 +21796,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Σερβιτόρος"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiter"
           }
         },
         "es" : {
@@ -20749,6 +22124,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Εργάτης αποθήκης"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warehouse worker"
           }
         },
         "es" : {
@@ -21075,6 +22456,12 @@
             "value" : "Δεν βρήκαμε νέες λέξεις για αυτό το επάγγελμα και τη γλώσσα αυτή τη στιγμή. Δοκίμασε αργότερα ή διάλεξε άλλο επάγγελμα."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We couldn't find new words for this profession and language right now. Try again later or pick a different profession."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -21397,6 +22784,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Καλώς ήρθες στο LearnScrumble"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome to LearnScrumble"
           }
         },
         "es" : {
@@ -21723,6 +23116,12 @@
             "value" : "Συγκολλητής"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welder"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -22045,6 +23444,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Οι λέξεις και οι εικόνες δημιουργούνται από ΤΝ και μπορεί να περιέχουν λάθη."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Words and images are generated by AI and may contain mistakes."
           }
         },
         "es" : {
@@ -22371,6 +23776,12 @@
             "value" : "που χρησιμοποιείς πραγματικά στη δουλειά."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "you actually use at work."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -22693,6 +24104,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Φαίνεται ότι είσαι εκτός σύνδεσης. Έλεγξε τη σύνδεσή σου στο διαδίκτυο και δοκίμασε ξανά."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You appear to be offline. Check your internet connection and try again."
           }
         },
         "es" : {
@@ -23019,6 +24436,12 @@
             "value" : "Τα έμαθες όλα!"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You have learned everything!"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -23343,6 +24766,12 @@
             "value" : "Η πρόοδός σου έχει αποθηκευτεί και θα δημιουργηθούν νέες λέξεις."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your progress is saved, and new words will be generated."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -23665,6 +25094,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Δεν ήταν δυνατή η φόρτωση των λέξεων επανάληψης. Δοκίμασε ξανά."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your review words couldn't be loaded right now. Please try again."
           }
         },
         "es" : {

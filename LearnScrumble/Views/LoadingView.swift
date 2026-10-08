@@ -29,11 +29,12 @@ struct LoadingView: View {
             .frame(width: groundRadius * 2, height: groundRadius * 2)
 
           LineMouse(width: 34)                                            // nibbling cheese in the middle of the ring
-
+            .environment(\.layoutDirection, .leftToRight)
           LineCat(width: 60)                                                       // legs animate on their own
             .rotationEffect(.radians(angle + .pi / 2))                   // feet toward the ring, head in walking direction
             .offset(x: cos(angle) * (groundRadius + 20),
                     y: sin(angle) * (groundRadius + 20))
+            .environment(\.layoutDirection, .leftToRight)
         }
       }
       .frame(width: 240, height: 240)
