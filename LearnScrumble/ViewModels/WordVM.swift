@@ -309,45 +309,39 @@ class WordVM {
   }
   
   // MARK: - SwiftData stats (scoped to this session's target language)
-  
-  private func accuracy(for records: [SwiftDataWordModel]) -> (correct: Int, total: Int) { // sums correct/incorrect across a set of SwiftData records
-    let correct = records.reduce(0) { $0 + $1.correct }               // total correct answers across all matched records
-    let incorrect = records.reduce(0) { $0 + $1.incorrect }           // total incorrect answers across all matched records
-    return (correct, correct + incorrect)                             // return correct count alongside the overall attempt count
-  }
-  
-  private var currentBatchWindow: ArraySlice<QuestionModel> {        // NEW — replaces the old fixed 10-word window
-    guard questions.indices.contains(currentIndex) else { return [] }
-    switch checkpointMode {
-    case .everyN(let interval):
-      let start = max(currentIndex - interval + 1, 0)
-      return questions[start...currentIndex]
-    case .endOfSession:
-      return questions[0...currentIndex]                            // the whole review pool is "this batch"
+
+    private func accuracy(for records: [SwiftDataWordModel]) -> (correct: Int, total: Int) { // sums correct/incorrect across a set of SwiftData records
+      let correct = records.reduce(0) { $0 + $1.correct }               // total correct answers across all matched records
+      let incorrect = records.reduce(0) { $0 + $1.incorrect }           // total incorrect answers across all matched records
+      return (correct, correct + incorrect)                             // return correct count alongside the overall attempt count
     }
-  }
-  
-  func batchAccuracy() -> (correct: Int, total: Int) {
-    let concepts = Set(currentBatchWindow.map { $0.word.toolName })
-    guard !concepts.isEmpty else { return (0, 0) }
-    let lang = targetLanguage
-    let descriptor = FetchDescriptor<SwiftDataWordModel>(
-      predicate: #Predicate { concepts.contains($0.concept) && $0.targetLanguage == lang }
-    )
-    let result = accuracy(for: (try? modelContext.fetch(descriptor)) ?? [])
-    print("📊 batchAccuracy — \(concepts.count) concepts, lang=\(lang) -> \(result.correct)/\(result.total)")
-    return result
-  }
-  
-  func overallAccuracy() -> (correct: Int, total: Int) {               // % correct across all-time history in the current target language
-    let lang = targetLanguage                                          // capture for use inside the #Predicate closure
-    let descriptor = FetchDescriptor<SwiftDataWordModel>(
-      predicate: #Predicate { $0.targetLanguage == lang }               // every concept ever tracked in this language, no batch limit
-    )
-    let result = accuracy(for: (try? modelContext.fetch(descriptor)) ?? []) // fetch and summarize; empty array on failure
-    print("📈 overallAccuracy — lang=\(lang) -> \(result.correct)/\(result.total)") // NEW
-    return result
-  }
+
+    private var currentBatchWindow: ArraySlice<QuestionModel> {        // the words in the current checkpoint window
+      guard questions.indices.contains(currentIndex) else { return [] }
+      switch checkpointMode {
+      case .everyN(let interval):
+        let start = max(currentIndex - interval + 1, 0)
+        return questions[start...currentIndex]
+      case .endOfSession:
+        return questions[0...currentIndex]                            // the whole review pool is "this batch"
+      }
+    }
+
+    func batchAccuracy() -> (correct: Int, total: Int) {                // % correct for the current checkpoint's words only
+      let concepts = Set(currentBatchWindow.map { $0.word.toolName })
+      guard !concepts.isEmpty else { return (0, 0) }
+      let lang = targetLanguage
+      let descriptor = FetchDescriptor<SwiftDataWordModel>(
+        predicate: #Predicate { concepts.contains($0.concept) && $0.targetLanguage == lang }
+      )
+      let result = accuracy(for: (try? modelContext.fetch(descriptor)) ?? [])
+      print("📊 batchAccuracy — \(concepts.count) concepts, lang=\(lang) -> \(result.correct)/\(result.total)")
+      return result
+    }
+
+    func overallAccuracy() -> (correct: Int, total: Int) {              // % correct across all-time history — the logic lives in PersistenceController
+      PersistenceController.shared.overallAccuracy(targetLanguage: targetLanguage)
+    }
   
   private func recordGuess(for toolName: String, result: GuessResult) { // persists one answered word's outcome to SwiftData
     let lang = targetLanguage                                          // capture for use inside the #Predicate closure
