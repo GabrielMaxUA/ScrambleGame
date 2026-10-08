@@ -13,3 +13,4 @@ struct WordModel: Codable {
   let targetWord: String
   let imagePrompt: String
 }
+

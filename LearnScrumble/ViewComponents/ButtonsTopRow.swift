@@ -88,10 +88,10 @@ struct ButtonsTopRow: View {
     speechManager: SpeechManager(),
     requestModel: RequestModel(),
     word: "Hello",
-    direction: true,
+    direction: false,
     onExitToSettings: {},
     onReviewStruggle: {},
     buttons: .menu)
     .background(.black)
-    .environment(\.layoutDirection, .rightToLeft)
+    .environment(\.layoutDirection, .leftToRight)
 }
