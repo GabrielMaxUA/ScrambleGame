@@ -9,6 +9,8 @@ struct ButtonsTopRow: View {
   let requestModel: RequestModel
   let word: String?
   let direction: Bool
+  let hasAccess: Bool                    // NEW
+  let onShowPaywall: () -> Void          // NEW
   let onExitToSettings: () -> Void
   let onReviewStruggle: () -> Void
   let buttons: MenuButtonsEnum
@@ -41,10 +43,11 @@ struct ButtonsTopRow: View {
       }
     }
     .alert(type.title, isPresented: $showAlert) {
-      Button("OK") {
+      Button(type.confirmTitle) {
         switch type {
         case .settings: onExitToSettings()
         case .reviewStruggle: onReviewStruggle()
+        case .subscriptionRequired, .settingsLocked: onShowPaywall()
         }
       }
       Button("Cancel", role: .cancel) {}
@@ -53,13 +56,13 @@ struct ButtonsTopRow: View {
     }
   }
 
-  private var settingsButton: some View {
-    glassButton("gear") { type = .settings; showAlert = true }
-  }
+    private var settingsButton: some View {
+      glassButton("gear") { type = hasAccess ? .settings : .settingsLocked; showAlert = true }
+    }
 
-  private var struggleButton: some View {
-    glassButton("10.arrow.trianglehead.counterclockwise.hi") { type = .reviewStruggle; showAlert = true }
-  }
+    private var struggleButton: some View {
+      glassButton("10.arrow.trianglehead.counterclockwise.hi") { type = hasAccess ? .reviewStruggle : .subscriptionRequired; showAlert = true }
+    }
 
   private var chevronButton: some View {
     if direction {
@@ -89,6 +92,8 @@ struct ButtonsTopRow: View {
     requestModel: RequestModel(),
     word: "Hello",
     direction: false,
+    hasAccess: false,          // false = free user: gear and review show the "Premium feature" alert
+    onShowPaywall: {},
     onExitToSettings: {},
     onReviewStruggle: {},
     buttons: .menu)

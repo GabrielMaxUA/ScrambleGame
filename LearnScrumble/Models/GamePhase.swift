@@ -9,8 +9,10 @@ import Foundation
 
 enum GamePhase{
   case onboarding
+  case welcomeBack
   case generating
   case playing(WordVM)
   case failed(String)
   case result(WordVM)
+    
 }

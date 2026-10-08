@@ -9,25 +9,28 @@ import SwiftUI
 
 struct ResultView: View {
   let vm: WordVM
+  let hasAccess: Bool                                   // NEW — paid/unlocked user, passed in from AppManager
   var onContinue: () -> Void
   var onRetry: () -> Void
+  var onShowPaywall: () -> Void                         // NEW — "See plans" in the alert
   var exitToSettings: () -> Void
-  
+  @State private var showSubscriptionAlert = false      // NEW — true while the "Premium feature" alert is showing
+
   /// nil when there's nothing to score yet, so the tile shows "—"
   private func fraction(_ stat: (correct: Int, total: Int)) -> Double? {
     guard stat.total > 0 else { return nil }
     return Double(stat.correct) / Double(stat.total)
   }
-  
+
   var body: some View {
     let setScore = fraction(vm.batchAccuracy())
     let overallScore = fraction(vm.overallAccuracy())
-    let learnedEverything = !vm.hasStruggleWords
+    let learnedEverything = !vm.hasStruggleWords && overallScore != nil   // only after at least one answered word
     let owlCelebrates = learnedEverything || (setScore ?? 0) >= 0.8   // big win or a strong set
-    
+
     VStack(spacing: 24) {
       Spacer(minLength: 40)
-      
+
       if learnedEverything {
         VStack(spacing: 8) {
           Text("Congratulations!")
@@ -39,9 +42,9 @@ struct ResultView: View {
         }
         .multilineTextAlignment(.center)
       }
-      
+
       Spacer()
-      
+
       // the owl perches on top of the score cards
       HStack(spacing: 12) {
         statTile(title: "This set", score: setScore)
@@ -52,9 +55,9 @@ struct ResultView: View {
           .alignmentGuide(.top) { $0[.bottom] - 4 }      // feet rest on the cards
       }
       .padding(.top, 80)                                      // room for the owl
-      
+
       Spacer()
-      
+
       VStack(spacing: 12) {
         Button(action: onContinue) {
           Text(vm.isFinished ? "Play again!" : "Learn more words!")
@@ -64,10 +67,12 @@ struct ResultView: View {
             .padding(.vertical, 14)
         }
         .glassEffect(.clear.interactive(), in: .capsule)
-        
+
         if vm.hasStruggleWords {
-          Button(action: onRetry) {
-            Text("Improve previous!")
+          Button {                                            // NEW — paid users review, free users see the alert
+            if hasAccess { onRetry() } else { showSubscriptionAlert = true }
+          } label: {
+            Label("Improve previous!", systemImage: hasAccess ? "arrow.counterclockwise" : "lock.fill")
               .font(.headline)
               .foregroundStyle(.white)
               .frame(maxWidth: .infinity)
@@ -75,7 +80,7 @@ struct ResultView: View {
           }
           .glassEffect(.clear.interactive(), in: .capsule)
         }
-        
+
         Button(action: exitToSettings) {
           Text("Exit")
             .font(.subheadline.weight(.semibold))
@@ -89,10 +94,16 @@ struct ResultView: View {
     .padding(.bottom, 8)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color.black.opacity(0.92))
+    .alert(MenuAlert.subscriptionRequired.title, isPresented: $showSubscriptionAlert) {   // NEW
+      Button("See plans") { onShowPaywall() }
+      Button("Cancel", role: .cancel) { }
+    } message: {
+      Text(MenuAlert.subscriptionRequired.message)
+    }
   }
-  
+
   // MARK: - Building blocks
-  
+
   private func statTile(title: LocalizedStringKey, score: Double?) -> some View {
     VStack(spacing: 6) {
       Text(title)
@@ -121,5 +132,7 @@ struct ResultView: View {
 }
 
 #Preview {
-  ResultView(vm: WordVM(questions: [], targetLanguage: "uk-UA"), onContinue: {}, onRetry: {}, exitToSettings: {})
+  ResultView(vm: WordVM(questions: [], targetLanguage: "uk-UA"),
+             hasAccess: false,                                    // NEW
+             onContinue: {}, onRetry: {}, onShowPaywall: {}, exitToSettings: {})
 }

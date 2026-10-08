@@ -82,4 +82,15 @@ final class PersistenceController {
     print("🎯 struggleToolNames — lang=\(targetLanguage) -> \(result.count) struggling: \(result)") // NEW
     return result
   }
+    
+    func overallAccuracy(targetLanguage: String) -> (correct: Int, total: Int) { // % correct across all-time history in one target language
+      let descriptor = FetchDescriptor<SwiftDataWordModel>(
+        predicate: #Predicate { $0.targetLanguage == targetLanguage } // same language scoping as the functions above
+      )
+      let records = (try? context.fetch(descriptor)) ?? []            // empty on failure — caller shows "—"
+      let correct = records.reduce(0) { $0 + $1.correct }             // total correct answers in this language
+      let incorrect = records.reduce(0) { $0 + $1.incorrect }         // total incorrect answers in this language
+      print("📈 overallAccuracy — lang=\(targetLanguage) -> \(correct)/\(correct + incorrect)")
+      return (correct, correct + incorrect)
+    }
 }

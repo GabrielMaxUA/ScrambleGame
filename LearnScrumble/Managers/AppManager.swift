@@ -37,7 +37,7 @@ final class AppManager {
   var layoutDirection: LayoutDirection {
     nativeLanguage.isRtL ? .rightToLeft : .leftToRight
   }
-  
+  var hasAccess = false   // paid or unlocked. For now always false; RevenueCat will set it later
   init(requestModel: RequestModel) {
     self.requestModel = requestModel
     print("🟢 AppManager.init") // NEW
@@ -70,7 +70,7 @@ final class AppManager {
       onResume: { [weak self] in                                     // fired by WordVM when leaving a checkpoint
         guard let self, let vm = self.activeVM else { return }
         print("▶️ startGame.onResume — isLoadingMore=\(vm.isLoadingMore), routing to \(vm.isLoadingMore ? ".generating" : ".playing")") // NEW
-        self.phase = vm.isLoadingMore ? .generating : .playing(vm)    // if the next batch isn't ready yet, show LoadingView briefly; otherwise go straight back to play
+        self.phase = vm.pendingAdvance ? .generating : .playing(vm)    // if the next batch isn't ready yet, show LoadingView briefly; otherwise go straight back to play
       },
       onFetchFailed: { [weak self] in
           guard let self, self.activeVM != nil else { return }

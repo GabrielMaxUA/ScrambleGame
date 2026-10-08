@@ -155,7 +155,7 @@ class WordVM {
     guessedWord = Array(repeating: nil, count: totalLetters)        // start with every slot empty
     
     var shuffledLetters = letters                                  // working copy to shuffle
-    if Set(letters).count > 1 {                                     // at least two DIFFERENT letters, so another order exists ("mm" or "妈妈" skip this)
+    if Set(letters).count > 1 {                                     // at least two DIFFERENT letters, so another order exists ("mm"                                                                or "妈妈" skip this)
       var attempts = 0
       repeat {
         shuffledLetters = letters.shuffled()                        // reshuffle...
