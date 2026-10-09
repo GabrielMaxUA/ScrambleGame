@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MainView: View {
     let vm: WordVM
+    let manager: AppManager
     private let boxSize: CGFloat = 55
     private let spacing: CGFloat = 8
     private let horizontalPadding: CGFloat = 20
@@ -20,7 +21,7 @@ struct MainView: View {
           let answerDirection: LayoutDirection = vm.isRightToleft ? .rightToLeft : .leftToRight
             Group {
                 if vm.word == nil {
-                    LoadingView()                                        // next word not ready yet
+                    LoadingView(progress: manager.requestModel.progress)                                        // next word not ready yet
                 } else {
                     VStack(spacing: 20) {
                         ImageComponent(image: vm.image, hint: vm.hintWord)
@@ -101,5 +102,5 @@ struct MainView: View {
 }
 
 #Preview {
-    MainView(vm: WordVM(questions: QuestionModel.mockQuestions, targetLanguage: "uk-UA"))
+    MainView(vm: WordVM(questions: QuestionModel.mockQuestions, targetLanguage: "uk-UA"), manager: AppManager(requestModel: RequestModel()))
 }

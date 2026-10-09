@@ -30,7 +30,7 @@ struct ErrorView: View {
             .frame(width: 50, height: 50)
             .foregroundStyle(.white)
         }
-        .glassEffect(.clear, in: .circle)
+        .glassCompat(in: .circle)
         Spacer()
       }
       .padding(.horizontal)
@@ -52,7 +52,7 @@ struct ErrorView: View {
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 20)
-        .glassEffect(.clear, in: .capsule)
+        .glassCompat(in : .capsule)
         .overlay(alignment: .top) {
           LineSpider(threadLength: showThread ? 1200 : 0)
             .alignmentGuide(.top) { $0[.bottom] - 2 }   // feet rest on top of the button

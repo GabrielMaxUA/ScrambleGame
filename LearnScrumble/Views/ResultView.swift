@@ -68,7 +68,7 @@ struct ResultView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
         }
-        .glassEffect(.clear.interactive(), in: .capsule)
+        .glassCompat(in: .capsule, interactive: true)
 
         if vm.hasStruggleWords {
           Button {                                            // NEW — paid users review, free users see the alert
@@ -85,7 +85,7 @@ struct ResultView: View {
               .frame(maxWidth: .infinity)
               .padding(.vertical, 14)
           }
-          .glassEffect(.clear.interactive(), in: .capsule)
+          .glassCompat(in: .capsule, interactive: true)
         }
 
         Button(action: exitToWelcome) {

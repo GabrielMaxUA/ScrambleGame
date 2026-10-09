@@ -49,7 +49,7 @@ struct ImageComponent: View {
                 .foregroundStyle(.white)
                 .frame(width: 44, height: 44)                           // Apple's minimum tap size
         }
-        //.glassEffect(.clear, in: .circle)
+        
         .accessibilityLabel("Show hint")
         .popover(isPresented: $showHint) {
             VStack(spacing: 4) {

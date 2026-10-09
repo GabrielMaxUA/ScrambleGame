@@ -112,7 +112,7 @@ struct SettingsView: View {
           .padding(.horizontal, 20)
           .padding(.vertical, 10)
       }
-      .glassEffect(.clear.interactive(), in: .capsule)
+      .glassCompat(in: .capsule, interactive: true)
       .disabled(!canClose)
       .opacity(canClose ? 1 : 0.5)
     }

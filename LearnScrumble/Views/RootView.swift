@@ -36,9 +36,9 @@ struct RootView: View {
                 onShowPaywall: { print("💳 paywall — not built yet") },
                 onSettings: { manager.openSettings() })
             case .generating:
-                LoadingView()
+                LoadingView(progress: manager.requestModel.progress)
             case .playing(let vm):
-                MainView(vm: vm)
+                MainView(vm: vm, manager: manager)
             case .failed(let message):
               ErrorView(
                 message: LocalizedStringKey(message),

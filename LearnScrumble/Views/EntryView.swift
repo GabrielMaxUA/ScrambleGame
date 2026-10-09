@@ -112,7 +112,7 @@ struct EntryView: View {
           .frame(maxWidth: .infinity)
           .padding(.vertical, 14)
       }
-      .glassEffect(.clear.interactive(), in: .capsule)
+      .glassCompat(in: .capsule, interactive: true)
       .disabled(!canStart)
       .opacity(canStart ? 1 : 0.5)
       .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { buttonWidth = $0 }

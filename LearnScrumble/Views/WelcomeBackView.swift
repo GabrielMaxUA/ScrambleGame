@@ -71,7 +71,7 @@ struct WelcomeBackView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
         }
-        .glassEffect(.clear.interactive(), in: .capsule)
+        .glassCompat(in: .capsule, interactive: true)
         
         if hasStruggleWords {
           Button {
@@ -83,7 +83,7 @@ struct WelcomeBackView: View {
               .frame(maxWidth: .infinity)
               .padding(.vertical, 14)
           }
-          .glassEffect(.clear.interactive(), in: .capsule)
+          .glassCompat(in: .capsule, interactive: true)
         }
         // NEW — the bottom Settings text button was removed; it's the gear at the top now
       }
@@ -98,7 +98,7 @@ struct WelcomeBackView: View {
           .foregroundStyle(.white)
           .frame(width: 44, height: 44)
       }
-      .glassEffect(.clear.interactive(), in: .circle)
+      .glassCompat(in: .circle, interactive: true)
       .accessibilityLabel(Text("Settings"))
       .padding(.horizontal, 20)
       .padding(.top, 8)

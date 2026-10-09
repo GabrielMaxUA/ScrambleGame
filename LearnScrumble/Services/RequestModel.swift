@@ -38,6 +38,7 @@ class RequestModel {
     var questions: [QuestionModel] = []                            // the current session's question list, populated by generate()
     var isLoading = false                                          // true while generate() is running
     var errorMessage: String?                                      // user-facing message, set when any entry point fails
+    var progress: Double = 0
     private let apiKey = "" // load from a plist/keychain — never hardcode, never paste in chat
     private let maxGenerationAttempts = 3                          // how many times to re-ask GPT if it keeps returning already-seen words
 
@@ -70,6 +71,7 @@ class RequestModel {
     func generate() async {                                            // builds the very first batch of the session
         isLoading = true
         errorMessage = nil
+        progress = 0
         questions = []                                                   // never leave a previous session's questions behind on failure
         defer { isLoading = false }
 
@@ -82,6 +84,7 @@ class RequestModel {
                 targetLanguage: selectedLanguage,
                 excludingToolNames: seen
             )
+            progress = 0.2
             let built = try await buildQuestions(from: words)
             guard !built.isEmpty else { throw GenerationError.noWordsAvailable }
             print("Generated \(built.count) questions: \(built.map { $0.word.targetWord })")
@@ -98,6 +101,7 @@ class RequestModel {
     func generateMore(excluding existingToolNames: [String]) async -> [QuestionModel] { // mid-session batch (prefetch or safety-net)
         print("Generating more questions")
         errorMessage = nil
+        progress = 0
         do {
             let seen = PersistenceController.shared.seenToolNames(targetLanguage: selectedLanguage.rawValue)
             let exclusion = seen.union(existingToolNames)
@@ -107,6 +111,7 @@ class RequestModel {
                 targetLanguage: selectedLanguage,
                 excludingToolNames: exclusion
             )
+            progress = 0.2
             return try await buildQuestions(from: words)
         } catch is CancellationError {
             return []
@@ -120,6 +125,7 @@ class RequestModel {
     @MainActor
     func generateStruggleReview(toolNames: [String]) async -> [QuestionModel] { // review session from KNOWN toolNames — no GPT word-list call
         errorMessage = nil
+        progress = 0
         guard !toolNames.isEmpty else {
             errorMessage = GenerationError.reviewUnavailable.errorDescription
             return []
@@ -140,7 +146,7 @@ class RequestModel {
         }
 
         do {
-            let built = try await buildQuestions(from: words)
+            let built = try await buildQuestions(from: words, progressBase: 0)
             guard !built.isEmpty else { throw GenerationError.reviewUnavailable }
             print("🎯 generateStruggleReview — built \(built.count) reviewable questions")
             return built
@@ -155,7 +161,7 @@ class RequestModel {
 
     // MARK: - Building questions
 
-    private func buildQuestions(from words: [WordModel]) async throws -> [QuestionModel] {
+    private func buildQuestions(from words: [WordModel], progressBase: Double = 0.2) async throws -> [QuestionModel] {
         guard !words.isEmpty else { return [] }
         print("🏗️ buildQuestions — starting for \(words.count) words: \(words.map { $0.toolName })")
         let existing = await FirebaseWordStore.fetchExisting(toolNames: words.map { $0.toolName })
@@ -167,6 +173,7 @@ class RequestModel {
         let maxConcurrent = 2 // throttled — 5-at-once was spiking CPU and stalling the main thread on generateMore
 
         var index = 0
+        var completed = 0
         while index < words.count {
             try Task.checkCancellation()                                   // stop early if the user left
             let chunk = Array(words[index..<min(index + maxConcurrent, words.count)])
@@ -195,6 +202,9 @@ class RequestModel {
                 }
                 for try await (idx, data) in group {
                     built[idx].imageData = data
+                    completed += 1
+                    let fraction = Double(completed) / Double(words.count)
+                    setProgress(progressBase + (1 - progressBase) * fraction)
                 }
             }
             index += maxConcurrent
@@ -205,7 +215,11 @@ class RequestModel {
         if playable.isEmpty { throw GenerationError.badResponse }          // every word failed — that IS an error
         return playable
     }
-
+    
+    @MainActor
+    private func setProgress(_ value: Double) {                    // buildQuestions runs off the main thread, so it updates progress through here
+        progress = value
+    }
     /// Returns image bytes for one word: reuses the Firebase-cached image if it's
     /// valid, otherwise generates a new one, uploads it, and saves translations.
     private func resolveImage(

@@ -50,7 +50,7 @@ struct AnswerResultView: View {
           .frame(maxWidth: .infinity)
           .padding(.vertical, 14)
       }
-      .glassEffect(.clear.interactive(), in: .capsule)
+      .glassCompat(in: .capsule, interactive: true)
     }
     .padding(.horizontal, 20)
     .padding(.bottom, 8)

@@ -48,6 +48,7 @@ final class AppManager {
   func startGame() async {                                          // normal play — builds a fresh, ever-growing word session via GPT
     lastSession = .game
     print("🎮 startGame — starting") // NEW
+      requestModel.progress = 0
     phase = .generating                                             // show LoadingView while the first batch is built
     await FreeAllowance.shared.syncClock()                  // internet time before checking the allowance
     guard canPlay else {                                    // safety net: the buttons should already prevent this
@@ -82,6 +83,7 @@ final class AppManager {
           return
         }
         print("▶️ startGame.onResume — pendingAdvance=\(vm.pendingAdvance), routing to \(vm.pendingAdvance ? ".generating" : ".playing")")
+          if vm.pendingAdvance && self.requestModel.progress >= 1 { self.requestModel.progress = 0 }
         self.phase = vm.pendingAdvance ? .generating : .playing(vm)    // if the next batch isn't ready yet, show LoadingView briefly; otherwise go straight back to play
       },
       onFetchFailed: { [weak self] in

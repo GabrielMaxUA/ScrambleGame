@@ -30,7 +30,7 @@ struct ResultWordRow: View {
                 .scaleEffect(0.7)
                 .padding(3)
                 .foregroundStyle(.white)
-                .glassEffect(.clear, in: .circle)
+                .glassCompat(in: .circle)
             }
             .padding(.trailing)
           }
