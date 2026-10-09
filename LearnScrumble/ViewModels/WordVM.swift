@@ -138,6 +138,7 @@ class WordVM {
     self.canFetchMore = canFetchMore
     print("🟢 WordVM.init — \(questions.count) starting questions, targetLanguage=\(targetLanguage), fetchMore=\(fetchMore != nil)") // NEW
     setupCurrentWord()                                             // scramble letters for the very first word immediately
+    requestMoreIfNeeded()
   }
   
   var word: WordModel? { questions.indices.contains(currentIndex) ? questions[currentIndex].word : nil }  // the word model currently being played, if any
@@ -255,7 +256,7 @@ class WordVM {
     }
     print("▶️ continueFromCheckpoint — leaving checkpoint, attempting advance to index \(currentIndex + 1)")
     advance(to: currentIndex + 1)
-    onResume?()// RESTORE — leaving .result needs its own explicit signal
+      if !pendingAdvance { onResume?() }// advance() already notified AppManager if we're now waiting on a fetch — only signal here when the next word was ready
   }
   
   private func advance(to index: Int) {                              // the single place that actually moves currentIndex forward
@@ -281,16 +282,18 @@ class WordVM {
     print("📍 advance — now at index \(currentIndex) of \(questions.count) loaded questions")
   }
   
+  private let prefetchThreshold = 3                                    // start the next batch when only this many words (incl. the current one) are left — 3 words of play time to hide GPT + image generation
+
   private func requestMoreIfNeeded() {                                // decides whether it's time to quietly start fetching the next batch
-    guard !hasRequestedMore,                                           // don't double-fire for the same batch
-          currentIndex == questions.count - 2,                         // trigger two words before the buffer runs out, to hide fetch latency
+    guard !hasRequestedMore,                                           // don't double-fire while a fetch is in flight
+          questions.count - currentIndex <= prefetchThreshold,         // few enough words left — fetch now (also retries on the next word if a prefetch failed)
           fetchMore != nil else { return }                             // only makes sense if a fetch source exists
     let unplayed = questions.count - currentIndex
     guard canFetchMore?(unplayed) ?? true else {          // free user would hit the limit before needing these words
       print("⛔️ requestMoreIfNeeded — skipping prefetch, daily free limit")
       return
     }
-    print("🛰️ requestMoreIfNeeded — index \(currentIndex) is 2 from end of \(questions.count), triggering prefetch") // NEW
+    print("🛰️ requestMoreIfNeeded — index \(currentIndex), \(unplayed) of \(questions.count) left, triggering prefetch")
     requestMoreNow()                                                   // conditions met — kick off the real fetch
   }
   

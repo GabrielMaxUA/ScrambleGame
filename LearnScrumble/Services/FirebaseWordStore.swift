@@ -30,7 +30,7 @@ enum FirebaseWordStore {
   private static func documentID(for toolName: String) -> String {
     toolName.replacingOccurrences(of: "/", with: "-")
   }
-  
+  private static let maxInQueryValues = 30
   static func saveIfNeeded(                                          // create-or-fill: the single entry point buildQuestions actually uses
     toolName: String,
     originLanguage: Languages,
@@ -83,27 +83,28 @@ enum FirebaseWordStore {
     }
   }
   
-  static func fetchExisting(toolNames: [String]) async -> [String: FirebaseWordModel] { // one batched lookup for a whole word list at once
-    guard !toolNames.isEmpty else { return [:] }                        // nothing to look up — avoid an empty/invalid Firestore query
-    
-    do {
-      let snapshot = try await Firestore.firestore()                    // single query for all requested toolNames at once, not one-by-one
-        .collection("words")
-        .whereField(FieldPath.documentID(), in: toolNames.map { documentID(for: $0) })
-        .getDocuments()
-      
-      var result: [String: FirebaseWordModel] = [:]                     // toolName -> decoded doc, for whichever ones actually exist
-      for doc in snapshot.documents {
-        if let model = try? doc.data(as: FirebaseWordModel.self) {      // skip any doc that fails to decode rather than failing the whole batch
-          result[model.id] = model
+    static func fetchExisting(toolNames: [String]) async -> [String: FirebaseWordModel] {
+      let ids = Array(Set(toolNames.map { documentID(for: $0) }))        // no duplicates
+      guard !ids.isEmpty else { return [:] }
+
+      var result: [String: FirebaseWordModel] = [:]
+      for start in stride(from: 0, to: ids.count, by: maxInQueryValues) { // one query per group of 30
+        let chunk = Array(ids[start..<min(start + maxInQueryValues, ids.count)])
+        do {
+          let snapshot = try await Firestore.firestore()
+            .collection("words")
+            .whereField(FieldPath.documentID(), in: chunk)
+            .getDocuments()
+          for doc in snapshot.documents {
+            if let model = try? doc.data(as: FirebaseWordModel.self) {
+              result[model.id] = model
+            }
+          }
+        } catch {
+          print("fetchExisting error for chunk \(start / maxInQueryValues): \(error)")  // one group failing doesn't lose the others
         }
       }
-      print("🔥 fetchExisting — asked for \(toolNames.count), found \(result.count) cached: \(result.keys.sorted())") // NEW
       return result
-    } catch {
-      print("fetchExisting error: \(error)")
-      return [:]                                                        // on failure, act as if nothing was cached — caller will regenerate everything
     }
-  }
   
 }

@@ -83,7 +83,7 @@ final class AppManager {
           return
         }
         print("▶️ startGame.onResume — pendingAdvance=\(vm.pendingAdvance), routing to \(vm.pendingAdvance ? ".generating" : ".playing")")
-          if vm.pendingAdvance && self.requestModel.progress >= 1 { self.requestModel.progress = 0 }
+          if vm.pendingAdvance && self.requestModel.progress >= 1 { self.requestModel.progress = 0}
         self.phase = vm.pendingAdvance ? .generating : .playing(vm)    // if the next batch isn't ready yet, show LoadingView briefly; otherwise go straight back to play
       },
       onFetchFailed: { [weak self] in
@@ -108,7 +108,7 @@ final class AppManager {
     print("🎯 startStruggleReview — starting") // NEW
     lastSession = .review
     phase = .generating                                              // show LoadingView while the review set is resolved
-    let toolNames = PersistenceController.shared.struggleToolNames(targetLanguage: requestModel.selectedLanguage.rawValue) // pull the current struggle list for this language
+      let toolNames = PersistenceController.shared.struggleToolNames(targetLanguage: requestModel.selectedLanguage.rawValue, limit: 10) // pull the current struggle list for this language
     
     guard !toolNames.isEmpty else {                                   // nothing to review right now
       print("🎯 startStruggleReview — no struggle words found") // NEW

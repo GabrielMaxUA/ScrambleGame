@@ -138,12 +138,13 @@ struct SettingsView: View {
 //            .onTapGesture { showLockedAlert = true }                // any tap on the locked block explains why
 //        }
 //      }
-      
-      if !hasAccess {
-        Label("Changing languages and profession is part of the subscription.", systemImage: "lock.fill")
-          .font(.footnote)
-          .foregroundStyle(.white.opacity(0.6))
-      } else if sameLanguage {
+//      
+//      if !hasAccess {
+//        Label("Changing languages and profession is part of the subscription.", systemImage: "lock.fill")
+//          .font(.footnote)
+//          .foregroundStyle(.white.opacity(0.6))
+//      } else
+        if sameLanguage {
         Label("Pick two different languages.", systemImage: "exclamationmark.circle")
           .font(.footnote)
           .foregroundStyle(.orange)

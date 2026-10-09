@@ -28,7 +28,7 @@ enum MenuAlert {
     case .settings: return "This round will end. Your answers so far are saved."
     case .reviewStruggle: return "Practice the words you got wrong."
     case .subscriptionRequired: return "Reviewing the words you got wrong is part of the subscription. Would you like to see the plans?"
-    case .settingsLocked: return "Changing your languages and profession is part of the subscription. Would you like to see the plans?"
+    case .settingsLocked: return "Choosing a different voice is part of the subscription. Would you like to see the plans?"
     case .dailyLimitReached:                                                          // NEW — number comes from FreeAllowance
       return "You've answered your \(FreeAllowance.dailyWordLimit) free words for today. Come back tomorrow, or unlock unlimited words."
     }

@@ -20,7 +20,7 @@ struct LaunchScreen: View {
             Text("Feel at home at work.")
               .font(.title)
               .fontWeight(.semibold)
-            
+              .multilineTextAlignment(.center)
             Text("Build the vocabulary.\nGain the confidence.\nUnlock new opportunities.")
               .font(.body)
               .foregroundStyle(.white.opacity(0.8))
