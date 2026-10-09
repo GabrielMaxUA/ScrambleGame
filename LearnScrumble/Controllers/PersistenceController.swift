@@ -83,14 +83,30 @@ final class PersistenceController {
     return result
   }
     
-    func overallAccuracy(targetLanguage: String) -> (correct: Int, total: Int) { // % correct across all-time history in one target language
-      let descriptor = FetchDescriptor<SwiftDataWordModel>(
-        predicate: #Predicate { $0.targetLanguage == targetLanguage } // same language scoping as the functions above
-      )
-      let records = (try? context.fetch(descriptor)) ?? []            // empty on failure — caller shows "—"
-      let correct = records.reduce(0) { $0 + $1.correct }             // total correct answers in this language
-      let incorrect = records.reduce(0) { $0 + $1.incorrect }         // total incorrect answers in this language
-      print("📈 overallAccuracy — lang=\(targetLanguage) -> \(correct)/\(correct + incorrect)")
-      return (correct, correct + incorrect)
-    }
+  func overallAccuracy(targetLanguage: String) -> (correct: Int, total: Int) { // % correct across all-time history in one target language
+    let descriptor = FetchDescriptor<SwiftDataWordModel>(
+      predicate: #Predicate { $0.targetLanguage == targetLanguage } // same language scoping as the functions above
+    )
+    let records = (try? context.fetch(descriptor)) ?? []            // empty on failure — caller shows "—"
+    let correct = records.reduce(0) { $0 + $1.correct }             // total correct answers in this language
+    let incorrect = records.reduce(0) { $0 + $1.incorrect }         // total incorrect answers in this language
+    print("📈 overallAccuracy — lang=\(targetLanguage) -> \(correct)/\(correct + incorrect)")
+    return (correct, correct + incorrect)
+  }
+  
+  func resetProgress(targetLanguage: String) {                      // deletes all answers in one target language
+    let descriptor = FetchDescriptor<SwiftDataWordModel>(
+      predicate: #Predicate { $0.targetLanguage == targetLanguage }
+    )
+    let records = (try? context.fetch(descriptor)) ?? []
+    records.forEach { context.delete($0) }
+    try? context.save()
+    print("🗑️ resetProgress — lang=\(targetLanguage), deleted \(records.count) records")
+  }
+  
+  func deleteAllProgress() {                                        // deletes every answer in every language
+    try? context.delete(model: SwiftDataWordModel.self)
+    try? context.save()
+    print("🗑️ deleteAllProgress — all records deleted")
+  }
 }

@@ -16,14 +16,17 @@ struct LaunchScreen: View {
           .ignoresSafeArea()
         VStack{
           Spacer()
-          VStack{
-            Text("Learn the words")
-            Text("you actually use at work.")
+          VStack(spacing: 8) {
+            Text("Feel at home at work.")
+              .font(.title)
+              .fontWeight(.semibold)
+            
+            Text("Build the vocabulary.\nGain the confidence.\nUnlock new opportunities.")
+              .font(.body)
+              .foregroundStyle(.white.opacity(0.8))
+              .multilineTextAlignment(.center)
           }
-            .font(.title)
-            .lineLimit(nil)
-            .multilineTextAlignment(.center)
-            .foregroundStyle(.white)
+          .foregroundStyle(.white)
           Image(.launchScreen)
             .resizable()
             .aspectRatio(1, contentMode: .fit)
@@ -37,10 +40,10 @@ struct LaunchScreen: View {
               .rotationEffect(.degrees(rotation))
           } keyframes: { _ in
             KeyframeTrack {
-              CubicKeyframe(7, duration: 0.7)
-              CubicKeyframe(-7, duration: 0.7)
+              CubicKeyframe(5, duration: 0.7)
+              CubicKeyframe(-5, duration: 0.7)
               CubicKeyframe(3, duration: 0.5)
-              CubicKeyframe(7, duration: 0.6)
+              CubicKeyframe(5, duration: 0.6)
             }
           }
           Spacer()

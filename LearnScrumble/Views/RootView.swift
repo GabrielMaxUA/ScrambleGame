@@ -30,20 +30,26 @@ struct RootView: View {
               WelcomeBackView(
                 targetLanguage: manager.requestModel.selectedLanguage.rawValue,
                 hasAccess: manager.hasAccess,
+                canPlay: manager.canPlay,
                 onContinue: { Task { await manager.startGame() } },
                 onReview: { Task { await manager.startStruggleReview() } },
                 onShowPaywall: { print("💳 paywall — not built yet") },
-                onSettings: { manager.exitToSettings() })
+                onSettings: { manager.openSettings() })
             case .generating:
                 LoadingView()
             case .playing(let vm):
                 MainView(vm: vm)
             case .failed(let message):
-              ErrorView(message: LocalizedStringKey(message), direction: direction, onRetry: { await manager.startGame() }, onExit: { manager.exitToSettings()})
+              ErrorView(
+                message: LocalizedStringKey(message),
+                direction: direction,
+                onRetry: { await manager.retry() },
+                onExit: { manager.exitToWelcome()})
             case .result(let vm):
                 ResultView(
                     vm: vm,
-                    hasAccess: manager.hasAccess,                // NEW
+                    hasAccess: manager.hasAccess,// NEW
+                    canPlay: manager.canPlay,
                     onContinue: {
                         if vm.isFinished {
                             Task { await manager.startGame() }   // struggle review just finished — start a fresh normal session
@@ -53,7 +59,14 @@ struct RootView: View {
                     },
                     onRetry: { Task { await manager.startStruggleReview() }},
                     onShowPaywall: { print("💳 paywall — not built yet") },   // NEW
-                    exitToSettings: { manager.exitToSettings() })
+                    exitToWelcome: { manager.exitToWelcome() })
+            case .settings:
+              SettingsView(
+                requestModel: manager.requestModel,
+                hasAccess: manager.hasAccess,
+                onShowPaywall: { print("💳 paywall — not built yet") },
+                onDone: { manager.closeSettings() }
+              )
             }
           if launching {
             LaunchScreen()
@@ -95,7 +108,7 @@ struct RootView: View {
       direction: direction,
       hasAccess: manager.hasAccess,                              // NEW
       onShowPaywall: { print("💳 paywall — not built yet") },     // NEW
-      onExitToSettings: { manager.exitToSettings() },
+      onOpenSettings: { manager.openSettings() },
       onReviewStruggle: { Task { await manager.startStruggleReview() }},
       buttons: buttons)
         .padding(.horizontal)

@@ -11,7 +11,7 @@ struct ButtonsTopRow: View {
   let direction: Bool
   let hasAccess: Bool                    // NEW
   let onShowPaywall: () -> Void          // NEW
-  let onExitToSettings: () -> Void
+  let onOpenSettings: () -> Void          // was onExitToSettings
   let onReviewStruggle: () -> Void
   let buttons: MenuButtonsEnum
 
@@ -45,9 +45,9 @@ struct ButtonsTopRow: View {
     .alert(type.title, isPresented: $showAlert) {
       Button(type.confirmTitle) {
         switch type {
-        case .settings: onExitToSettings()
+        case .settings: onOpenSettings()
         case .reviewStruggle: onReviewStruggle()
-        case .subscriptionRequired, .settingsLocked: onShowPaywall()
+        case .subscriptionRequired, .settingsLocked, .dailyLimitReached: onShowPaywall()   // NEW — added .dailyLimitReached
         }
       }
       Button("Cancel", role: .cancel) {}
@@ -57,7 +57,7 @@ struct ButtonsTopRow: View {
   }
 
     private var settingsButton: some View {
-      glassButton("gear") { type = hasAccess ? .settings : .settingsLocked; showAlert = true }
+      glassButton("gear") { type = .settings; showAlert = true }   // open for everyone; SettingsView will replace this later
     }
 
     private var struggleButton: some View {
@@ -90,11 +90,11 @@ struct ButtonsTopRow: View {
   ButtonsTopRow(
     speechManager: SpeechManager(),
     requestModel: RequestModel(),
-    word: "Hello",
+    word: "Hummer",
     direction: false,
     hasAccess: false,          // false = free user: gear and review show the "Premium feature" alert
     onShowPaywall: {},
-    onExitToSettings: {},
+    onOpenSettings: {},
     onReviewStruggle: {},
     buttons: .menu)
     .background(.black)

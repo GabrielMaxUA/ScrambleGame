@@ -74,6 +74,9 @@ class WordVM {
   private let onCheckpoint: (() -> Void)?                        // closure back to AppManager: "show ResultView now"
   private let onResume: (() -> Void)?                            // closure back to AppManager: "return to playing (or generating if still loading)"
   private let onFetchFailed: (() -> Void)?        // closure back to AppManager: "the user is waiting and the fetch failed — show ErrorView"
+  private let onWordAnswered: (() -> Void)?            // AppManager: count this word toward today's free allowance
+  private let canContinue: (() -> Bool)?               // AppManager: may the user play another word?
+  private let canFetchMore: ((Int) -> Bool)?           // AppManager: may we download more, given how many words are still unplayed?
   private let modelContext: ModelContext                         // SwiftData context, shared singleton from PersistenceController
   private let targetLanguage: String                             // Languages.rawValue for this session — scopes all progress queries below
   var overlayShown: Bool = false                                 // controls the correct/incorrect result overlay shown after checkAnswer()
@@ -117,7 +120,10 @@ class WordVM {
        fetchMore: (([String]) async -> [QuestionModel])? = nil,   // how to fetch more words when running low; nil = fixed-size session (e.g. struggle review)
        onCheckpoint: (() -> Void)? = nil,                         // callback fired every 10th word — AppManager wires this to show ResultView
        onResume: (() -> Void)? = nil,                             // callback fired when leaving the checkpoint — AppManager wires this to resume play
-       onFetchFailed: (() -> Void)? = nil
+       onFetchFailed: (() -> Void)? = nil,
+       onWordAnswered: (() -> Void)? = nil,
+       canContinue: (() -> Bool)? = nil,
+       canFetchMore: ((Int) -> Bool)? = nil
   ) {
     self.modelContext = PersistenceController.shared.context      // grab the shared SwiftData context once, up front
     self.questions = questions                                    // store the starting batch
@@ -127,6 +133,9 @@ class WordVM {
     self.onCheckpoint = onCheckpoint                               // store the injected checkpoint callback (or nil)
     self.onResume = onResume                                        // store the injected resume callback (or nil)
     self.onFetchFailed = onFetchFailed
+    self.onWordAnswered = onWordAnswered
+    self.canContinue = canContinue
+    self.canFetchMore = canFetchMore
     print("🟢 WordVM.init — \(questions.count) starting questions, targetLanguage=\(targetLanguage), fetchMore=\(fetchMore != nil)") // NEW
     setupCurrentWord()                                             // scramble letters for the very first word immediately
   }
@@ -196,10 +205,17 @@ class WordVM {
     overlayShown = true                                              // trigger the result overlay to appear
     print("✅❌ checkAnswer — guessed='\(resultWord)' target='\(word.targetWord)' -> \(isCorrect ? "CORRECT" : "INCORRECT")") // NEW
     recordGuess(for: word.toolName, result: guessResult!)            // persist this attempt to SwiftData, keyed by the canonical concept name
+    onWordAnswered?()                                                 // count it, right or wrong
   }
   
   func nextWord() {
     guessResult = nil
+    if let canContinue, !canContinue() {                  // free daily limit reached: end the round here
+      isAtCheckpoint = true
+      print("⛔️ nextWord — daily free limit reached, ending the round")
+      onCheckpoint?()
+      return
+    }
     let nextIndex = currentIndex + 1
     
     switch checkpointMode {
@@ -226,6 +242,11 @@ class WordVM {
   
   /// Called from ResultView's Continue action.
   func continueFromCheckpoint() {
+    if let canContinue, !canContinue() {
+      print("⛔️ continueFromCheckpoint — daily free limit reached, not advancing")
+      onResume?()
+      return
+    }
     isAtCheckpoint = false
     guard !isFinished else {                                        // .endOfSession already hit its true end — nothing left to advance into
       print("🔚 continueFromCheckpoint — session already finished, nothing to advance, letting AppManager route away")
@@ -264,6 +285,11 @@ class WordVM {
     guard !hasRequestedMore,                                           // don't double-fire for the same batch
           currentIndex == questions.count - 2,                         // trigger two words before the buffer runs out, to hide fetch latency
           fetchMore != nil else { return }                             // only makes sense if a fetch source exists
+    let unplayed = questions.count - currentIndex
+    guard canFetchMore?(unplayed) ?? true else {          // free user would hit the limit before needing these words
+      print("⛔️ requestMoreIfNeeded — skipping prefetch, daily free limit")
+      return
+    }
     print("🛰️ requestMoreIfNeeded — index \(currentIndex) is 2 from end of \(questions.count), triggering prefetch") // NEW
     requestMoreNow()                                                   // conditions met — kick off the real fetch
   }
@@ -343,26 +369,26 @@ class WordVM {
       PersistenceController.shared.overallAccuracy(targetLanguage: targetLanguage)
     }
   
-  private func recordGuess(for toolName: String, result: GuessResult) { // persists one answered word's outcome to SwiftData
-    let lang = targetLanguage                                          // capture for use inside the #Predicate closure
-    let predicate = #Predicate<SwiftDataWordModel> { $0.concept == toolName && $0.targetLanguage == lang } // find this exact (word, language) row
-    let descriptor = FetchDescriptor<SwiftDataWordModel>(predicate: predicate) // wrap the predicate into a fetch request
-    
-    let existing = (try? modelContext.fetch(descriptor))?.first        // NEW — split out so we can log whether it's new vs existing
-    let record = existing ?? {                                          // reuse the existing row if one exists...
-      let new = SwiftDataWordModel(concept: toolName, targetLanguage: lang) // ...otherwise create a fresh one for this (word, language) pair
-      modelContext.insert(new)                                          // register it with SwiftData
-      return new                                                        // hand it back for updating below
-    }()
-    print("💾 recordGuess — concept='\(toolName)' lang=\(lang) [\(existing == nil ? "NEW row" : "existing row")], result=\(result)") // NEW
-    
-    switch result {                                                    // bump whichever counter matches this attempt
-    case .correct: record.correct += 1                                 // one more correct attempt
-    case .incorrect: record.incorrect += 1                             // one more incorrect attempt
+    private func recordGuess(for toolName: String, result: GuessResult) { // persists one answered word's outcome to SwiftData
+      let lang = targetLanguage                                          // capture for use inside the #Predicate closure
+      let predicate = #Predicate<SwiftDataWordModel> { $0.concept == toolName && $0.targetLanguage == lang } // find this exact (word, language) row
+      let descriptor = FetchDescriptor<SwiftDataWordModel>(predicate: predicate) // wrap the predicate into a fetch request
+      
+      let existing = (try? modelContext.fetch(descriptor))?.first        // NEW — split out so we can log whether it's new vs existing
+      let record = existing ?? {                                          // reuse the existing row if one exists...
+        let new = SwiftDataWordModel(concept: toolName, targetLanguage: lang) // ...otherwise create a fresh one for this (word, language) pair
+        modelContext.insert(new)                                          // register it with SwiftData
+        return new                                                        // hand it back for updating below
+      }()
+      print("💾 recordGuess — concept='\(toolName)' lang=\(lang) [\(existing == nil ? "NEW row" : "existing row")], result=\(result)") // NEW
+      
+      switch result {                                                    // bump whichever counter matches this attempt
+      case .correct: record.correct += 1                                 // one more correct attempt
+      case .incorrect: record.incorrect += 1                             // one more incorrect attempt
+      }
+      record.lastSeen = .now                                             // stamp when this word was last practiced
+      
+      try? modelContext.save()                                           // persist the change to disk
+      print("💾 recordGuess — saved. '\(toolName)' now correct=\(record.correct) incorrect=\(record.incorrect) accuracy=\(record.accuracy)") // NEW
     }
-    record.lastSeen = .now                                             // stamp when this word was last practiced
-    
-    try? modelContext.save()                                           // persist the change to disk
-    print("💾 recordGuess — saved. '\(toolName)' now correct=\(record.correct) incorrect=\(record.incorrect) accuracy=\(record.accuracy)") // NEW
-  }
 }

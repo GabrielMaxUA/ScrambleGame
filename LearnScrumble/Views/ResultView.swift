@@ -10,12 +10,14 @@ import SwiftUI
 struct ResultView: View {
   let vm: WordVM
   let hasAccess: Bool                                   // NEW — paid/unlocked user, passed in from AppManager
+  let canPlay: Bool
   var onContinue: () -> Void
   var onRetry: () -> Void
   var onShowPaywall: () -> Void                         // NEW — "See plans" in the alert
-  var exitToSettings: () -> Void
+  var exitToWelcome: () -> Void
   @State private var showSubscriptionAlert = false      // NEW — true while the "Premium feature" alert is showing
-
+  @State private var alertType: MenuAlert = .subscriptionRequired   // NEW — which alert to show
+  @State private var showAlert = false
   /// nil when there's nothing to score yet, so the tile shows "—"
   private func fraction(_ stat: (correct: Int, total: Int)) -> Double? {
     guard stat.total > 0 else { return nil }
@@ -70,7 +72,12 @@ struct ResultView: View {
 
         if vm.hasStruggleWords {
           Button {                                            // NEW — paid users review, free users see the alert
-            if hasAccess { onRetry() } else { showSubscriptionAlert = true }
+            if hasAccess {
+              onRetry()
+            } else {
+              alertType = .subscriptionRequired
+              showAlert = true
+            }
           } label: {
             Label("Improve previous!", systemImage: hasAccess ? "arrow.counterclockwise" : "lock.fill")
               .font(.headline)
@@ -81,7 +88,7 @@ struct ResultView: View {
           .glassEffect(.clear.interactive(), in: .capsule)
         }
 
-        Button(action: exitToSettings) {
+        Button(action: exitToWelcome) {
           Text("Exit")
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(.white.opacity(0.7))
@@ -94,11 +101,11 @@ struct ResultView: View {
     .padding(.bottom, 8)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color.black.opacity(0.92))
-    .alert(MenuAlert.subscriptionRequired.title, isPresented: $showSubscriptionAlert) {   // NEW
-      Button("See plans") { onShowPaywall() }
+    .alert(alertType.title, isPresented: $showAlert) {                    // NEW — one alert for both cases
+      Button(alertType.confirmTitle) { onShowPaywall() }
       Button("Cancel", role: .cancel) { }
     } message: {
-      Text(MenuAlert.subscriptionRequired.message)
+      Text(alertType.message)
     }
   }
 
@@ -132,7 +139,13 @@ struct ResultView: View {
 }
 
 #Preview {
-  ResultView(vm: WordVM(questions: [], targetLanguage: "uk-UA"),
-             hasAccess: false,                                    // NEW
-             onContinue: {}, onRetry: {}, onShowPaywall: {}, exitToSettings: {})
+  ResultView(
+    vm: WordVM(questions: [], targetLanguage: "uk-UA"),
+    hasAccess: false,// NEW
+    canPlay: false,
+    onContinue: {
+    },
+    onRetry: {},
+    onShowPaywall: {},
+    exitToWelcome: {})
 }

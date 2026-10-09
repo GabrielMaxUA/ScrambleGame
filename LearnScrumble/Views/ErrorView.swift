@@ -20,7 +20,7 @@ struct ErrorView: View {
   
   var body: some View {
     ZStack(alignment: .topLeading) {
-      Color.black.opacity(0.9)
+      Color.black.opacity(0.92)
         .ignoresSafeArea()
       HStack {
         Button {

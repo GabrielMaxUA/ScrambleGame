@@ -23,12 +23,11 @@ import SwiftUI
 //   onCheckpoint -> phase = .result(vm)                  (show ResultView)
 //   onResume     -> phase = .playing(vm) or .generating   (resume, or show a
 //                    brief loading state if the next batch isn't ready yet)
-//
-// exitToSettings() drops activeVM and returns to .onboarding — since activeVM
-// is `weak`, the WordVM deallocates once `phase` stops referencing it too.
 
 @Observable
 final class AppManager {
+  private enum SessionKind { case game, review }
+  private var lastSession: SessionKind = .game
   var phase: GamePhase = .onboarding                               // drives what RootView renders — the single UI state machine for the app
   let requestModel: RequestModel                                   // shared generation/data layer, same instance across the whole app lifetime
   private weak var activeVM: WordVM?                                // weak on purpose — `phase`'s associated value is the real owner, this is just a way for callbacks to reach it
@@ -38,6 +37,8 @@ final class AppManager {
     nativeLanguage.isRtL ? .rightToLeft : .leftToRight
   }
   var hasAccess = false   // paid or unlocked. For now always false; RevenueCat will set it later
+  var canPlay: Bool { hasAccess || !FreeAllowance.shared.isLimitReached }   // paid, or free words left today
+  
   init(requestModel: RequestModel) {
     self.requestModel = requestModel
     print("🟢 AppManager.init") // NEW
@@ -45,8 +46,14 @@ final class AppManager {
   
   @MainActor
   func startGame() async {                                          // normal play — builds a fresh, ever-growing word session via GPT
+    lastSession = .game
     print("🎮 startGame — starting") // NEW
     phase = .generating                                             // show LoadingView while the first batch is built
+    await FreeAllowance.shared.syncClock()                  // internet time before checking the allowance
+    guard canPlay else {                                    // safety net: the buttons should already prevent this
+      phase = .welcomeBack
+      return
+    }
     await requestModel.generate()                                   // RequestModel handles SwiftData-exclusion + GPT + Firebase, populates requestModel.questions
     
     if requestModel.questions.isEmpty {                              // generate() failed or returned nothing usable
@@ -69,7 +76,12 @@ final class AppManager {
       },
       onResume: { [weak self] in                                     // fired by WordVM when leaving a checkpoint
         guard let self, let vm = self.activeVM else { return }
-        print("▶️ startGame.onResume — isLoadingMore=\(vm.isLoadingMore), routing to \(vm.isLoadingMore ? ".generating" : ".playing")") // NEW
+        guard self.canPlay else {                                    // NEW — limit reached: don't go back to the answered word
+          print("⛔️ startGame.onResume — daily free limit reached, back to welcome")
+          self.exitToWelcome()
+          return
+        }
+        print("▶️ startGame.onResume — pendingAdvance=\(vm.pendingAdvance), routing to \(vm.pendingAdvance ? ".generating" : ".playing")")
         self.phase = vm.pendingAdvance ? .generating : .playing(vm)    // if the next batch isn't ready yet, show LoadingView briefly; otherwise go straight back to play
       },
       onFetchFailed: { [weak self] in
@@ -77,6 +89,12 @@ final class AppManager {
           print("❌ startGame.onFetchFailed — showing ErrorView")
           self.activeVM = nil
           self.phase = .failed(self.requestModel.errorMessage ?? "Couldn't load more words. Please try again.")
+      },
+      onWordAnswered: { FreeAllowance.shared.recordAnsweredWord() },             // every answered word counts
+      canContinue: { [weak self] in self?.canPlay ?? false },                     // checked after every word
+      canFetchMore: { [weak self] unplayed in                                     // no downloads the user can't play
+        guard let self else { return false }
+        return self.hasAccess || FreeAllowance.shared.wordsUsedToday + unplayed < FreeAllowance.dailyWordLimit
       }
     )
     activeVM = vm                                                     // keep a weak reference so the callbacks above can reach this vm later
@@ -86,6 +104,7 @@ final class AppManager {
   @MainActor
   func startStruggleReview() async {                                 // review mode — fixed pool of previously-struggled words, no new generation
     print("🎯 startStruggleReview — starting") // NEW
+    lastSession = .review
     phase = .generating                                              // show LoadingView while the review set is resolved
     let toolNames = PersistenceController.shared.struggleToolNames(targetLanguage: requestModel.selectedLanguage.rawValue) // pull the current struggle list for this language
     
@@ -124,9 +143,40 @@ final class AppManager {
     phase = .playing(vm)
   }
   
-  func exitToSettings() {                                             // called when the user backs out to onboarding mid-session
-    print("🚪 exitToSettings — dropping activeVM, returning to onboarding") // NEW
+  func exitToWelcome() {                                             // called when the user leaves a session (result or error screen)
+    print("🚪 exitToWelcome — dropping activeVM, returning to Welcome Screen")
     activeVM = nil                                                     // last strong-ish reference removed here; vm deallocates once phase changes below
-    phase = .onboarding
+    phase = .welcomeBack
+  }
+  
+  func openSettings() {                                             // gear or welcome-back Settings button
+    activeVM = nil                                                  // a running round ends; every answer is already saved
+    phase = .settings
+  }
+  
+  func closeSettings() {                                            // Done in Settings
+    phase = .welcomeBack
+  }
+  
+//  @MainActor
+//  func deleteAllData() {                                            // "Delete my data": back to a first-launch state
+//    PersistenceController.shared.deleteAllProgress()
+//    for key in ["nativeLanguage", "pickedLanguage", "pickedProffession",
+//                "hasCompletedOnboarding", "speechRate"] {
+//      UserDefaults.standard.removeObject(forKey: key)              // @AppStorage values fall back to their defaults
+//    }
+//    requestModel.proffession = ""
+//    activeVM = nil
+//    phase = .onboarding
+//  }
+  
+  @MainActor
+  func retry() async {
+    switch lastSession {
+    case .game:
+      await startGame()
+    case .review:
+      await startStruggleReview()
+    }
   }
 }
