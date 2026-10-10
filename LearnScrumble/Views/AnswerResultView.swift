@@ -88,9 +88,7 @@ private struct AnimalStage: View {
         .foregroundStyle(.white, isCorrect ? .green : .red)
         .symbolEffect(.bounce, value: bounce)
         .onAppear {
-          if isCorrect {
-            SoundManager.shared.play("success")
-          }
+            SoundManager.shared.play(isCorrect ? "success" : "incorrect")
           bounce.toggle()
         }
       
