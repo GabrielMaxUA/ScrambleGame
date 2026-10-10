@@ -20,11 +20,13 @@ import FirebaseFirestore
 //
 // ERROR HANDLING
 // - Every network call goes through send(), which maps failures to GenerationError,
-//   retries 429/5xx a couple of times, and respects Task cancellation.
+//   retries 408/429/5xx a couple of times, and respects Task cancellation.
+//   Any other 4xx (missing/revoked key, billing, bad request) is .serviceUnavailable —
+//   our problem, never retried, and ErrorView offers no Retry for it.
 // - One word failing (bad image, moderation refusal, upload issue) never kills
 //   the batch — that word is skipped. Only an EMPTY batch is treated as a failure.
-// - On failure, errorMessage holds a user-facing message. generate() never
-//   leaves stale questions behind; the other two return [] + set errorMessage.
+// - On failure, lastError holds the reason (AppManager picks the screen from it). generate() never
+//   leaves stale questions behind; the other two return [] + set lastError.
 
 // MARK: - Errors
 
@@ -37,7 +39,8 @@ class RequestModel {
     var proffession: String = ""                                   // drives which vocabulary GPT is asked for
     var questions: [QuestionModel] = []                            // the current session's question list, populated by generate()
     var isLoading = false                                          // true while generate() is running
-    var errorMessage: String?                                      // user-facing message, set when any entry point fails
+    private(set) var lastError: GenerationError?                   // set when any entry point fails, so AppManager can pick the right screen (offline vs error)
+    var errorMessage: String? { lastError.map { "\($0)" } }        // for logs only — the screens show lastError.message
     var progress: Double = 0
     private let apiKey = "" // load from a plist/keychain — never hardcode, never paste in chat
     private let maxGenerationAttempts = 3                          // how many times to re-ask GPT if it keeps returning already-seen words
@@ -70,7 +73,7 @@ class RequestModel {
     @MainActor
     func generate() async {                                            // builds the very first batch of the session
         isLoading = true
-        errorMessage = nil
+        lastError = nil
         progress = 0
         questions = []                                                   // never leave a previous session's questions behind on failure
         defer { isLoading = false }
@@ -93,14 +96,14 @@ class RequestModel {
             print("generate() cancelled")                                // user left the screen — not an error to show
         } catch {
             print("GENERATE ERROR:", error)
-            errorMessage = GenerationError.from(error).errorDescription
+            lastError = GenerationError.from(error)
         }
     }
 
     @MainActor
     func generateMore(excluding existingToolNames: [String]) async -> [QuestionModel] { // mid-session batch (prefetch or safety-net)
         print("Generating more questions")
-        errorMessage = nil
+        lastError = nil
         progress = 0
         do {
             let seen = PersistenceController.shared.seenToolNames(targetLanguage: selectedLanguage.rawValue)
@@ -117,17 +120,17 @@ class RequestModel {
             return []
         } catch {
             print("generateMore failed: \(error)")
-            errorMessage = GenerationError.from(error).errorDescription  // caller decides whether to surface it (only matters if the buffer is empty)
+            lastError = GenerationError.from(error)                      // caller decides whether to surface it (only matters if the buffer is empty)
             return []
         }
     }
 
     @MainActor
     func generateStruggleReview(toolNames: [String]) async -> [QuestionModel] { // review session from KNOWN toolNames — no GPT word-list call
-        errorMessage = nil
+        lastError = nil
         progress = 0
         guard !toolNames.isEmpty else {
-            errorMessage = GenerationError.reviewUnavailable.errorDescription
+            lastError = .reviewUnavailable
             return []
         }
         print("🎯 generateStruggleReview — resolving \(toolNames.count) struggle words")
@@ -154,7 +157,7 @@ class RequestModel {
             return []
         } catch {
             print("generateStruggleReview failed: \(error)")
-            errorMessage = GenerationError.from(error).errorDescription
+            lastError = GenerationError.from(error)
             return []
         }
     }
@@ -174,12 +177,13 @@ class RequestModel {
 
         var index = 0
         var completed = 0
+        var failures: [GenerationError] = []                               // why skipped words failed — explains an all-failed batch
         while index < words.count {
             try Task.checkCancellation()                                   // stop early if the user left
             let chunk = Array(words[index..<min(index + maxConcurrent, words.count)])
             let chunkStart = index
 
-            try await withThrowingTaskGroup(of: (Int, Data?).self) { group in
+            try await withThrowingTaskGroup(of: (Int, Data?, GenerationError?).self) { group in
                 for (offset, word) in chunk.enumerated() {
                     let globalIndex = chunkStart + offset
                     let cachedImageURL = existing[word.toolName]?.image
@@ -191,17 +195,18 @@ class RequestModel {
                                 originLanguage: originLanguage,
                                 targetLanguage: targetLanguage
                             )
-                            return (globalIndex, data)
+                            return (globalIndex, data, nil)
                         } catch is CancellationError {
                             throw CancellationError()                         // cancellation stops everything
                         } catch {
                             print("⚠️ buildQuestions — skipping '\(word.toolName)': \(error)") // any other failure only drops THIS word
-                            return (globalIndex, nil)
+                            return (globalIndex, nil, GenerationError.from(error))
                         }
                     }
                 }
-                for try await (idx, data) in group {
+                for try await (idx, data, failure) in group {
                     built[idx].imageData = data
+                    if let failure { failures.append(failure) }
                     completed += 1
                     let fraction = Double(completed) / Double(words.count)
                     setProgress(progressBase + (1 - progressBase) * fraction)
@@ -212,8 +217,16 @@ class RequestModel {
 
         let playable = built.filter { $0.imageData != nil }                // only questions that actually have an image
         print("🏗️ buildQuestions — finished, \(playable.count)/\(built.count) questions playable")
-        if playable.isEmpty { throw GenerationError.badResponse }          // every word failed — that IS an error
+        if playable.isEmpty { throw Self.batchFailure(from: failures) }    // every word failed — that IS an error
         return playable
+    }
+
+    /// Picks the most useful reason when a whole batch failed word by word:
+    /// offline beats everything; all words hitting our-side 4xx means a key/billing problem; otherwise a bad reply.
+    private static func batchFailure(from failures: [GenerationError]) -> GenerationError {
+        if failures.contains(.offline) { return .offline }
+        if !failures.isEmpty && failures.allSatisfy({ $0 == .serviceUnavailable }) { return .serviceUnavailable }
+        return .badResponse
     }
     
     @MainActor
@@ -435,12 +448,16 @@ class RequestModel {
             switch status {
             case 200..<300:
                 return data
-            case 429, 500...599:                                           // rate limited or server hiccup — worth a retry
+            case 408, 429, 500...599:                                      // timeout, rate limited or server hiccup — worth a retry
                 guard attempt < retries else { throw GenerationError.serverBusy }
                 attempt += 1
                 print("⏳ send — status \(status), retry \(attempt)/\(retries)")
                 try await Task.sleep(nanoseconds: UInt64(attempt) * 2_000_000_000)
-            default:                                                       // 400/401/403 etc. — retrying won't help
+            case 400..<500:                                                // 400/401/403/404 — our key, billing or request is wrong
+                let body = String(data: data, encoding: .utf8) ?? "no body"
+                print("🚨 send — status=\(status), service unavailable (our side), body=\(body)")
+                throw GenerationError.serviceUnavailable
+            default:                                                       // anything else unexpected
                 let body = String(data: data, encoding: .utf8) ?? "no body"
                 print("Bad response: status=\(status), body=\(body)")
                 throw GenerationError.badResponse

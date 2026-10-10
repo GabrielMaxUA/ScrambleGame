@@ -9,6 +9,7 @@ import SwiftUI
 
 struct LetterBoxView: View {
   var letter: LetterModel
+  var size: CGFloat = 40                                    // tile width, MainView shrinks/grows it with the letter count
   @State private var color: Color = .clear
   let onTap:(LetterModel) -> Void
   
@@ -23,8 +24,8 @@ struct LetterBoxView: View {
       }
     } label: {
       Text(letter.isUsed ? " " : letter.letter)
-        .font(.system(size: 20, weight: .semibold))
-        .frame(width: 40, height: 45)
+        .font(.system(size: size * 0.5, weight: .semibold))
+        .frame(width: size, height: size * 1.125)
         .overlay {
           RoundedRectangle(cornerRadius: 14)
             .stroke(lineWidth: 1)

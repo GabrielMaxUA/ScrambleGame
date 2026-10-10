@@ -14,6 +14,13 @@ struct AnswerResultView: View {
   
   private var isCorrect: Bool { result == .correct }
   
+  /// The answer in the target language, trimmed and wrapped in Unicode "first strong isolate" marks,
+  /// so a right-to-left word inside a left-to-right sentence (or the other way round) stays in place
+  /// instead of dragging the colon and the sentence around with it.
+  private var isolatedAnswer: String {
+    "\u{2068}" + correctAnswer.trimmingCharacters(in: .whitespacesAndNewlines) + "\u{2069}"
+  }
+  
   var body: some View {
     VStack(spacing: 24) {
       Spacer(minLength: 72)                                    // room for RootView's top button row
@@ -26,7 +33,9 @@ struct AnswerResultView: View {
           .foregroundStyle(isCorrect ? .green : .red)
         
         if !isCorrect {
-          Text("Correct answer was: \(correctAnswer)")
+          // Same catalog key as before ("Correct answer was: %@"), so every existing translation still applies;
+          // the word itself is bold white so it stands out from the label.
+          Text("Correct answer was: \(Text(isolatedAnswer).bold().foregroundStyle(.white))")
             .font(.title3)
             .foregroundStyle(.white.opacity(0.85))
             .padding(.horizontal, 16)
@@ -59,8 +68,8 @@ struct AnswerResultView: View {
   }
 }
 
-/// The checkmark or X in the middle, with the cat, dog, mouse and spider around it.
-/// Correct: they dance. Incorrect: they droop for a moment, then sadly walk off the screen.
+/// The checkmark or X in the middle, with the cat on wheels, raccoon, mouse and spider around it.
+/// Correct: they dance. Incorrect: they droop for a moment, then sadly leave the screen.
 private struct AnimalStage: View {
   let isCorrect: Bool
   
@@ -80,35 +89,37 @@ private struct AnimalStage: View {
         .symbolEffect(.bounce, value: bounce)
         .onAppear { bounce.toggle() }
       
-      TimelineView(.animation(paused: reduceMotion)) { timeline in
+      // Reduce Motion: paused (still frame). Otherwise capped at 30fps to spare the battery.
+      TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { timeline in
         let t = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 100)
+        let moving = isCorrect || leaving
         
         ZStack {
           // spider — yo-yos when happy; when sad, climbs back up its thread and out of sight
-          LineSpider(width: 44, isWiggling: isCorrect || leaving, threadLength: 70)
+          HardHatSpider(width: 60, isWiggling: moving, threadLength: 70)   // wider than LineSpider's 44 — the new one is flatter
             .offset(y: (isCorrect ? -118 + sin(t * 4) * 8 : -104 + sin(t * 1.2) * 1.5)
                     - (away ? distance + 120 : 0))
             .opacity(isCorrect ? 1 : 0.7)
           
-          // cat on the left — dances; when sad, turns around and walks off to the left
-          LineCat(width: 70, isWalking: isCorrect || leaving)
-            .scaleEffect(x: leaving ? -1 : 1)
+          // cat on wheels, left — happy: rocks back and forth on spinning wheels;
+          // sad: parked, head low, then turns around and rolls off to the left
+          WheelCat(t: t, size: 74, isMoving: moving, sad: !isCorrect)
+            .scaleEffect(x: leaving ? 1 : -1)                // the drawing faces left: mirrored to face the icon
             .rotationEffect(.degrees(tilt(t, phase: 0, droop: leaving ? -4 : 8)))
-            .offset(x: -118 - (away ? distance : 0), y: 20 + lift(t, phase: 0))
+            .offset(x: -118 + rock(t) - (away ? distance : 0), y: 10 + lift(t, phase: 0))
             .opacity(isCorrect ? 1 : 0.7)
           
-          // dog on the right — prances; when sad, sits without its tongue, then gets up and leaves to the right
-          LineDog(pose: (isCorrect || leaving) ? .running : .sitting,
-                  width: 80,
-                  tongueColor: isCorrect ? .pink : .clear,
-                  isAnimating: isCorrect || leaving)
-          .scaleEffect(x: leaving ? 1 : -1)                 // faces the icon, then turns away
-          .rotationEffect(.degrees(tilt(t, phase: 1.2, droop: leaving ? 4 : -8)))
-          .offset(x: 116 + (away ? distance : 0), y: 16 + lift(t, phase: 1.2))
-          .opacity(isCorrect ? 1 : 0.7)
+          // raccoon, right — happy: dances on its feet, waving a paw; sad: tail down, eyes on the floor,
+          // then turns and walks off to the right
+          PhoneRaccoon(t: t, facing: leaving ? 1 : -1, running: moving,
+                       arm: isCorrect ? .wave : .leg, sad: !isCorrect, size: 80)
+            .rotationEffect(.degrees(tilt(t, phase: 1.2, droop: leaving ? 4 : -8)))
+            .offset(x: 116 + (away ? distance : 0), y: 14 + lift(t, phase: 1.2))
+            .opacity(isCorrect ? 1 : 0.7)
           
-          // mouse below — hops with its cheese; when sad, trudges off to the right carrying it
-          LineMouse(width: 56, isEating: isCorrect)
+          // mouse below — happy: hops with its tail whipping; sad: tail drooped, then scurries off to the right
+          RunningMouse(t: t, size: 54, isMoving: moving, sad: !isCorrect)
+            .scaleEffect(x: -1)                              // faces right, the way it leaves
             .rotationEffect(.degrees(tilt(t, phase: 2.4, droop: 6)))
             .offset(x: away ? distance : 0, y: 112 + lift(t, phase: 2.4) * 0.6)
             .opacity(isCorrect ? 1 : 0.7)
@@ -132,6 +143,11 @@ private struct AnimalStage: View {
     if isCorrect { return -abs(sin(t * 5 + phase)) * 12 }
     if leaving { return 4 - abs(sin(t * 3 + phase)) * 3 }
     return 4 + sin(t * 1.2 + phase) * 1.2
+  }
+  
+  /// Happy: the cat rolls a little back and forth on its wheels. Otherwise it stays put.
+  private func rock(_ t: Double) -> Double {
+    isCorrect ? sin(t * 3) * 8 : 0
   }
   
   /// Happy: sways to the beat. Sad: head hangs down.

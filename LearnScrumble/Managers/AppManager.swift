@@ -28,6 +28,7 @@ import SwiftUI
 final class AppManager {
   private enum SessionKind { case game, review }
   private var lastSession: SessionKind = .game
+  private var isStarting = false                                   // true while startGame()/startStruggleReview() runs — blocks a second load (auto-retry + tap)
   var phase: GamePhase = .onboarding                               // drives what RootView renders — the single UI state machine for the app
   let requestModel: RequestModel                                   // shared generation/data layer, same instance across the whole app lifetime
   private weak var activeVM: WordVM?                                // weak on purpose — `phase`'s associated value is the real owner, this is just a way for callbacks to reach it
@@ -46,6 +47,9 @@ final class AppManager {
   
   @MainActor
   func startGame() async {                                          // normal play — builds a fresh, ever-growing word session via GPT
+    guard !isStarting else { print("🎮 startGame — already loading, ignoring"); return }
+    isStarting = true
+    defer { isStarting = false }
     lastSession = .game
     print("🎮 startGame — starting") // NEW
       requestModel.progress = 0
@@ -58,8 +62,8 @@ final class AppManager {
     await requestModel.generate()                                   // RequestModel handles SwiftData-exclusion + GPT + Firebase, populates requestModel.questions
     
     if requestModel.questions.isEmpty {                              // generate() failed or returned nothing usable
-      phase = .failed(requestModel.errorMessage ?? "Something went wrong") // show ErrorView with whatever message RequestModel set
       print("Error: \(requestModel.errorMessage ?? "Unknown error")")
+      await showFailure()                                             // OfflineView or ErrorView, depending on the cause
       return
     }
     
@@ -90,7 +94,9 @@ final class AppManager {
           guard let self, self.activeVM != nil else { return }
           print("❌ startGame.onFetchFailed — showing ErrorView")
           self.activeVM = nil
-          self.phase = .failed(self.requestModel.errorMessage ?? "Couldn't load more words. Please try again.")
+          Task { @MainActor in
+            await self.showFailure()
+          }
       },
       onWordAnswered: { FreeAllowance.shared.recordAnsweredWord() },             // every answered word counts
       canContinue: { [weak self] in self?.canPlay ?? false },                     // checked after every word
@@ -105,6 +111,9 @@ final class AppManager {
   
   @MainActor
   func startStruggleReview() async {                                 // review mode — fixed pool of previously-struggled words, no new generation
+    guard !isStarting else { print("🎯 startStruggleReview — already loading, ignoring"); return }
+    isStarting = true
+    defer { isStarting = false }
     print("🎯 startStruggleReview — starting") // NEW
     lastSession = .review
     phase = .generating                                              // show LoadingView while the review set is resolved
@@ -112,7 +121,7 @@ final class AppManager {
     
     guard !toolNames.isEmpty else {                                   // nothing to review right now
       print("🎯 startStruggleReview — no struggle words found") // NEW
-      phase = .failed("No struggle words yet — keep practicing!")
+      phase = .failed(.noStruggleWords)
       return
     }
     
@@ -120,7 +129,7 @@ final class AppManager {
     let reviewQuestions = await requestModel.generateStruggleReview(toolNames: toolNames) // resolve these known toolNames via Firebase (no GPT word-list call)
       guard !reviewQuestions.isEmpty else {
         print("🎯 startStruggleReview — resolution produced 0 questions")
-        phase = .failed(requestModel.errorMessage ?? "Couldn't load your struggle words. Try again.")
+        await showFailure(fallback: .reviewUnavailable)
         return
       }
     
@@ -143,6 +152,25 @@ final class AppManager {
     )
     activeVM = vm
     phase = .playing(vm)
+  }
+  
+  /// Single place that decides which failure screen to show.
+  /// Offline wins if RequestModel saw it, OR if the phone has no connection right now —
+  /// some failures (Firebase reads, every image download failing) hide the offline reason.
+  @MainActor
+  private func showFailure(fallback: GenerationError = .unknown) async {
+    let error = requestModel.lastError ?? fallback                     // nil only when the load was cancelled mid-way
+    if error == .offline {
+      phase = .offline
+    } else if !(await Connectivity.isOnline()) {
+      print("📵 showFailure — '\(error)' but the phone is offline, showing OfflineView")
+      phase = .offline
+    } else {
+      if error == .serviceUnavailable {                                // our side is broken (key, billing, request) — loud log until server-side alerts exist
+        print("🚨 showFailure — SERVICE UNAVAILABLE: every user is blocked until the key/billing/request is fixed")
+      }
+      phase = .failed(error)
+    }
   }
   
   func exitToWelcome() {                                             // called when the user leaves a session (result or error screen)

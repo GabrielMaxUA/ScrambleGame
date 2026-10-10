@@ -11,7 +11,7 @@ struct GuessedLetterView: View {
       if let letter { onTap(letter) }
     } label: {
       Text(letter?.letter.capitalized(with: .none) ?? "")
-        .font(.system(size: size * 0.6))
+        .font(.system(size: size * 0.75)) // larger share of the slot so letters stay legible when slots shrink
         .frame(width: size, height: size * 1.5)
         .overlay(alignment: .bottom) {
           RoundedRectangle(cornerRadius: 14)

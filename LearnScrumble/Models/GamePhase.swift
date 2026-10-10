@@ -12,7 +12,8 @@ enum GamePhase{
   case welcomeBack
   case generating
   case playing(WordVM)
-  case failed(String)
+  case failed(GenerationError)  // ErrorView — the error decides the message AND the button (retry / change profession / back)
+  case offline                // no internet connection — OfflineView, retries by itself once the connection is back
   case result(WordVM)
   case settings
 }

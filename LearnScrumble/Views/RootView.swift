@@ -39,12 +39,18 @@ struct RootView: View {
                 LoadingView(progress: manager.requestModel.progress)
             case .playing(let vm):
                 MainView(vm: vm, manager: manager)
-            case .failed(let message):
+            case .failed(let error):
               ErrorView(
-                message: LocalizedStringKey(message),
+                error: error,
                 direction: direction,
                 onRetry: { await manager.retry() },
-                onExit: { manager.exitToWelcome()})
+                onExit: { manager.exitToWelcome()},
+                onChangeProfession: { manager.openSettings() })
+            case .offline:
+              OfflineView(
+                direction: direction,
+                onRetry: { await manager.retry() },
+                onExit: { manager.exitToWelcome() })
             case .result(let vm):
                 ResultView(
                     vm: vm,

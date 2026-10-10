@@ -7,11 +7,16 @@
 
 import SwiftUI
 
+// Shows a GenerationError and only the action that can actually help:
+//   .retry            -> "Retry!"            (temporary problem)
+//   .changeProfession -> "Change profession" (no new words for this one — opens Settings)
+//   .none             -> "Back to start"     (our side is broken, or nothing to review — no false Retry)
 struct ErrorView: View {
-  var message: LocalizedStringKey
+  let error: GenerationError
   let direction: Bool
   var onRetry: () async -> Void
   var onExit: () -> Void
+  var onChangeProfession: () -> Void
   
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var spiderLanded = false          // drives the drop down the thread
@@ -36,16 +41,14 @@ struct ErrorView: View {
       .padding(.horizontal)
       VStack {
         Spacer()
-        Text(message)
-          .font(.largeTitle)
+        Text(error.message)
+          .font(.title2.weight(.semibold))
           .foregroundColor(.white)
         Spacer()
         Button {
-          Task {
-            await onRetry()
-          }
+          primaryAction()
         } label: {
-          Text("Retry!")
+          Text(primaryTitle)
             .foregroundStyle(Color.white)
             .font(.title3)
             .fontWeight(.semibold)
@@ -54,7 +57,7 @@ struct ErrorView: View {
         .padding(.horizontal, 20)
         .glassCompat(in : .capsule)
         .overlay(alignment: .top) {
-          LineSpider(threadLength: showThread ? 1200 : 0)
+          HardHatSpider(width: 76, threadLength: showThread ? 1200 : 0)   // wider than LineSpider's 56 — the new one is flatter
             .alignmentGuide(.top) { $0[.bottom] - 2 }   // feet rest on top of the button
             .offset(x: spiderPace, y: spiderLanded ? 0 : -900)   // starts far above the screen
             .allowsHitTesting(false)                    // never blocks the Retry tap
@@ -66,6 +69,22 @@ struct ErrorView: View {
       .frame(maxWidth: .infinity)
     }//zs
     .onAppear(perform: dropSpider)
+  }
+  
+  private var primaryTitle: LocalizedStringKey {
+    switch error.recovery {
+    case .retry:            "Retry!"
+    case .changeProfession: "Change profession"
+    case .none:             "Back to start"
+    }
+  }
+  
+  private func primaryAction() {
+    switch error.recovery {
+    case .retry:            Task { await onRetry() }
+    case .changeProfession: onChangeProfession()
+    case .none:             onExit()
+    }
   }
   
   private func dropSpider() {
@@ -95,6 +114,14 @@ struct ErrorView: View {
   }
 }
 
-#Preview {
-  ErrorView(message: "Something went wrong here", direction: true, onRetry: {}, onExit: {})
+#Preview("Our problem — no retry") {
+  ErrorView(error: .serviceUnavailable, direction: true, onRetry: {}, onExit: {}, onChangeProfession: {})
+}
+
+#Preview("Temporary — retry") {
+  ErrorView(error: .serverBusy, direction: true, onRetry: {}, onExit: {}, onChangeProfession: {})
+}
+
+#Preview("No words — change profession") {
+  ErrorView(error: .noWordsAvailable, direction: true, onRetry: {}, onExit: {}, onChangeProfession: {})
 }
