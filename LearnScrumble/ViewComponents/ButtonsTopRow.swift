@@ -54,6 +54,7 @@ struct ButtonsTopRow: View {
         } message: {
             Text(type.message)
         }
+        .alertSound(isPresented: showAlert)
     }
     
     private var settingsButton: some View {

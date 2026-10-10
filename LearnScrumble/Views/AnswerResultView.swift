@@ -87,7 +87,12 @@ private struct AnimalStage: View {
         .symbolRenderingMode(.palette)
         .foregroundStyle(.white, isCorrect ? .green : .red)
         .symbolEffect(.bounce, value: bounce)
-        .onAppear { bounce.toggle() }
+        .onAppear {
+          if isCorrect {
+            SoundManager.shared.play("success")
+          }
+          bounce.toggle()
+        }
       
       // Reduce Motion: paused (still frame). Otherwise capped at 30fps to spare the battery.
       TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { timeline in

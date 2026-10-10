@@ -113,6 +113,7 @@ struct ResultView: View {
         } message: {
             Text(alertType.message)
         }
+        .alertSound(isPresented: showAlert)
     }
     
     // MARK: - Building blocks

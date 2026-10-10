@@ -17,6 +17,7 @@ struct LetterBoxView: View {
     Button {
       guard !letter.isUsed else { return }
       color = .white
+      SoundManager.shared.play("tapScrumbled")
       onTap(letter)
       Task {
         try? await Task.sleep(for: .seconds(0.1))

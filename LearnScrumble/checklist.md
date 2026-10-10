@@ -4,7 +4,7 @@
 **From:** Konstantin
 **Based on:** your code at `1e60eb9` (1 October 2026), which I built and reviewed on 4 October. Nothing new had been pushed by 7 October.
 **Status:** revised 7 October to the direction "keep building toward a finished app". Ready to send after Konstantin's read-through.
-**Progress check (9 October, against the current code):** ✅ = done · ❓ **need discussion** = waiting on a conversation or decision · ⬜ **to do** = not started yet
+**Progress check (10 October, against the current code):** ✅ = done · ❓ **need discussion** = waiting on a conversation or decision · ⬜ **to do** = not started yet
 
 ---
 
@@ -44,7 +44,7 @@ That's about direction, not effort. We never agreed on a clear target, and that'
 | ✅ 2 | The loading screen can still stick after a checkpoint | `WordVM.swift:231, 252, 282`; `AppManager.swift:73` | When exactly two words are left, `advance()` starts a prefetch, `onResume` routes to loading, and nothing routes back. Route on "is a word ready?", not on "is a fetch running?" *(Now routes on `pendingAdvance`; confirmed in a simulator trace. The prefetch also starts earlier, with 3 words left)* |
 | ✅ 3 | A "/" in a word name crashes Firestore, for example "a/c unit" | `FirebaseWordStore.swift:37, 87` | Turn `toolName` into a safe slug before using it as a document ID or in the `in` query *(`documentID(for:)`; the `in` query is also split into groups of 30 now)* |
 | ✅ 4 | The shuffle never ends for words made of one repeated letter | `WordVM.swift:158-162` | `repeat … while shuffled == letters` loops forever on "mm" or "妈妈". Add an attempt cap *(Capped at 10 tries; skipped when all letters are the same)* |
-| ✅ 5 | Seven strings stay in English, and "Loading" has no translations | `EntryView.swift:37, 39, 92`; `MenuAlert.swift:15-23`; `LoadingView.swift:41` | The seven are passed as `String`, not `LocalizedStringKey`, so the catalog never sees them. "Loading" is in the catalog but has 0 translations *(All are `LocalizedStringKey` now, and "Loading" has 54 translations. One new string, the VoiceOver value "%lld percent" in `LoadingView.swift:51`, still has 0 translations)* |
+| ✅ 5 | Seven strings stay in English, and "Loading" has no translations | `EntryView.swift:37, 39, 92`; `MenuAlert.swift:15-23`; `LoadingView.swift:41` | The seven are passed as `String`, not `LocalizedStringKey`, so the catalog never sees them. "Loading" is in the catalog but has 0 translations *(All are `LocalizedStringKey` now, and "Loading" has 54 translations. The VoiceOver value "%lld percent" in `LoadingView.swift:51` now has 54 translations too)* |
 | ✅ 6 | The review shortcut never appears with the default target language | `RootView.swift:8, 15` vs `EntryView.swift:6, 61` | `@AppStorage("pickedLanguage")` defaults to "" in one view and "en-US" in the other *(All three views now default to "en-US")* |
 | ✅ 7 | "Retry" after a failed review starts a normal, paid session | `RootView.swift:30` | Retry should repeat what failed *(`AppManager.retry()` uses `lastSession`)* |
 | ✅ 8 | An unused cat photo of about 15 MB ships in the app | `Assets.xcassets/cat.imageset` | It bloats the download and causes a build warning *(Removed)* |
@@ -199,7 +199,7 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 
 ---
 
-## 9. Summary (9 October)
+## 9. Summary (10 October)
 
 ### ⬜ Remaining: to do
 
@@ -207,7 +207,6 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 2. ⬜ **Multi-step onboarding** with back and skip. Today it's a single setup screen. *(§2, §4.1)*
 3. ⬜ **Paywall.** RevenueCat on StoreKit; the paywall screen after the first completed round, showing price, period, what's included and the auto-renewal terms; Restore Purchases on the paywall too; a local StoreKit or sandbox setup with no live products. *(§2, §4.3, §7)*
 4. ⬜ **Crash reporting and analytics**, with the events: onboarding finished, round finished, paywall shown, trial started. *(§2, §4.4)*
-5. ⬜ **Translate "%lld percent"**, the VoiceOver value in `LoadingView.swift:51` (0 translations). *(§3 #5)*
 
 ### ❓ Remaining: need discussion
 
@@ -228,7 +227,7 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 - ✅ The loading screen no longer sticks after a checkpoint (routes on `pendingAdvance`).
 - ✅ "/" in word names: safe document IDs.
 - ✅ Shuffle attempt cap for repeated-letter words.
-- ✅ The seven English-only strings are localized; "Loading" has 54 translations.
+- ✅ The seven English-only strings are localized; "Loading" and "%lld percent" have 54 translations each.
 - ✅ `pickedLanguage` defaults to "en-US" in every view.
 - ✅ Retry repeats what failed (`lastSession`).
 - ✅ The 15 MB cat image is removed.
@@ -257,3 +256,10 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 - ✅ Mid-round loading screens: the next batch now starts loading with 3 words left instead of 2.
 - ✅ A short first batch (3 words or fewer) starts loading the next one right away.
 - ✅ The duplicate `onResume` call after Continue is removed.
+- ✅ Error recovery: each `GenerationError` has a recovery type (retry, wait for connection, change profession, none), and `ErrorView` shows the buttons that match it. 4xx responses (except 408/429) become `.serviceUnavailable`, and 401s are no longer retried.
+- ✅ Offline screen with automatic retry, also used when a fetch fails mid-session.
+- ✅ Two loads can no longer run at once (`startGame` and `startStruggleReview` are guarded).
+
+**Also done on 10 October (not in the original list)**
+- ✅ Sound effects through a new `SoundManager`: letter taps, a success sound for correct answers, and a notification sound on every alert.
+- ✅ All 54 localized languages are now listed in the project's known regions.

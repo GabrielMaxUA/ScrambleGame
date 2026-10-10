@@ -95,6 +95,9 @@ struct SettingsView: View {
     .alert(restoreMessage, isPresented: $showRestoreAlert) {
       Button("OK") { }
     }
+    .alertSound(isPresented: showLockedAlert)
+    .alertSound(isPresented: showResetAlert)
+    .alertSound(isPresented: showRestoreAlert)
   }
   
   // MARK: - Sections
@@ -224,6 +227,7 @@ struct SettingsView: View {
     } message: {
       Text(MenuAlert.settingsLocked.message)
     }
+    .alertSound(isPresented: showVoiceLockedAlert)
   }
   
   private func loadVoice() {

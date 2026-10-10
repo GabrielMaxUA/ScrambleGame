@@ -110,6 +110,7 @@ struct WelcomeBackView: View {
     } message: {
       Text(alertType.message)
     }
+    .alertSound(isPresented: showAlert)
   }
   
   // same tile as ResultView
