@@ -98,7 +98,10 @@ final class AppManager {
             await self.showFailure()
           }
       },
-      onWordAnswered: { FreeAllowance.shared.recordAnsweredWord() },             // every answered word counts
+      onWordAnswered: {                                                          // every answered word counts
+        FreeAllowance.shared.recordAnsweredWord()
+        DailyReminder.cancelToday()                                              // played today: no 9am reminder
+      },
       canContinue: { [weak self] in self?.canPlay ?? false },                     // checked after every word
       canFetchMore: { [weak self] unplayed in                                     // no downloads the user can't play
         guard let self else { return false }

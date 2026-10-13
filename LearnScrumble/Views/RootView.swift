@@ -24,6 +24,7 @@ struct RootView: View {
             case .onboarding:
               EntryView(requestModel: manager.requestModel, onSubmit: {
                 hasCompletedOnboarding = true                    // setup done: next launch shows the welcome-back screen
+                Task { await DailyReminder.requestPermission() } // notification Allow popup — asked once, on onboarding's Let's go
                 await manager.startGame()
               })
             case .welcomeBack:                                   // NEW — returning user's start screen

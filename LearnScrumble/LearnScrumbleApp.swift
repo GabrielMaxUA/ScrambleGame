@@ -12,6 +12,7 @@ import SwiftData
 struct LearnScrumbleApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
   @State private var manager: AppManager
+  @Environment(\.scenePhase) private var scenePhase
   
   init() {
     let requestModel = RequestModel()
@@ -23,5 +24,10 @@ struct LearnScrumbleApp: App {
       RootView(manager: manager)
     }
     .modelContainer(PersistenceController.shared.container)
+    .onChange(of: scenePhase) { _, phase in
+      guard phase == .active else { return }
+      FreeAllowance.shared.refresh()                                 // new day since last open: count starts at 0
+      Task { await DailyReminder.reschedule() }
+    }
   }
 }
