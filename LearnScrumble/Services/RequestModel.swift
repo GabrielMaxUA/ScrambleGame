@@ -415,15 +415,35 @@ class RequestModel {
         print("🌐 generateImage — requesting image for '\(toolName)'")
         let data = try await send(request)
 
-        struct ImgResponse: Decodable { struct Item: Decodable { let b64_json: String }; let data: [Item] }
-        guard let decoded = try? JSONDecoder().decode(ImgResponse.self, from: data),
-              let b64 = decoded.data.first?.b64_json,
-              let imgData = Data(base64Encoded: b64),
-              UIImage(data: imgData) != nil else {                        // bytes must actually form an image
+        guard let imgData = await Self.unpackImage(data) else {           // heavy part runs on a background thread — the loading animation keeps moving
             throw GenerationError.badResponse
         }
         return imgData
     }
+
+    // MARK: - Background image unpacking
+    // Flow: resolveImage -> generateImage -> send() (network, waits in iOS) -> raw reply bytes
+    //       -> await unpackImage(data) [background thread] -> PNG bytes back on the main thread
+    //       -> resolveImage -> FirebaseImageStore.uploadWebP + returned to buildQuestions as the question's image
+
+    /// GPT's reply is ~2 MB of JSON with the PNG inside as base64 text.
+    /// Parsing it, decoding the base64 and checking the image is real CPU work,
+    /// so it runs on a background thread (@concurrent) instead of freezing the main thread.
+    /// Called from: generateImage above. Returns nil for an unreadable reply -> generateImage throws .badResponse.
+    @concurrent                                                           // run this on a background thread, not the caller's (main) thread
+    nonisolated private static func unpackImage(_ data: Data) async -> Data? {   // nonisolated + static: touches no RequestModel state, so it may run off the main thread
+        guard let decoded = try? JSONDecoder().decode(ImgResponse.self, from: data),   // reply bytes -> ImgResponse (the JSON shape below)
+              let b64 = decoded.data.first?.b64_json,                    // the first (only, n: 1) image, as base64 text
+              let imgData = Data(base64Encoded: b64),                    // base64 text -> real PNG bytes
+              UIImage(data: imgData) != nil else {                        // bytes must actually form an image
+            return nil
+        }
+        return imgData                                                   // PNG bytes — same Data generateImage returned before
+    }
+
+    /// Shape of GPT's image reply: { "data": [ { "b64_json": "<base64 PNG>" } ] }.
+    /// nonisolated so unpackImage can decode it on the background thread (the project default would tie it to the main thread).
+    nonisolated private struct ImgResponse: Decodable { struct Item: Decodable { let b64_json: String }; let data: [Item] }
 
     // MARK: - Networking
 

@@ -100,7 +100,7 @@ final class AppManager {
       },
       onWordAnswered: {                                                          // every answered word counts
         FreeAllowance.shared.recordAnsweredWord()
-        DailyReminder.cancelToday()                                              // played today: no 9am reminder
+        DailyReminder.cancelToday()                                              // played today: delete today's booked 9am reminder (DailyReminder.swift)
       },
       canContinue: { [weak self] in self?.canPlay ?? false },                     // checked after every word
       canFetchMore: { [weak self] unplayed in                                     // no downloads the user can't play

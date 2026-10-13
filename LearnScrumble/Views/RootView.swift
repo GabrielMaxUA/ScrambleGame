@@ -24,7 +24,11 @@ struct RootView: View {
             case .onboarding:
               EntryView(requestModel: manager.requestModel, onSubmit: {
                 hasCompletedOnboarding = true                    // setup done: next launch shows the welcome-back screen
-                Task { await DailyReminder.requestPermission() } // notification Allow popup — asked once, on onboarding's Let's go
+                // MARK: - Daily reminder permission
+                // "Let's go" -> DailyReminder.requestPermission() -> iOS Allow / Don't Allow popup (iOS shows it once ever)
+                //   Allow -> DailyReminder.reschedule() books the 9am reminders for the next 7 days
+                // Separate Task so startGame() below starts loading words while the popup is on screen
+                Task { await DailyReminder.requestPermission() }
                 await manager.startGame()
               })
             case .welcomeBack:                                   // NEW — returning user's start screen
