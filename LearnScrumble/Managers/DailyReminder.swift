@@ -41,66 +41,89 @@ enum DailyReminder {
 
   // MARK: - Public
 
-  /// Shows the system permission prompt once (later calls just return the saved answer), then schedules.
-  /// Called from: RootView -> EntryView onSubmit ("Let's go" at the end of onboarding)
+  // MARK: - requestPermission
+  // Shows the system permission prompt once (later calls just return the saved answer), then schedules.
+  // Called from: RootView -> EntryView onSubmit ("Let's go" at the end of onboarding)
+  // 1. iOS popup — waits here until the user taps; true = Allow (an error counts as not allowed).
+  // 2. reschedule(): allowed -> books the next 7 days now; denied -> reschedule() stops at its guard.
   static func requestPermission() async {
-    let granted = (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false   // iOS popup — waits here until the user taps; true = Allow
+    let granted = (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
     print("🔔 DailyReminder — permission \(granted ? "granted" : "denied")")
-    await reschedule()                                             // allowed: book the next 7 days now (denied: reschedule() stops at its guard)
+    await reschedule()
   }
 
-  /// Rebuilds the next days of reminders. Call when the app becomes active.
-  /// Called from: requestPermission() above, and LearnScrumbleApp .onChange(of: scenePhase) every time the app opens
+  // MARK: - reschedule
+  // Rebuilds the next days of reminders. Call when the app becomes active.
+  // Called from: requestPermission() above, and LearnScrumbleApp .onChange(of: scenePhase) every time the app opens
+  // 1. User said Don't Allow (or turned it off in iOS Settings) -> book nothing.
+  // 2. Deletes what's booked from earlier opens, so no day gets two reminders.
+  // 3. playedToday: FreeAllowance counts answered words per day — 0 means the user hasn't played today.
+  // 4. For each day, offset 0 = today, 1 = tomorrow … 6:
+  //    - that date at 9:00:00 in the phone's calendar + time zone (= the user's local 9am)
+  //    - skipped if that 9am already passed, or if it's today and the user already played
+  //    - otherwise one reminder: id "dailyReminder-2026-10-12" (lets cancelToday() find it later)
+  //      + content() (title, text, sound) + a trigger that fires once, on that exact date at 9:00
+  //    - handed to iOS, which shows it even if the app is closed
   static func reschedule() async {
-    guard await center.notificationSettings().authorizationStatus == .authorized else { return }   // user said Don't Allow (or turned it off in iOS Settings): book nothing
-    center.removePendingNotificationRequests(withIdentifiers: allIds())   // delete what's booked from earlier opens, so no day gets two reminders
+    guard await center.notificationSettings().authorizationStatus == .authorized else { return }
+    center.removePendingNotificationRequests(withIdentifiers: allIds())
 
-    let calendar = Calendar.current                                // the phone's calendar + time zone -> 9:00 is the user's local 9am
+    let calendar = Calendar.current
     let now = Date()
-    let playedToday = FreeAllowance.shared.wordsUsedToday > 0      // FreeAllowance counts answered words per day: 0 = hasn't played today
-    for offset in 0..<daysAhead {                                  // offset 0 = today, 1 = tomorrow ... 6
-      guard let day = calendar.date(byAdding: .day, value: offset, to: now),                 // the date `offset` days from now
-            let fireDate = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: day), // that date at 9:00:00
-            fireDate > now else { continue }                       // today's 9am already passed
-      if offset == 0 && playedToday { continue }                   // already played before 9am
+    let playedToday = FreeAllowance.shared.wordsUsedToday > 0
+    for offset in 0..<daysAhead {
+      guard let day = calendar.date(byAdding: .day, value: offset, to: now),
+            let fireDate = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: day),
+            fireDate > now else { continue }
+      if offset == 0 && playedToday { continue }
 
-      var parts = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: fireDate)   // split 9:00 on that day into numbers for the trigger
+      var parts = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: fireDate)
       parts.second = 0
-      let request = UNNotificationRequest(                         // one reminder = id + what it says + when it fires
-        identifier: id(for: fireDate),                             // "dailyReminder-2026-10-12" — lets cancelToday() find it later
-        content: content(),                                        // title, text and sound, built below
-        trigger: UNCalendarNotificationTrigger(dateMatching: parts, repeats: false))   // fires once, on that exact date at 9:00
-      try? await center.add(request)                               // hand it to iOS — iOS shows it even if the app is closed
+      let request = UNNotificationRequest(
+        identifier: id(for: fireDate),
+        content: content(),
+        trigger: UNCalendarNotificationTrigger(dateMatching: parts, repeats: false))
+      try? await center.add(request)
     }
     print("🔔 DailyReminder — scheduled next \(daysAhead) days at \(hour):00 (today skipped: \(playedToday))")
   }
 
-  /// The user played today: today's reminder isn't needed anymore.
-  /// Called from: AppManager.startGame -> WordVM's onWordAnswered, after every answered word
+  // MARK: - cancelToday
+  // The user played today: today's reminder isn't needed anymore.
+  // Called from: AppManager.startGame -> WordVM's onWordAnswered, after every answered word
+  // Deletes today's id; if it already fired or was never booked, nothing happens.
   static func cancelToday() {
-    center.removePendingNotificationRequests(withIdentifiers: [id(for: Date())])   // delete today's id; already fired or not booked = nothing happens
+    center.removePendingNotificationRequests(withIdentifiers: [id(for: Date())])
   }
 
   // MARK: - Private
 
-  /// What the notification shows. Used by reschedule() for every booked day.
+  // MARK: - content
+  // What the notification shows. Used by reschedule() for every booked day.
+  //   title: "LearnScrumble" — bold first line of the banner
+  //   body:  the message, from Localizable.xcstrings (phone's language)
+  //   sound: the standard iOS notification sound
   private static func content() -> UNMutableNotificationContent {
     let content = UNMutableNotificationContent()
-    content.title = "LearnScrumble"                                // bold first line of the banner
-    content.body = String(localized: "LearnScrumble got your words ready and waiting for you!")   // message text — from Localizable.xcstrings (phone's language)
-    content.sound = .default                                       // standard iOS notification sound
+    content.title = "LearnScrumble"
+    content.body = String(localized: "LearnScrumble got your words ready and waiting for you!")
+    content.sound = .default
     return content
   }
 
-  /// Builds the reminder id for a day, e.g. "dailyReminder-2026-10-12".
-  /// Used by reschedule() (to book), cancelToday() (to delete today) and allIds() (to delete all).
-  nonisolated private static func id(for date: Date) -> String {   // pure date math: safe from any thread
-    let parts = Calendar.current.dateComponents([.year, .month, .day], from: date)   // pull year, month, day out of the date
+  // MARK: - id(for:)
+  // Builds the reminder id for a day, e.g. "dailyReminder-2026-10-12": pulls year, month, day out of the date.
+  // Used by reschedule() (to book), cancelToday() (to delete today) and allIds() (to delete all).
+  // nonisolated: pure date math, safe from any thread.
+  nonisolated private static func id(for date: Date) -> String {
+    let parts = Calendar.current.dateComponents([.year, .month, .day], from: date)
     return "\(idPrefix)\(parts.year ?? 0)-\(parts.month ?? 0)-\(parts.day ?? 0)"
   }
 
-  /// Ids for today + the next 6 days — every reminder reschedule() could have booked.
+  // MARK: - allIds
+  // Ids for today + the next 6 days — every reminder reschedule() could have booked:
+  // days 0...6 from now -> their ids.
   private static func allIds() -> [String] {
-    (0..<daysAhead).compactMap { Calendar.current.date(byAdding: .day, value: $0, to: Date()) }.map(id(for:))   // days 0...6 from now -> their ids
+    (0..<daysAhead).compactMap { Calendar.current.date(byAdding: .day, value: $0, to: Date()) }.map(id(for:))
   }
 }

@@ -82,7 +82,7 @@ class WordVM {
   var overlayShown: Bool = false                                 // controls the correct/incorrect result overlay shown after checkAnswer()
   var isLoadingMore = false                                      // true while requestMoreNow()'s background Task is in flight
   private(set) var pendingAdvance = false                             // true when the user is waiting on advance() but the next batch hasn't landed yet
-  var isRightToleft: Bool {
+  var isRightToleft: Bool {                                      // target language written right-to-left -> MainView flips the answer row
     Languages(rawValue: targetLanguage)?.isRtL ?? false
   }
   var wordSegments: [String] {                                   // splits the target word into space-separated segments (for multi-word answers)
@@ -114,30 +114,42 @@ class WordVM {
     !PersistenceController.shared.struggleToolNames(targetLanguage: targetLanguage).isEmpty
   }
   
-  init(questions: [QuestionModel],                                // initial batch of questions, passed in from RequestModel.generate()
-       targetLanguage: String,                                    // which language this whole session is testing (drives SwiftData scoping)
-       checkpointMode: CheckpointMode = .everyN(10),                // NEW — normal play keeps today's behavior by default
-       fetchMore: (([String]) async -> [QuestionModel])? = nil,   // how to fetch more words when running low; nil = fixed-size session (e.g. struggle review)
-       onCheckpoint: (() -> Void)? = nil,                         // callback fired every 10th word — AppManager wires this to show ResultView
-       onResume: (() -> Void)? = nil,                             // callback fired when leaving the checkpoint — AppManager wires this to resume play
+  // MARK: - init
+  // Builds the session from the first batch and whatever AppManager wired in:
+  //   questions       — initial batch of questions, from RequestModel.generate() (or the review pool)
+  //   targetLanguage  — which language this whole session is testing (drives SwiftData scoping)
+  //   checkpointMode  — NEW, .everyN(10) by default so normal play keeps today's behavior
+  //   fetchMore       — how to fetch more words when running low; nil = fixed-size session (e.g. struggle review)
+  //   onCheckpoint    — fired every 10th word; AppManager wires this to show ResultView
+  //   onResume        — fired when leaving the checkpoint; AppManager wires this to resume play
+  //   onFetchFailed / onWordAnswered / canContinue / canFetchMore — see the properties above
+  // Steps: grab the shared SwiftData context once, up front -> store the starting batch, lock in the language
+  // this session tracks progress against, store every injected closure (or nil) -> scramble letters for the
+  // very first word immediately -> start a prefetch if the batch is already short.
+  init(questions: [QuestionModel],
+       targetLanguage: String,
+       checkpointMode: CheckpointMode = .everyN(10),
+       fetchMore: (([String]) async -> [QuestionModel])? = nil,
+       onCheckpoint: (() -> Void)? = nil,
+       onResume: (() -> Void)? = nil,
        onFetchFailed: (() -> Void)? = nil,
        onWordAnswered: (() -> Void)? = nil,
        canContinue: (() -> Bool)? = nil,
        canFetchMore: ((Int) -> Bool)? = nil
   ) {
-    self.modelContext = PersistenceController.shared.context      // grab the shared SwiftData context once, up front
-    self.questions = questions                                    // store the starting batch
-    self.targetLanguage = targetLanguage                          // lock in the language this session tracks progress against
+    self.modelContext = PersistenceController.shared.context
+    self.questions = questions
+    self.targetLanguage = targetLanguage
     self.checkpointMode = checkpointMode
-    self.fetchMore = fetchMore                                    // store the injected fetch closure (or nil)
-    self.onCheckpoint = onCheckpoint                               // store the injected checkpoint callback (or nil)
-    self.onResume = onResume                                        // store the injected resume callback (or nil)
+    self.fetchMore = fetchMore
+    self.onCheckpoint = onCheckpoint
+    self.onResume = onResume
     self.onFetchFailed = onFetchFailed
     self.onWordAnswered = onWordAnswered
     self.canContinue = canContinue
     self.canFetchMore = canFetchMore
-    print("🟢 WordVM.init — \(questions.count) starting questions, targetLanguage=\(targetLanguage), fetchMore=\(fetchMore != nil)") // NEW
-    setupCurrentWord()                                             // scramble letters for the very first word immediately
+    print("🟢 WordVM.init — \(questions.count) starting questions, targetLanguage=\(targetLanguage), fetchMore=\(fetchMore != nil)")
+    setupCurrentWord()
     requestMoreIfNeeded()
   }
   
@@ -150,75 +162,106 @@ class WordVM {
   }
   var isComplete: Bool { !guessedWord.contains(where: { $0 == nil }) }  // true once every letter slot has been filled in
   
-  func setupCurrentWord() {                                        // resets scrambled tiles + empty guess slots for whatever word is now current
-    guard let word else {                                           // no word to set up (e.g. ran past the end of questions)
-      guessedWord = []                                              // clear guess slots
-      scrumbledWord = []                                            // clear letter tiles
+  // MARK: - setupCurrentWord
+  // Resets scrambled tiles + empty guess slots for whatever word is now current.
+  // 1. No word (e.g. ran past the end of questions) -> clear slots and tiles, nothing else to do.
+  // 2. Letters = the target-language word with spaces stripped (they're not tiles, just layout gaps),
+  //    each character lowercased.
+  // 3. Every answer slot starts empty (one per letter).
+  // 4. Shuffle — only if there are at least two DIFFERENT letters, so another order exists ("mm" or "妈妈" skip this):
+  //    reshuffle until it differs from the answer, but never more than 10 tries; still in answer order
+  //    after that (very rare, e.g. "ab") -> move the first letter to the end: always a different order.
+  // 5. Wrap each shuffled letter into a tappable LetterModel tile (id = its position), all unused.
+  func setupCurrentWord() {
+    guard let word else {
+      guessedWord = []
+      scrumbledWord = []
       print("⚪️ setupCurrentWord — no word at index \(currentIndex), clearing tiles")
-      return                                                        // nothing else to do
+      return
     }
-    let letters = word.targetWord                                  // start from the target-language word
-      .filter { $0 != " " }                                         // strip spaces — they're not draggable tiles, just layout gaps
-      .map { String($0).lowercased() }                              // normalize each character to a lowercase single-char string
-    
-    let totalLetters = letters.count                                // how many tiles/slots this word needs
-    guessedWord = Array(repeating: nil, count: totalLetters)        // start with every slot empty
-    
-    var shuffledLetters = letters                                  // working copy to shuffle
-    if Set(letters).count > 1 {                                     // at least two DIFFERENT letters, so another order exists ("mm"                                                                or "妈妈" skip this)
+    let letters = word.targetWord
+      .filter { $0 != " " }
+      .map { String($0).lowercased() }
+
+    let totalLetters = letters.count
+    guessedWord = Array(repeating: nil, count: totalLetters)
+
+    var shuffledLetters = letters
+    if Set(letters).count > 1 {
       var attempts = 0
       repeat {
-        shuffledLetters = letters.shuffled()                        // reshuffle...
+        shuffledLetters = letters.shuffled()
         attempts += 1
-      } while shuffledLetters == letters && attempts < 10           // ...until it differs from the answer, but never more than 10 tries
-      
-      if shuffledLetters == letters {                               // still in answer order after 10 tries (very rare, e.g. "ab")
-        shuffledLetters = Array(letters.dropFirst()) + [letters[0]] // move the first letter to the end: always a different order
+      } while shuffledLetters == letters && attempts < 10
+
+      if shuffledLetters == letters {
+        shuffledLetters = Array(letters.dropFirst()) + [letters[0]]
       }
     }
-    
-    scrumbledWord = shuffledLetters                                 // take the shuffled letters
-      .enumerated()                                                 // pair each with its position
-      .map { LetterModel(id: $0.offset, letter: $0.element, isUsed: false) } // wrap into tappable tile models, all initially unused
+
+    scrumbledWord = shuffledLetters
+      .enumerated()
+      .map { LetterModel(id: $0.offset, letter: $0.element, isUsed: false) }
     print("🔤 setupCurrentWord — index \(currentIndex): '\(word.targetWord)' (\(totalLetters) letters), hint='\(word.originWord)'")
   }
   
-  func selectLetter(_ tile: LetterModel) {                          // called when the user taps an available letter tile
-    guard let emptySlot = guessedWord.firstIndex(where: { $0 == nil }) else { return } // find the next empty answer slot; bail if the answer is already full
-    guard let index = scrumbledWord.firstIndex(where: { $0.id == tile.id }) else { return } // find this tile in the tray
-    scrumbledWord[index].isUsed = true                              // mark it as placed so it visually disables in the tray
-    guessedWord[emptySlot] = tile                                   // drop it into the next empty answer slot
-    print("👉 selectLetter — placed '\(tile.letter)' at slot \(emptySlot), current guess='\(resultWord)'") // NEW
+  // MARK: - selectLetter
+  // Called when the user taps an available letter tile (LetterBoxView -> MainView).
+  // Finds the next empty answer slot (answer already full -> nothing) and the tile in the tray,
+  // marks the tile as placed (it dims in the tray) and drops it into that slot.
+  func selectLetter(_ tile: LetterModel) {
+    guard let emptySlot = guessedWord.firstIndex(where: { $0 == nil }) else { return }
+    guard let index = scrumbledWord.firstIndex(where: { $0.id == tile.id }) else { return }
+    scrumbledWord[index].isUsed = true
+    guessedWord[emptySlot] = tile
+    print("👉 selectLetter — placed '\(tile.letter)' at slot \(emptySlot), current guess='\(resultWord)'")
   }
   
-  func deselectLetter(_ tile: LetterModel) {                        // called when the user taps a tile they'd already placed, to undo it
-    guard let slotIndex = guessedWord.firstIndex(where: { $0?.id == tile.id }) else { return } // find where this tile currently sits in the answer
-    guard let index = scrumbledWord.firstIndex(where: { $0.id == tile.id }) else { return } // find it back in the tray
-    scrumbledWord[index].isUsed = false                             // mark it available again in the tray
-    guessedWord[slotIndex] = nil                                    // clear that answer slot
-    print("👈 deselectLetter — removed '\(tile.letter)' from slot \(slotIndex), current guess='\(resultWord)'") // NEW
+  // MARK: - deselectLetter
+  // Called when the user taps a tile they'd already placed, to undo it (GuessedLetterView).
+  // Finds where the tile sits in the answer and in the tray, marks it available again and clears that slot.
+  func deselectLetter(_ tile: LetterModel) {
+    guard let slotIndex = guessedWord.firstIndex(where: { $0?.id == tile.id }) else { return }
+    guard let index = scrumbledWord.firstIndex(where: { $0.id == tile.id }) else { return }
+    scrumbledWord[index].isUsed = false
+    guessedWord[slotIndex] = nil
+    print("👈 deselectLetter — removed '\(tile.letter)' from slot \(slotIndex), current guess='\(resultWord)'")
   }
   
-  func checkAnswer() {                                              // called when the user submits their completed guess
-    guard isComplete, let word else { return }                       // only score once every slot is filled and there's a real word
-    let isCorrect = resultWord == word.targetWord.lowercased() // compare guess to the target word, spaces stripped, case-insensitive
-    guessResult = isCorrect ? .correct : .incorrect                  // record the verdict for the UI
-    overlayShown = true                                              // trigger the result overlay to appear
-    print("✅❌ checkAnswer — guessed='\(resultWord)' target='\(word.targetWord)' -> \(isCorrect ? "CORRECT" : "INCORRECT")") // NEW
-    recordGuess(for: word.toolName, result: guessResult!)            // persist this attempt to SwiftData, keyed by the canonical concept name
-    onWordAnswered?()                                                 // count it, right or wrong
+  // MARK: - checkAnswer
+  // Called when every slot is filled (MainView .onChange of isComplete).
+  // 1. Only scores when the answer is complete and there's a real word.
+  // 2. Compares the guess to the target word, case-insensitive (resultWord is already lowercased, with spaces between words).
+  // 3. Records the verdict for the UI (guessResult) and shows the result overlay.
+  // 4. recordGuess: saves this attempt to SwiftData, keyed by the canonical concept name.
+  // 5. onWordAnswered: counts it toward today's free allowance, right or wrong.
+  func checkAnswer() {
+    guard isComplete, let word else { return }
+    let isCorrect = resultWord == word.targetWord.lowercased()
+    guessResult = isCorrect ? .correct : .incorrect
+    overlayShown = true
+    print("✅❌ checkAnswer — guessed='\(resultWord)' target='\(word.targetWord)' -> \(isCorrect ? "CORRECT" : "INCORRECT")")
+    recordGuess(for: word.toolName, result: guessResult!)
+    onWordAnswered?()
   }
   
+  // MARK: - nextWord
+  // "Next" on AnswerResultView.
+  // 1. Clears the verdict. Free daily limit reached (canContinue false) -> end the round here with a checkpoint.
+  // 2. .everyN: the next word would be the Nth -> checkpoint (ResultView), staying on the current index.
+  //    .endOfSession: that was the last word in the pool -> checkpoint and isFinished
+  //    (this pool is exhausted — there's genuinely nothing after this checkpoint).
+  // 3. Otherwise -> advance() to the next word.
   func nextWord() {
     guessResult = nil
-    if let canContinue, !canContinue() {                  // free daily limit reached: end the round here
+    if let canContinue, !canContinue() {
       isAtCheckpoint = true
       print("⛔️ nextWord — daily free limit reached, ending the round")
       onCheckpoint?()
       return
     }
     let nextIndex = currentIndex + 1
-    
+
     switch checkpointMode {
     case .everyN(let interval):
       if nextIndex % interval == 0 {
@@ -230,18 +273,23 @@ class WordVM {
     case .endOfSession:
       if nextIndex >= questions.count {
         isAtCheckpoint = true
-        isFinished = true                                          // this pool is exhausted — there's genuinely nothing after this checkpoint
+        isFinished = true
         print("🏁 nextWord — final word answered (\(questions.count) total), showing end-of-session result")
         onCheckpoint?()
         return
       }
     }
-    
+
     print("➡️ nextWord — advancing from index \(currentIndex) to \(nextIndex)")
     advance(to: nextIndex)
   }
   
-  /// Called from ResultView's Continue action.
+  // MARK: - continueFromCheckpoint
+  // Called from ResultView's Continue action.
+  // 1. Daily limit reached -> don't advance; onResume lets AppManager route away.
+  // 2. Leaves the checkpoint. .endOfSession already hit its true end -> nothing left to advance into, let AppManager route away.
+  // 3. Otherwise advance() to the next word. advance() already notified AppManager if we're now waiting on a fetch —
+  //    so onResume is only signalled here when the next word was ready.
   func continueFromCheckpoint() {
     if let canContinue, !canContinue() {
       print("⛔️ continueFromCheckpoint — daily free limit reached, not advancing")
@@ -249,77 +297,104 @@ class WordVM {
       return
     }
     isAtCheckpoint = false
-    guard !isFinished else {                                        // .endOfSession already hit its true end — nothing left to advance into
+    guard !isFinished else {
       print("🔚 continueFromCheckpoint — session already finished, nothing to advance, letting AppManager route away")
       onResume?()
       return
     }
     print("▶️ continueFromCheckpoint — leaving checkpoint, attempting advance to index \(currentIndex + 1)")
     advance(to: currentIndex + 1)
-      if !pendingAdvance { onResume?() }// advance() already notified AppManager if we're now waiting on a fetch — only signal here when the next word was ready
+      if !pendingAdvance { onResume?() }
   }
   
-  private func advance(to index: Int) {                              // the single place that actually moves currentIndex forward
-    guard index < questions.count else {                              // we've run past what's currently loaded
-      if isLoadingMore {                                              // a fetch is already in flight
-        pendingAdvance = true                                        // remember to advance automatically once it lands
+  // MARK: - advance(to:)
+  // The single place that actually moves currentIndex forward.
+  // Ran past what's currently loaded:
+  //   - a fetch is already in flight -> pendingAdvance: advance automatically once it lands
+  //   - no fetch in flight but more content is possible -> pendingAdvance + fetch right now
+  //     (safety net — the prefetch wasn't triggered in time)
+  //   - no fetchMore at all (fixed-size session, e.g. struggle review) -> isFinished: genuinely nothing left
+  //   then (NEW) onResume right away — waiting on a fetch means AppManager shows LoadingView.
+  // Otherwise: move to the requested word -> scramble its letters / reset guess slots
+  // -> kick off a background prefetch if we're getting close to the end -> hide the previous word's result overlay.
+  private func advance(to index: Int) {
+    guard index < questions.count else {
+      if isLoadingMore {
+        pendingAdvance = true
         print("⏳ advance(\(index)) — out of bounds (\(questions.count) loaded), fetch already in flight, setting pendingAdvance")
-      } else if fetchMore != nil {                                    // no fetch in flight, but more content is possible
-        pendingAdvance = true                                        // remember to advance once this fetch (below) resolves
+      } else if fetchMore != nil {
+        pendingAdvance = true
         print("🚨 advance(\(index)) — out of bounds, no fetch in flight, triggering safety-net fetch now")
-        requestMoreNow()                                              // safety net — fetch wasn't pre-triggered in time, so fetch right now
-      } else {                                                        // no fetchMore at all — this is a fixed-size session (e.g. struggle review)
-        isFinished = true                                             // genuinely nothing left — signal true end of session
+        requestMoreNow()
+      } else {
+        isFinished = true
         print("🔚 advance(\(index)) — out of bounds, no fetchMore source, marking session isFinished")
       }
-      onResume?()                                                     // NEW — tell AppManager right now: waiting on a fetch means show LoadingView
+      onResume?()
       return
     }
-    currentIndex = index                                              // move to the requested word
-    setupCurrentWord()                                                 // scramble its letters / reset guess slots
-    requestMoreIfNeeded()                                              // opportunistically kick off a background prefetch if we're getting close to the end
-    overlayShown = false                                               // hide any leftover result overlay from the previous word
+    currentIndex = index
+    setupCurrentWord()
+    requestMoreIfNeeded()
+    overlayShown = false
     print("📍 advance — now at index \(currentIndex) of \(questions.count) loaded questions")
   }
   
   private let prefetchThreshold = 3                                    // start the next batch when only this many words (incl. the current one) are left — 3 words of play time to hide GPT + image generation
 
-  private func requestMoreIfNeeded() {                                // decides whether it's time to quietly start fetching the next batch
-    guard !hasRequestedMore,                                           // don't double-fire while a fetch is in flight
-          questions.count - currentIndex <= prefetchThreshold,         // few enough words left — fetch now (also retries on the next word if a prefetch failed)
-          fetchMore != nil else { return }                             // only makes sense if a fetch source exists
+  // MARK: - requestMoreIfNeeded
+  // Decides whether it's time to quietly start fetching the next batch. Only when:
+  //   - no fetch already claimed for this batch (don't double-fire while one is in flight)
+  //   - few enough words left (≤ prefetchThreshold) — also retries on the next word if a prefetch failed
+  //   - a fetch source exists
+  //   - canFetchMore: a free user wouldn't hit the daily limit before needing these words
+  // Then -> requestMoreNow().
+  private func requestMoreIfNeeded() {
+    guard !hasRequestedMore,
+          questions.count - currentIndex <= prefetchThreshold,
+          fetchMore != nil else { return }
     let unplayed = questions.count - currentIndex
-    guard canFetchMore?(unplayed) ?? true else {          // free user would hit the limit before needing these words
+    guard canFetchMore?(unplayed) ?? true else {
       print("⛔️ requestMoreIfNeeded — skipping prefetch, daily free limit")
       return
     }
     print("🛰️ requestMoreIfNeeded — index \(currentIndex), \(unplayed) of \(questions.count) left, triggering prefetch")
-    requestMoreNow()                                                   // conditions met — kick off the real fetch
+    requestMoreNow()
   }
   
-  private func requestMoreNow() {                                    // actually performs the background fetch for more questions
+  // MARK: - requestMoreNow
+  // Actually performs the background fetch for more questions.
+  // 1. Needs a fetch source, and never stacks a second fetch on top of one in flight.
+  // 2. Marks this batch's prefetch as claimed and isLoadingMore (drives LoadingView decisions upstream).
+  // 3. Exclusion list = the canonical, language-independent toolNames already in this session (was targetWord).
+  // 4. Task on the main thread (UI state changes must happen there): await fetchMore -> append the new questions,
+  //    clear the loading flags.
+  // 5. Nobody waiting (background prefetch) -> done; if it failed, the safety net in advance() retries later.
+  //    User was waiting (pendingAdvance) and nothing came back -> onFetchFailed (ErrorView) instead of looping back into advance().
+  //    User was waiting and words arrived -> advance() to the next word + onResume.
+  private func requestMoreNow() {
     guard let fetchMore, !isLoadingMore else {
-      print("⛔️ requestMoreNow — skipped (fetchMore=\(self.fetchMore != nil), isLoadingMore=\(isLoadingMore))") // NEW
+      print("⛔️ requestMoreNow — skipped (fetchMore=\(self.fetchMore != nil), isLoadingMore=\(isLoadingMore))")
       return
-    }                 // need a fetch source, and don't stack a second fetch on top of one in flight
-    hasRequestedMore = true                                            // mark this batch's prefetch as claimed
-    isLoadingMore = true                                               // flag that a fetch is now in progress (drives LoadingView decisions upstream)
-    let existingToolNames = questions.map { $0.word.toolName }         // ← was targetWord  // build the exclusion list using the canonical (language-independent) word key
-    print("📡 requestMoreNow — fetching more, excluding \(existingToolNames.count) toolNames: \(existingToolNames)") // NEW
-    
-    Task { @MainActor in                                               // UI state changes must happen on the main thread
+    }
+    hasRequestedMore = true
+    isLoadingMore = true
+    let existingToolNames = questions.map { $0.word.toolName }
+    print("📡 requestMoreNow — fetching more, excluding \(existingToolNames.count) toolNames: \(existingToolNames)")
+
+    Task { @MainActor in
       let newQuestions = await fetchMore(existingToolNames)
       questions.append(contentsOf: newQuestions)
       isLoadingMore = false
       hasRequestedMore = false
       print("📥 requestMoreNow — fetch resolved, appended \(newQuestions.count) new questions, total now \(questions.count)")
-      
-      guard pendingAdvance else { return }                             // background prefetch — if it failed, the safety net will retry later
+
+      guard pendingAdvance else { return }
       pendingAdvance = false
-      
-      if newQuestions.isEmpty {                                        // user is stuck waiting and nothing came back
+
+      if newQuestions.isEmpty {
         print("❌ requestMoreNow — user was waiting and fetch returned nothing, reporting failure")
-        onFetchFailed?()                                               // stop here instead of looping back into advance()
+        onFetchFailed?()
         return
       }
       advance(to: currentIndex + 1)
@@ -327,22 +402,27 @@ class WordVM {
     }
   }
   
-  func resetGuess() {                                                 // called when the user wants to clear their current attempt and retry
-    for tile in guessedWord.compactMap({ $0 }) {                       // walk every letter currently placed in the answer
-      if let idx = scrumbledWord.firstIndex(where: { $0.id == tile.id }) { // find it back in the tray
-        scrumbledWord[idx].isUsed = false                              // mark it available again
+  // MARK: - resetGuess
+  // Called when the user wants to clear their current attempt and retry (ResultWordRow's arrow).
+  // Every placed letter is marked available again in the tray, and every answer slot is emptied.
+  func resetGuess() {
+    for tile in guessedWord.compactMap({ $0 }) {
+      if let idx = scrumbledWord.firstIndex(where: { $0.id == tile.id }) {
+        scrumbledWord[idx].isUsed = false
       }
     }
-    guessedWord = Array(repeating: nil, count: guessedWord.count)      // empty out every answer slot
-    print("♻️ resetGuess — cleared all answer slots for index \(currentIndex)") // NEW
+    guessedWord = Array(repeating: nil, count: guessedWord.count)
+    print("♻️ resetGuess — cleared all answer slots for index \(currentIndex)")
   }
   
   // MARK: - SwiftData stats (scoped to this session's target language)
 
-    private func accuracy(for records: [SwiftDataWordModel]) -> (correct: Int, total: Int) { // sums correct/incorrect across a set of SwiftData records
-      let correct = records.reduce(0) { $0 + $1.correct }               // total correct answers across all matched records
-      let incorrect = records.reduce(0) { $0 + $1.incorrect }           // total incorrect answers across all matched records
-      return (correct, correct + incorrect)                             // return correct count alongside the overall attempt count
+    // MARK: - accuracy(for:)
+    // Sums correct/incorrect across a set of SwiftData records -> (correct, all attempts).
+    private func accuracy(for records: [SwiftDataWordModel]) -> (correct: Int, total: Int) {
+      let correct = records.reduce(0) { $0 + $1.correct }
+      let incorrect = records.reduce(0) { $0 + $1.incorrect }
+      return (correct, correct + incorrect)
     }
 
     private var currentBatchWindow: ArraySlice<QuestionModel> {        // the words in the current checkpoint window
@@ -356,7 +436,11 @@ class WordVM {
       }
     }
 
-    func batchAccuracy() -> (correct: Int, total: Int) {                // % correct for the current checkpoint's words only
+    // MARK: - batchAccuracy
+    // Correct vs all answers for the current checkpoint's words only (ResultView "This set").
+    // The words in currentBatchWindow -> their concepts -> fetch those records in this language -> accuracy(for:).
+    // No words -> (0, 0).
+    func batchAccuracy() -> (correct: Int, total: Int) {
       let concepts = Set(currentBatchWindow.map { $0.word.toolName })
       guard !concepts.isEmpty else { return (0, 0) }
       let lang = targetLanguage
@@ -368,30 +452,38 @@ class WordVM {
       return result
     }
 
-    func overallAccuracy() -> (correct: Int, total: Int) {              // % correct across all-time history — the logic lives in PersistenceController
+    // MARK: - overallAccuracy
+    // Correct vs all answers across all-time history (ResultView "Overall") — the logic lives in PersistenceController.
+    func overallAccuracy() -> (correct: Int, total: Int) {
       PersistenceController.shared.overallAccuracy(targetLanguage: targetLanguage)
     }
   
-    private func recordGuess(for toolName: String, result: GuessResult) { // persists one answered word's outcome to SwiftData
-      let lang = targetLanguage                                          // capture for use inside the #Predicate closure
-      let predicate = #Predicate<SwiftDataWordModel> { $0.concept == toolName && $0.targetLanguage == lang } // find this exact (word, language) row
-      let descriptor = FetchDescriptor<SwiftDataWordModel>(predicate: predicate) // wrap the predicate into a fetch request
-      
-      let existing = (try? modelContext.fetch(descriptor))?.first        // NEW — split out so we can log whether it's new vs existing
-      let record = existing ?? {                                          // reuse the existing row if one exists...
-        let new = SwiftDataWordModel(concept: toolName, targetLanguage: lang) // ...otherwise create a fresh one for this (word, language) pair
-        modelContext.insert(new)                                          // register it with SwiftData
-        return new                                                        // hand it back for updating below
+    // MARK: - recordGuess(for:result:)
+    // Saves one answered word's outcome to SwiftData.
+    // 1. Finds this exact (word, language) row — the language is captured first for use inside #Predicate.
+    // 2. Reuses the existing row, or creates and inserts a fresh one for this (word, language) pair (NEW: logs which).
+    // 3. Bumps whichever counter matches this attempt, stamps when the word was last practiced.
+    // 4. Saves the change to disk.
+    private func recordGuess(for toolName: String, result: GuessResult) {
+      let lang = targetLanguage
+      let predicate = #Predicate<SwiftDataWordModel> { $0.concept == toolName && $0.targetLanguage == lang }
+      let descriptor = FetchDescriptor<SwiftDataWordModel>(predicate: predicate)
+
+      let existing = (try? modelContext.fetch(descriptor))?.first
+      let record = existing ?? {
+        let new = SwiftDataWordModel(concept: toolName, targetLanguage: lang)
+        modelContext.insert(new)
+        return new
       }()
-      print("💾 recordGuess — concept='\(toolName)' lang=\(lang) [\(existing == nil ? "NEW row" : "existing row")], result=\(result)") // NEW
-      
-      switch result {                                                    // bump whichever counter matches this attempt
-      case .correct: record.correct += 1                                 // one more correct attempt
-      case .incorrect: record.incorrect += 1                             // one more incorrect attempt
+      print("💾 recordGuess — concept='\(toolName)' lang=\(lang) [\(existing == nil ? "NEW row" : "existing row")], result=\(result)")
+
+      switch result {
+      case .correct: record.correct += 1
+      case .incorrect: record.incorrect += 1
       }
-      record.lastSeen = .now                                             // stamp when this word was last practiced
-      
-      try? modelContext.save()                                           // persist the change to disk
-      print("💾 recordGuess — saved. '\(toolName)' now correct=\(record.correct) incorrect=\(record.incorrect) accuracy=\(record.accuracy)") // NEW
+      record.lastSeen = .now
+
+      try? modelContext.save()
+      print("💾 recordGuess — saved. '\(toolName)' now correct=\(record.correct) incorrect=\(record.incorrect) accuracy=\(record.accuracy)")
     }
 }

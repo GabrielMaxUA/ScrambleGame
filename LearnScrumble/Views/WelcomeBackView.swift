@@ -7,6 +7,15 @@
 
 import SwiftUI
 
+// MARK: - Flow of this file
+// The returning user's start screen (phase .welcomeBack).
+//   Reads PersistenceController: overall accuracy (score tile) and struggle words (review button)
+//   -> "Continue learning": free words left (canPlay) -> onContinue -> AppManager.startGame(); limit reached -> daily-limit alert
+//   -> "Improve previous!": paid -> onReview -> startStruggleReview(); free -> subscription alert
+//   -> gear (top) -> onSettings -> AppManager.openSettings()
+//   -> the alerts' "See plans" -> onShowPaywall (paywall not built yet).
+//   The owl celebrates when the overall score is 80% or more.
+
 struct WelcomeBackView: View {
   let targetLanguage: String                     // language being learned — scopes the stats
   let hasAccess: Bool                            // paid/unlocked user
@@ -16,8 +25,8 @@ struct WelcomeBackView: View {
   var onShowPaywall: () -> Void                  // "See plans" in the alert
   var onSettings: () -> Void                     // NEW comment — opens SettingsView (free for everyone)
   var previewHasStruggle: Bool? = nil            // previews only: force the struggle check on or off
-  @State private var showAlert = false
-  @State private var alertType: MenuAlert = .subscriptionRequired
+  @State private var showAlert = false                    // is the daily-limit / subscription alert open
+  @State private var alertType: MenuAlert = .subscriptionRequired   // which of the two alerts
   
   private var overallScore: Double? {            // nil when nothing has been answered yet, so the tile shows "—"
     let stat = PersistenceController.shared.overallAccuracy(targetLanguage: targetLanguage)
@@ -25,12 +34,12 @@ struct WelcomeBackView: View {
     return Double(stat.correct) / Double(stat.total)
   }
   
-  private var hasStruggleWords: Bool {
+  private var hasStruggleWords: Bool {           // any struggle word in this language -> show "Improve previous!" (previews can force it)
     previewHasStruggle ?? !PersistenceController.shared.struggleToolNames(targetLanguage: targetLanguage).isEmpty
   }
   
   var body: some View {
-    let score = overallScore
+    let score = overallScore                     // read once per redraw (it's a SwiftData fetch)
     
     VStack(spacing: 24) {
       Spacer(minLength: 40)
@@ -74,7 +83,7 @@ struct WelcomeBackView: View {
         .glassCompat(in: .capsule, interactive: true)
         
         if hasStruggleWords {
-          Button {
+          Button {                                     // paid: review; free: subscription alert
             if hasAccess { onReview() } else { alertType = .subscriptionRequired; showAlert = true }
           } label: {
             Label("Improve previous!", systemImage: hasAccess ? "arrow.counterclockwise" : "lock.fill")
@@ -113,7 +122,9 @@ struct WelcomeBackView: View {
     .alertSound(isPresented: showAlert)
   }
   
-  // same tile as ResultView
+  // MARK: - statTile(title:score:)
+  // Same tile as ResultView: a title and a big percent, or "—" when there's no score yet (nil).
+  // VoiceOver reads the tile as one element, e.g. "Overall, 80%".
   private func statTile(title: LocalizedStringKey, score: Double?) -> some View {
     VStack(spacing: 6) {
       Text(title)
@@ -136,7 +147,7 @@ struct WelcomeBackView: View {
       RoundedRectangle(cornerRadius: 14)
         .stroke(.white.opacity(0.2), lineWidth: 1)
     }
-    .accessibilityElement(children: .combine)        // VoiceOver reads "Overall, 80%"
+    .accessibilityElement(children: .combine)
   }
 }
 

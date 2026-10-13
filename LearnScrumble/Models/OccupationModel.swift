@@ -7,8 +7,15 @@
 
 import SwiftUI
 
+// MARK: - Flow of this file
+// The list of jobs offered in the profession menu.
+//   ProfessionPicker lists Occupation.allCases with their translated displayName
+//   -> the picked case's rawValue (fixed English name) goes into requestModel.proffession
+//   -> RequestModel sends that English name to GPT, so the prompt is the same whatever the app language.
+//   .notListed switches the picker to a free-text field.
+
 enum Occupation: String, CaseIterable, Identifiable {
-  var id: String { rawValue }
+  var id: String { rawValue }                                      // ForEach needs an id — the English name is unique
   
   // Warehouse and transport
   case warehouseWorker = "Warehouse worker"

@@ -1,32 +1,40 @@
 // EntryView.swift
 import SwiftUI
 
+// MARK: - Flow of this file
+// First-launch setup screen (phase .onboarding): native language, profession, language to learn.
+//   Pickers write straight into RequestModel (nativeLanguage, selectedLanguage, proffession)
+//   -> onChange copies each into UserDefaults (@AppStorage) so the next launch restores them
+//   -> "Start Learning" (only when profession is filled and the two languages differ)
+//   -> onSubmit -> RootView: hasCompletedOnboarding = true, notification permission, AppManager.startGame().
+//   A raccoon runs onto the button when the form is ready and runs off when it isn't.
+
 struct EntryView: View {
-  @AppStorage("nativeLanguage") private var nativeLanguage = "en-US"
-  @AppStorage("pickedLanguage") private var pickedLanguage = "en-US"
-  @AppStorage("pickedProffession") private var pickedProfession = ""
-  @Bindable var requestModel: RequestModel
-  let onSubmit: () async -> Void
-  private let nativePick: LocalizedStringKey = "I speak"
+  @AppStorage("nativeLanguage") private var nativeLanguage = "en-US"         // saved copy of requestModel.nativeLanguage
+  @AppStorage("pickedLanguage") private var pickedLanguage = "en-US"         // saved copy of requestModel.selectedLanguage
+  @AppStorage("pickedProffession") private var pickedProfession = ""         // saved copy of requestModel.proffession
+  @Bindable var requestModel: RequestModel                                   // the pickers write into it directly
+  let onSubmit: () async -> Void                                             // RootView: mark onboarding done + start the game
+  private let nativePick: LocalizedStringKey = "I speak"                     // card titles / warning, translated by the catalog
   private let professionPick: LocalizedStringKey = "My profession"
   private let wantToLearnPick: LocalizedStringKey = "I want to learn"
   private let languageAlertMessage: LocalizedStringKey = "Pick two different languages."
   @FocusState private var professionFocused: Bool                 // passed into ProfessionPicker so the raccoon and the button can react to typing
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var raccoonX: CGFloat = -600                          // raccoon's horizontal position relative to the button center
-  @State private var raccoonArrived = false
+  @State private var raccoonArrived = false                             // on the button: jumping/scratching instead of running
   @State private var raccoonHidden = true                              // off-screen: no need to animate
-  @State private var buttonWidth: CGFloat = 300
+  @State private var buttonWidth: CGFloat = 300                        // measured Start button width — decides how far off-screen is
   private let maxProfessionLength = 40                              // keeps prompts short and blocks pasted essays
   private let privacyURL = URL(string: "https://your-site.com/privacy")! // TODO: replace with your real privacy policy URL
   
-  private var trimmedProfession: String {
+  private var trimmedProfession: String {                              // profession without leading/trailing spaces
     requestModel.proffession.trimmingCharacters(in: .whitespacesAndNewlines)
   }
-  private var sameLanguage: Bool {
+  private var sameLanguage: Bool {                                     // native == target: not allowed
     requestModel.nativeLanguage == requestModel.selectedLanguage
   }
-  private var canStart: Bool {
+  private var canStart: Bool {                                         // form complete and not already loading
     !trimmedProfession.isEmpty && !sameLanguage && !requestModel.isLoading
   }
   private var raccoonOffscreen: CGFloat { buttonWidth / 2 + 140 }  // far enough that the whole raccoon (and its arm) is past the screen edge
@@ -45,7 +53,7 @@ struct EntryView: View {
           
           languageField(title: wantToLearnPick, icon: "character.book.closed", selection: $requestModel.selectedLanguage)
           
-          if sameLanguage {
+          if sameLanguage {                                     // orange warning under the pickers
             Label(languageAlertMessage, systemImage: "exclamationmark.circle")
               .font(.footnote)
               .foregroundStyle(.orange)
@@ -61,13 +69,13 @@ struct EntryView: View {
     .dismissKeyboardOnTap()
     .background(.black)
     .safeAreaInset(edge: .bottom) { footer }                     // button stays pinned above the keyboard / home indicator
-    .onChange(of: requestModel.nativeLanguage) { _, new in
+    .onChange(of: requestModel.nativeLanguage) { _, new in          // save the choice for next launch
       nativeLanguage = new.rawValue
     }
-    .onChange(of: requestModel.selectedLanguage) { _, new in
+    .onChange(of: requestModel.selectedLanguage) { _, new in        // save the choice for next launch
       pickedLanguage = new.rawValue
     }
-    .onChange(of: requestModel.proffession) { _, new in
+    .onChange(of: requestModel.proffession) { _, new in             // cut to 40 characters, then save
       if new.count > maxProfessionLength {
         requestModel.proffession = String(new.prefix(maxProfessionLength))
       }
@@ -87,7 +95,7 @@ struct EntryView: View {
   
   // MARK: - Sections
   
-  private var header: some View {
+  private var header: some View {                                      // welcome title + subtitle
     VStack(spacing: 8) {
       Text("Welcome to LearnScrumble")
         .font(.largeTitle.bold())
@@ -99,9 +107,9 @@ struct EntryView: View {
     .multilineTextAlignment(.center)
   }
   
-  private var footer: some View {
+  private var footer: some View {                                      // Start button (with the raccoon) + AI / privacy note
     VStack(spacing: 12) {
-      Button {
+      Button {                                                          // close keyboard, save the trimmed profession, start
         professionFocused = false
         requestModel.proffession = trimmedProfession
         Task { await onSubmit() }
@@ -115,7 +123,7 @@ struct EntryView: View {
       .glassCompat(in: .capsule, interactive: true)
       .disabled(!canStart)
       .opacity(canStart ? 1 : 0.5)
-      .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { buttonWidth = $0 }
+      .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { buttonWidth = $0 }   // keep buttonWidth up to date
       .overlay(alignment: .top) {
         ButtonRaccoon(arrived: raccoonArrived, isAnimating: !raccoonHidden)
           .alignmentGuide(.top) { $0[.bottom] - $0.height * 0.04 - 1 } // feet rest on top of the button
@@ -141,23 +149,31 @@ struct EntryView: View {
   
   // MARK: - Raccoon
   
-  /// Runs in from the left edge and stays on the button, jumping and scratching.
+  // MARK: - raccoonArrives
+  // Runs in from the left edge and stays on the button, jumping and scratching.
+  // Reduce Motion: just appears in the middle, standing still.
+  // Otherwise runs to the middle over 1.3s, slowing down as it gets there; once there it settles in
+  // (arrived = jumping/scratching) — but only if the button is still active.
   private func raccoonArrives() {
     raccoonHidden = false
     raccoonArrived = false
-    guard !reduceMotion else {                                    // Reduce Motion: just appears, standing still
+    guard !reduceMotion else {
       raccoonX = 0
       raccoonArrived = true
       return
     }
-    withAnimation(.easeOut(duration: 1.3)) {                      // slows down as it reaches the middle
+    withAnimation(.easeOut(duration: 1.3)) {
       raccoonX = 0
     } completion: {
-      if canStart { raccoonArrived = true }                         // only settle in if the button is still active
+      if canStart { raccoonArrived = true }
     }
   }
   
-  /// Gets up and runs off the right edge, then waits off the left edge for next time.
+  // MARK: - raccoonLeaves
+  // Gets up and runs off the right edge, then waits off the left edge for next time.
+  // Reduce Motion: just disappears to the left.
+  // Otherwise runs off to the right over 0.9s; then, unless the form became ready again meanwhile
+  // (it came back while running off — leave it be), it jumps back to the left edge unseen and stops animating.
   private func raccoonLeaves() {
     raccoonArrived = false
     guard !reduceMotion else {
@@ -168,14 +184,16 @@ struct EntryView: View {
     withAnimation(.easeIn(duration: 0.9)) {
       raccoonX = raccoonOffscreen
     } completion: {
-      guard !canStart else { return }                           // came back while running off — leave it be
-      raccoonX = -raccoonOffscreen                                      // jump back to the left, unseen
+      guard !canStart else { return }
+      raccoonX = -raccoonOffscreen
       raccoonHidden = true
     }
   }
   
   // MARK: - Building blocks
   
+  // MARK: - languageField(title:icon:selection:)
+  // A FieldCard with a menu of every language (translated names); the picked one is written into `selection`.
   private func languageField(title: LocalizedStringKey, icon: String, selection: Binding<Languages>) -> some View {
     FieldCard(title: title, icon: icon) {
       Picker(title, selection: selection) {
@@ -193,7 +211,7 @@ struct EntryView: View {
 /// The raccoon on the Start button. Running in or out: all four legs going. Arrived: excited jumps,
 /// then a good scratch behind the ear, over and over. Reduce Motion or off-screen: no redraws at all.
 private struct ButtonRaccoon: View {
-  let arrived: Bool
+  let arrived: Bool                          // on the button (jump/scratch) vs running
   let isAnimating: Bool                      // false while hidden off-screen
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   

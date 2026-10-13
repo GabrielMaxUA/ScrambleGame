@@ -8,12 +8,22 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - Flow of this file
+// The app's entry point (@main).
+//   Launch -> AppDelegate sets up Firebase
+//          -> init() creates the one RequestModel and the one AppManager for the whole app
+//          -> body shows RootView(manager:) with the SwiftData container attached
+//   Every time the app comes on screen -> FreeAllowance.refresh() -> DailyReminder.reschedule()
+
 @main
 struct LearnScrumbleApp: App {
-  @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-  @State private var manager: AppManager
+  @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate   // plugs in AppDelegate (Firebase setup at launch)
+  @State private var manager: AppManager                           // the app's single AppManager — kept alive for the whole run
   @Environment(\.scenePhase) private var scenePhase               // tells us when the app comes on screen — used for the daily reminder below
   
+  // MARK: - init
+  // Builds the shared data layer (RequestModel) and hands it to AppManager,
+  // which every screen then reaches through RootView.
   init() {
     let requestModel = RequestModel()
     _manager = State(initialValue: AppManager(requestModel: requestModel))
@@ -21,9 +31,9 @@ struct LearnScrumbleApp: App {
   
   var body: some Scene {
     WindowGroup {
-      RootView(manager: manager)
+      RootView(manager: manager)                                   // RootView picks the screen from manager.phase
     }
-    .modelContainer(PersistenceController.shared.container)
+    .modelContainer(PersistenceController.shared.container)        // SwiftData store for @Query in the views
     // MARK: - Daily reminder renewal
     // App opened / back from background -> FreeAllowance.refresh() -> DailyReminder.reschedule()
     //   refresh(): if midnight passed, today's word count resets to 0

@@ -7,7 +7,10 @@
 
 import SwiftUI
 
-// MARK: - Smooth progress
+// MARK: - Flow of this file
+// The loading screen: a cat chasing a mouse around a ring that fills with the loading progress.
+//
+// Smooth progress:
 // RequestModel.progress only moves in big steps (0 -> 20% word list -> +16% per finished image),
 // and one image can take 10–30s. So the number shown here is not `progress` itself:
 //   - when `progress` changes, the shown value eases from where it was to the new value (catch-up)
@@ -15,14 +18,17 @@ import SwiftUI
 //     gets closer, so the screen never looks stuck but never runs far ahead of real progress
 //   - it never goes backwards, except when a new load starts (progress drops back to 0)
 // Reduce Motion: no creep, the real `progress` is shown as is.
+//   RootView (phase .generating) and MainView (next word not ready) pass RequestModel.progress
+//   -> TimelineView redraws up to 30 times a second: the cat chases the mouse around the ring
+//   -> each frame: shownProgress() -> ring fill + percent text.
 
 struct LoadingView: View {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   var progress: Double                          // 0...1, passed in from RequestModel.progress
   private let groundRadius: CGFloat = 50        // the ring the cat and mouse run on
   private let lapDuration: Double = 8           // seconds for one full lap
-  private let catSize: CGFloat = 62
-  private let mouseSize: CGFloat = 36
+  private let catSize: CGFloat = 62            // cat drawing size
+  private let mouseSize: CGFloat = 36          // mouse drawing size
   private let catchUpDuration: Double = 0.6     // seconds to glide to a new real progress value
   private let creepRoom: Double = 0.12          // how far past the real progress the creep may go (one image step is 0.16)
   private let creepPace: Double = 6             // seconds — after 6s the creep has covered ~63% of its room, after 12s ~86%
@@ -30,9 +36,11 @@ struct LoadingView: View {
   @State private var stepFrom: Double           // shown value at the moment progress last changed — the catch-up starts here
   @State private var stepStart = Date()         // when progress last changed — catch-up and creep are timed from here
 
+  // MARK: - init
+  // Starts the shown value at the real progress, so the view appears at it — no glide from 0.
   init(progress: Double) {
     self.progress = progress
-    _stepFrom = State(initialValue: progress)   // appear at the real value, no glide from 0
+    _stepFrom = State(initialValue: progress)
   }
 
   var body: some View {
@@ -84,20 +92,30 @@ struct LoadingView: View {
     }
   }
 
-  /// The value on screen at `date`: glide from `stepFrom` to the real progress, plus a slow creep beyond it.
+  // MARK: - shownProgress(for:at:)
+  // The value on screen at `date`: glide from `stepFrom` to the real progress, plus a slow creep beyond it.
+  // 1. elapsed = seconds since progress last changed.
+  // 2. target = the real progress — but never lower than stepFrom, so it never goes backwards
+  //    if the creep already passed the new step.
+  // 3. Catch-up: over catchUpDuration (0.6s) glide from stepFrom to target — fast start, soft landing.
+  // 4. Creep: room = up to creepRoom (0.12) past the target; nothing at 100%, and near the end it stays under 100%.
+  //    It grows fast at first, then slows down and never quite reaches `room` (creepPace sets how fast).
+  // 5. Catch-up + creep, never above 1.
   private func shownProgress(for real: Double, at date: Date) -> Double {
-    let elapsed = max(0, date.timeIntervalSince(stepStart))            // seconds since progress last changed
-    let target = max(real, stepFrom)                                   // never go backwards if the creep already passed the new step
+    let elapsed = max(0, date.timeIntervalSince(stepStart))
+    let target = max(real, stepFrom)
     let glide = min(1, elapsed / catchUpDuration)
-    let eased = 1 - pow(1 - glide, 3)                                  // fast start, soft landing
-    let base = stepFrom + (target - stepFrom) * eased                  // catch-up part
-    let room = target >= 1 ? 0 : min(creepRoom, (1 - target) * 0.9)   // at 100% nothing to creep; near the end stay under 100%
-    let creep = room * (1 - exp(-elapsed / creepPace))                 // grows fast at first, then slows down and never reaches `room`
+    let eased = 1 - pow(1 - glide, 3)
+    let base = stepFrom + (target - stepFrom) * eased
+    let room = target >= 1 ? 0 : min(creepRoom, (1 - target) * 0.9)
+    let creep = room * (1 - exp(-elapsed / creepPace))
     return min(base + creep, 1)
   }
 
-  /// Stands a character on the outside of the ring: feet toward the ring, facing the way it's running.
-  /// Both drawings face left, so they're mirrored to run clockwise.
+  // MARK: - onRing(_:angle:distance:)
+  // Stands a character on the outside of the ring: feet toward the ring, facing the way it's running.
+  // Both drawings face left, so they're mirrored to run clockwise; rotated so its feet point at the center,
+  // moved out to `distance` along `angle`, and always drawn left-to-right (even in RTL languages).
   private func onRing(_ character: some View, angle: Double, distance: CGFloat) -> some View {
     character
       .scaleEffect(x: -1, y: 1)

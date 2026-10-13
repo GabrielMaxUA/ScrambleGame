@@ -7,12 +7,18 @@
 
 import SwiftUI
 
-/// Titled card used across the app's forms — same look as EntryView's fieldCard.
+// MARK: - Flow of this file
+// Titled card used across the app's forms — same look as EntryView's fieldCard.
+//   EntryView / SettingsView: FieldCard(title:, icon:) { any content }
+//   -> label with icon on top, the content inside a rounded translucent box below.
+
 struct FieldCard<Content: View>: View {
-  let title: LocalizedStringKey
-  let icon: String
-  let content: Content
+  let title: LocalizedStringKey            // card heading, translated through the string catalog
+  let icon: String                         // SF Symbol name shown before the title
+  let content: Content                     // whatever the screen puts inside (picker, slider, text…)
   
+  // MARK: - init
+  // Takes the title, icon and a @ViewBuilder closure, and builds the content once from that closure.
   init(title: LocalizedStringKey, icon: String, @ViewBuilder content: () -> Content) {
     self.title = title
     self.icon = icon
@@ -21,17 +27,17 @@ struct FieldCard<Content: View>: View {
   
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
-      Label(title, systemImage: icon)
+      Label(title, systemImage: icon)                       // heading above the box
         .font(.subheadline.weight(.semibold))
         .foregroundStyle(.white.opacity(0.7))
-      content
+      content                                               // the box itself
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
         .overlay {
           RoundedRectangle(cornerRadius: 14)
-            .stroke(.white.opacity(0.2), lineWidth: 1)
+            .stroke(.white.opacity(0.2), lineWidth: 1)      // thin border
         }
     }
   }

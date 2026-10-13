@@ -7,16 +7,20 @@
 
 import SwiftUI
 
+// MARK: - Flow of this file
 // Shows a GenerationError and only the action that can actually help:
 //   .retry            -> "Retry!"            (temporary problem)
 //   .changeProfession -> "Change profession" (no new words for this one — opens Settings)
 //   .none             -> "Back to start"     (our side is broken, or nothing to review — no false Retry)
+//   RootView shows it for phase .failed(error), set by AppManager.showFailure()
+//   -> the button calls onRetry (AppManager.retry), onChangeProfession (openSettings) or onExit (exitToWelcome)
+//   -> on appear, a hard-hat spider drops down on a thread and strolls on top of the button.
 struct ErrorView: View {
-  let error: GenerationError
-  let direction: Bool
-  var onRetry: () async -> Void
-  var onExit: () -> Void
-  var onChangeProfession: () -> Void
+  let error: GenerationError                       // what went wrong — decides message and button
+  let direction: Bool                              // true = left-to-right (back chevron points left)
+  var onRetry: () async -> Void                    // AppManager.retry — runs the last session kind again
+  var onExit: () -> Void                           // back to the welcome screen
+  var onChangeProfession: () -> Void               // opens Settings to pick another profession
   
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var spiderLanded = false          // drives the drop down the thread
@@ -27,7 +31,7 @@ struct ErrorView: View {
     ZStack(alignment: .topLeading) {
       Color.black.opacity(0.92)
         .ignoresSafeArea()
-      HStack {
+      HStack {                                     // back button, top corner
         Button {
           onExit()
         } label: {
@@ -41,11 +45,11 @@ struct ErrorView: View {
       .padding(.horizontal)
       VStack {
         Spacer()
-        Text(error.message)
+        Text(error.message)                        // translated explanation from GenerationError
           .font(.title2.weight(.semibold))
           .foregroundColor(.white)
         Spacer()
-        Button {
+        Button {                                   // the one action that can help (see primaryAction)
           primaryAction()
         } label: {
           Text(primaryTitle)
@@ -68,10 +72,10 @@ struct ErrorView: View {
       .multilineTextAlignment(.center)
       .frame(maxWidth: .infinity)
     }//zs
-    .onAppear(perform: dropSpider)
+    .onAppear(perform: dropSpider)                 // start the spider animation
   }
   
-  private var primaryTitle: LocalizedStringKey {
+  private var primaryTitle: LocalizedStringKey {   // button text for the error's recovery
     switch error.recovery {
     case .retry:            "Retry!"
     case .changeProfession: "Change profession"
@@ -79,6 +83,9 @@ struct ErrorView: View {
     }
   }
   
+  // MARK: - primaryAction
+  // What the main button does, by the error's recovery:
+  //   .retry -> onRetry() (async, so wrapped in a Task), .changeProfession -> onChangeProfession(), .none -> onExit().
   private func primaryAction() {
     switch error.recovery {
     case .retry:            Task { await onRetry() }
@@ -87,21 +94,24 @@ struct ErrorView: View {
     }
   }
   
+  // MARK: - dropSpider
+  // Reduce Motion: the spider is simply sitting there — no thread, no strolling — and nothing animates.
+  // Otherwise, one step after another (each starts when the previous finishes):
+  //   1. lower down the thread over 1.8s, slowing as it nears the button
+  //   2. the thread fades away
+  //   3. step to one side, then stroll back and forth forever
   private func dropSpider() {
-    guard !reduceMotion else {                      // Reduce Motion: spider is simply sitting there, no thread, no strolling
+    guard !reduceMotion else {
       spiderLanded = true
       showThread = false
       return
     }
-    // 1. lower down the thread, slowing as it nears the button
     withAnimation(.easeOut(duration: 1.8).delay(0.3)) {
       spiderLanded = true
     } completion: {
-      // 2. the thread fades away
       withAnimation(.easeOut(duration: 0.6)) {
         showThread = false
       } completion: {
-        // 3. step to one side, then stroll back and forth forever
         withAnimation(.easeInOut(duration: 0.9)) {
           spiderPace = -14
         } completion: {

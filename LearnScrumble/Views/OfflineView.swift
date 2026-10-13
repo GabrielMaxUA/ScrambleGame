@@ -15,11 +15,14 @@ import Network
 //   If the phone already looks online when the screen opens, it waits for a "Try again" tap
 //   instead, so a server that's unreachable can never cause an endless retry loop.
 // - SignalHunters draws the owl, raccoon and spider running around with phones, looking for signal.
+//   RootView shows it for phase .offline
+//   -> watchConnection(): offline -> online seen here -> "Back online!" -> 1.5s -> onRetry() (AppManager.retry)
+//   -> "Try again" -> onRetry() at any time; back chevron -> onExit() (AppManager.exitToWelcome)
 
 struct OfflineView: View {
-  let direction: Bool
-  var onRetry: () async -> Void
-  var onExit: () -> Void
+  let direction: Bool                                 // true = left-to-right (back chevron points left)
+  var onRetry: () async -> Void                       // AppManager.retry — runs the last session kind again
+  var onExit: () -> Void                              // back to the welcome screen
   
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var isOnline: Bool?                // nil until the monitor reports the first state
@@ -68,7 +71,7 @@ struct OfflineView: View {
         .font(.system(size: 100, weight: .semibold))
         .foregroundStyle(.white)
         .accessibilityHidden(true)
-        if isConnected {
+        if isConnected {                            // online: no "no internet" texts
           statusLine                                // online: only the "back online" / "looks OK" line
         } else {
           Text("No internet connection")
@@ -80,7 +83,7 @@ struct OfflineView: View {
           statusLine                                // offline: "Waiting for connection…"
         }
         Spacer()
-        Button {
+        Button {                                    // manual retry, any time
           Task { await onRetry() }
         } label: {
           Text("Try again")
@@ -98,11 +101,11 @@ struct OfflineView: View {
       .multilineTextAlignment(.center)
       .frame(maxWidth: .infinity)
     }
-    .task { await watchConnection() }
+    .task { await watchConnection() }               // watch the connection while the screen is up
   }
   
   @ViewBuilder
-  private var statusLine: some View {
+  private var statusLine: some View {               // one line under the icon: back online / looks OK / waiting
     HStack(spacing: 8) {
       if backOnline {
         Image(systemName: "checkmark.circle.fill")
@@ -120,17 +123,23 @@ struct OfflineView: View {
     .frame(minHeight: 24)
   }
   
+  // MARK: - watchConnection
   // Auto-retries only on a real offline -> online change seen on this screen.
+  // NWPathMonitor sends every connection change; the loop ends when the view goes away (task is cancelled).
+  // 1. Each change updates isOnline, animated, so the icon + text swap smoothly.
+  // 2. Offline seen -> remembered (sawOffline).
+  // 3. Online after having been offline -> "Back online!" -> 1.5s so the characters celebrate for a moment
+  //    -> still on screen? -> onRetry() and stop watching.
   private func watchConnection() async {
     var sawOffline = false
-    for await path in NWPathMonitor() {             // ends when the view goes away (task is cancelled)
+    for await path in NWPathMonitor() {
       let online = path.status == .satisfied
-      withAnimation(.easeInOut) { isOnline = online } // icon + text swap smoothly
+      withAnimation(.easeInOut) { isOnline = online }
       if !online {
         sawOffline = true
       } else if sawOffline {
         withAnimation(.easeInOut) { backOnline = true }
-        try? await Task.sleep(for: .seconds(1.5))   // let the characters celebrate for a moment
+        try? await Task.sleep(for: .seconds(1.5))
         guard !Task.isCancelled else { return }
         await onRetry()
         return
@@ -145,10 +154,10 @@ struct OfflineView: View {
 /// each holding up a phone with no bars (the rigged characters live in SignalCharacters.swift).
 /// All motion comes from one time value, so it costs nothing when paused.
 private struct SignalHunters: View {
-  let celebrating: Bool
+  let celebrating: Bool                              // connected: full bars, hearts, happy hops
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
-  @State private var start = Date()
-  @State private var lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
+  @State private var start = Date()                  // animation time starts at 0 when the screen opens
+  @State private var lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled   // Low Power Mode: half the frame rate
   
   var body: some View {
     GeometryReader { geo in
@@ -172,53 +181,66 @@ private struct SignalHunters: View {
     }
   }
   
+  // MARK: - celebrationHop
   // Happy jump when the connection comes back (none with Reduce Motion — the hearts and full bars say it).
   private func celebrationHop(_ t: Double) -> CGFloat {
     celebrating && !reduceMotion ? -abs(sin(t * 9)) * 18 : 0
   }
   
-  // MARK: Owl — flies a wavy loop across the top, one wing flapping, the other holding the phone up
-  
+  // MARK: - Owl
+  // Flies a wavy loop across the top, one wing flapping, the other holding the phone up.
+  // x: swings side to side across almost the whole width; y: gentle wave (+ celebration hop).
+  // facing follows the flight direction so the phone leads; it leans 8° into the flight.
+  // Positioned a bit higher because the drawing has room above for the raised phone.
   private func owl(t: Double, size: CGSize) -> some View {
     let side: CGFloat = 64
     let swing = (size.width - side) / 2 - 12
     let x = size.width / 2 + sin(t * 0.55) * swing
-    let facing: CGFloat = cos(t * 0.55) >= 0 ? 1 : -1                 // which way it's flying — the phone leads
+    let facing: CGFloat = cos(t * 0.55) >= 0 ? 1 : -1
     let y = 82 + sin(t * 1.4) * 14 + celebrationHop(t)
     return PhoneOwl(t: t, celebrating: celebrating, facing: facing, size: side)
-      .rotationEffect(.degrees(Double(facing) * 8))                    // leans into the flight
-      .position(x: x, y: y - side * 0.2)                               // the drawing has room above for the raised phone
+      .rotationEffect(.degrees(Double(facing) * 8))
+      .position(x: x, y: y - side * 0.2)
   }
   
-  // MARK: Spider — hangs from the top on a thread down to the Try again button, bungee up and down and swinging
-  
+  // MARK: - Spider
+  // Hangs from the top on a thread down to the Try again button, bungee up and down and swinging.
+  // threadLength: dangles beside the button, below the text, bouncing slowly (never negative).
+  // The drawn thread (a 1pt rectangle) lines up with the spider's own thread, at PhoneSpider.threadX
+  // of its drawing space (1.24 × 1.18 of its size); the whole thing swings ±4° from the top of the thread
+  // and sits at the right edge.
   private func spider(t: Double, size: CGSize) -> some View {
     let side: CGFloat = 64
-    let threadLength = max(size.height - 260 + sin(t * 0.8) * 26 + celebrationHop(t), 0) // dangles beside the button, below the text
+    let threadLength = max(size.height - 260 + sin(t * 0.8) * 26 + celebrationHop(t), 0)
     let angle = sin(t * 1.7) * 4
     let spider = PhoneSpider(t: t, celebrating: celebrating, size: side)
-    let spiderWidth = side * 1.24, spiderHeight = side * 1.18          // PhoneSpider's drawing space
-    let threadX = spiderWidth * PhoneSpider.threadX                    // where its own thread starts at the top
+    let spiderWidth = side * 1.24, spiderHeight = side * 1.18
+    let threadX = spiderWidth * PhoneSpider.threadX
     return VStack(alignment: .leading, spacing: 0) {
       Rectangle()
         .fill(.white.opacity(0.5))
         .frame(width: 1, height: threadLength)
-        .padding(.leading, threadX - 0.5)                              // lines up with the spider's own thread
+        .padding(.leading, threadX - 0.5)
       spider
     }
-    .rotationEffect(.degrees(angle), anchor: UnitPoint(x: PhoneSpider.threadX, y: 0)) // swings from the top of the thread
+    .rotationEffect(.degrees(angle), anchor: UnitPoint(x: PhoneSpider.threadX, y: 0))
     .frame(width: spiderWidth, height: threadLength + spiderHeight, alignment: .top)
     .position(x: size.width - spiderWidth / 2 - 4, y: (threadLength + spiderHeight) / 2)
   }
   
-  // MARK: Raccoon — runs back and forth along the bottom, stopping to jump with its phone held up
-  
+  // MARK: - Raccoon
+  // Runs back and forth along the bottom, stopping to jump with its phone held up.
+  // A 9s cycle: run right (3.5s), stop (1s), run left (3.5s), stop (1s).
+  //   progress: 0 = left edge, 1 = right edge; margin keeps the outstretched arm + phone on screen at the turns.
+  // Reduce Motion or celebrating: standing still, phone held up.
+  // Phone goes up while stopped: eases up over 0.3s after stopping, back down 0.3s before running again.
+  // Little run hops while running, big "signal?" jumps while stopped; leans 5° into the run.
   private func raccoon(t: Double, size: CGSize) -> some View {
     let side: CGFloat = 86
-    let margin = side * 0.75                                           // keeps the outstretched arm + phone on screen at the turns
-    let cycle = 9.0                                                    // run right, stop, run left, stop
+    let margin = side * 0.75
+    let cycle = 9.0
     let p = t.truncatingRemainder(dividingBy: cycle)
-    let progress: Double                                               // 0 = left edge, 1 = right edge
+    let progress: Double
     let facing: CGFloat
     let running: Bool
     switch p {
@@ -227,19 +249,20 @@ private struct SignalHunters: View {
     case ..<8.0: progress = 1 - ease((p - 4.5) / 3.5); facing = -1; running = true
     default:     progress = 0; facing = -1; running = false
     }
-    let isRunning = running && !celebrating && !reduceMotion           // Reduce Motion: standing still, phone held up
-    // Phone goes up while stopped: eases up over 0.3s after stopping, back down 0.3s before running again.
+    let isRunning = running && !celebrating && !reduceMotion
     let stopStart = p < 4.5 ? 3.5 : 8.0
     let raise = isRunning ? 0 : (celebrating || reduceMotion ? 1 : ease((p - stopStart) / 0.3) * ease((stopStart + 1 - p) / 0.3))
     let x = margin + (size.width - margin * 2) * progress
-    let hop: CGFloat = reduceMotion ? 0 : (isRunning ? -abs(sin(t * 11)) * 6 : -abs(sin(t * 6)) * 14) // little run hops / big "signal?" jumps
+    let hop: CGFloat = reduceMotion ? 0 : (isRunning ? -abs(sin(t * 11)) * 6 : -abs(sin(t * 6)) * 14)
     let y = size.height - 50 + hop + celebrationHop(t)
     return PhoneRaccoon(t: t, celebrating: celebrating, facing: facing, running: isRunning, raise: raise, size: side)
-      .rotationEffect(.degrees(isRunning ? Double(facing) * 5 : 0))    // leans into the run
+      .rotationEffect(.degrees(isRunning ? Double(facing) * 5 : 0))
       .position(x: x, y: y)
   }
   
-  private func ease(_ x: Double) -> Double {                           // smooth start and stop
+  // MARK: - ease
+  // Smooth start and stop: 0...1 in -> 0...1 out, slow at both ends (input outside 0...1 is clamped).
+  private func ease(_ x: Double) -> Double {
     let c = min(max(x, 0), 1)
     return c * c * (3 - 2 * c)
   }

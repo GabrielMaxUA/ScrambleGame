@@ -7,9 +7,11 @@
 
 import SwiftUI
 
+// MARK: - Flow of this file
 // Every failure the word pipeline can surface, plus what the user can actually do about it.
-// AppManager routes .offline to OfflineView; everything else goes to ErrorView, which picks its
-// button from `recovery` — so we never offer a Retry that can't work.
+//   RequestModel catches any thrown error -> GenerationError.from(error) -> stores it in lastError
+//   AppManager.showFailure() routes .offline to OfflineView; everything else goes to ErrorView,
+//   which shows `message` and picks its button from `recovery` — so we never offer a Retry that can't work.
 enum GenerationError: Error, Equatable {
   case offline              // no internet — OfflineView
   case timedOut             // slow network, temporary
@@ -28,7 +30,7 @@ enum GenerationError: Error, Equatable {
     case none               // nothing the user can do now — just a way back
   }
   
-  var recovery: Recovery {
+  var recovery: Recovery {                                         // which button ErrorView shows for this error
     switch self {
     case .offline, .timedOut, .serverBusy, .badResponse, .unknown: .retry
     case .noWordsAvailable:                                       .changeProfession
@@ -52,7 +54,13 @@ enum GenerationError: Error, Equatable {
     }
   }
   
-  static func from(_ error: Error) -> GenerationError {             // turns ANY thrown error into one of our cases
+  // MARK: - from(_:)
+  // Turns ANY thrown error into one of our cases:
+  //   already a GenerationError -> kept as is
+  //   URLError: no connection / host not reachable / DNS -> .offline, timeout -> .timedOut, anything else -> .unknown
+  //   DecodingError (unreadable JSON) -> .badResponse
+  //   everything else -> .unknown
+  static func from(_ error: Error) -> GenerationError {
     if let error = error as? GenerationError { return error }
     if let urlError = error as? URLError {
       switch urlError.code {

@@ -7,12 +7,19 @@
 
 import SwiftUI
 
+// MARK: - Flow of this file
+// The full-screen right/wrong overlay after each answer.
+//   MainView: every slot filled -> WordVM.checkAnswer() sets guessResult -> MainView overlays AnswerResultView
+//   -> correct: green title, the animals dance; incorrect: red title + the correct word, the animals droop and walk off
+//   -> "Next" -> onNext -> WordVM.nextWord() (which may fire a checkpoint -> ResultView).
+//   AnimalStage (below) draws the icon + animals and plays the success / incorrect sound.
+
 struct AnswerResultView: View {
-  let result: GuessResult
-  let correctAnswer: String
-  let onNext: () -> Void
+  let result: GuessResult                    // correct or incorrect
+  let correctAnswer: String                  // the target word, shown when the answer was wrong
+  let onNext: () -> Void                     // WordVM.nextWord
   
-  private var isCorrect: Bool { result == .correct }
+  private var isCorrect: Bool { result == .correct }   // shortcut used all over the view
   
   /// The answer in the target language, trimmed and wrapped in Unicode "first strong isolate" marks,
   /// so a right-to-left word inside a left-to-right sentence (or the other way round) stays in place
@@ -25,7 +32,7 @@ struct AnswerResultView: View {
     VStack(spacing: 24) {
       Spacer(minLength: 72)                                    // room for RootView's top button row
       
-      AnimalStage(isCorrect: isCorrect)
+      AnimalStage(isCorrect: isCorrect)                        // icon + dancing / leaving animals
       
       VStack(spacing: 14) {
         Text(isCorrect ? "Correct!" : "Incorrect")
@@ -52,7 +59,7 @@ struct AnswerResultView: View {
       
       Spacer()
       
-      Button(action: onNext) {
+      Button(action: onNext) {                                 // on to the next word
         Text("Next")
           .font(.headline)
           .foregroundStyle(.white)
@@ -71,10 +78,10 @@ struct AnswerResultView: View {
 /// The checkmark or X in the middle, with the cat on wheels, raccoon, mouse and spider around it.
 /// Correct: they dance. Incorrect: they droop for a moment, then sadly leave the screen.
 private struct AnimalStage: View {
-  let isCorrect: Bool
+  let isCorrect: Bool                                  // happy or sad show
   
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
-  @State private var bounce = false
+  @State private var bounce = false                    // toggled once on appear to bounce the icon
   @State private var leaving = false                   // turned around and walking (switches poses instantly)
   @State private var away = false                      // drives the slide off the screen (animated)
   
@@ -87,7 +94,7 @@ private struct AnimalStage: View {
         .symbolRenderingMode(.palette)
         .foregroundStyle(.white, isCorrect ? .green : .red)
         .symbolEffect(.bounce, value: bounce)
-        .onAppear {
+        .onAppear {                                      // sound + one icon bounce
             SoundManager.shared.play(isCorrect ? "success" : "incorrect")
           bounce.toggle()
         }
@@ -95,7 +102,7 @@ private struct AnimalStage: View {
       // Reduce Motion: paused (still frame). Otherwise capped at 30fps to spare the battery.
       TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { timeline in
         let t = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 100)
-        let moving = isCorrect || leaving
+        let moving = isCorrect || leaving                    // animals animate when happy or walking away
         
         ZStack {
           // spider — yo-yos when happy; when sad, climbs back up its thread and out of sight
@@ -141,19 +148,23 @@ private struct AnimalStage: View {
     }
   }
   
-  /// Happy: hops. Sad: sunk a little lower with a slow sigh; trudging bob while walking away.
+  // MARK: - lift(_:phase:)
+  // Vertical bounce for each animal at time t (phase shifts each animal so they don't move in sync).
+  // Happy: hops. Sad: sunk a little lower with a slow sigh; trudging bob while walking away.
   private func lift(_ t: Double, phase: Double) -> Double {
     if isCorrect { return -abs(sin(t * 5 + phase)) * 12 }
     if leaving { return 4 - abs(sin(t * 3 + phase)) * 3 }
     return 4 + sin(t * 1.2 + phase) * 1.2
   }
   
-  /// Happy: the cat rolls a little back and forth on its wheels. Otherwise it stays put.
+  // MARK: - rock(_:)
+  // Happy: the cat rolls a little back and forth on its wheels. Otherwise it stays put.
   private func rock(_ t: Double) -> Double {
     isCorrect ? sin(t * 3) * 8 : 0
   }
   
-  /// Happy: sways to the beat. Sad: head hangs down.
+  // MARK: - tilt(_:phase:droop:)
+  // Rotation in degrees. Happy: sways to the beat. Sad: head hangs down by `droop` degrees.
   private func tilt(_ t: Double, phase: Double, droop: Double) -> Double {
     isCorrect ? sin(t * 2.5 + phase) * 10 : droop
   }

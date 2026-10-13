@@ -7,10 +7,14 @@
 
 import SwiftUI
 
+// MARK: - Flow of this file
+// The line above the letters in MainView: shows a word/result text with a small reset button on the right.
+//   MainView passes the text and resetGuess -> tap the arrow -> resetGuess() -> WordVM clears the placed letters.
+
 struct ResultWordRow: View {
-  let result: String
-  @State private var overlay: Bool = false
-  let resetGuess: () -> Void
+  let result: String                       // text shown in the middle
+  @State private var overlay: Bool = false // true would fade the text almost invisible (currently never switched on)
+  let resetGuess: () -> Void               // MainView's action: send every placed letter back
     var body: some View {
       HStack(alignment: .top){
         Spacer()
@@ -20,9 +24,9 @@ struct ResultWordRow: View {
           .foregroundStyle(overlay ? .white.opacity(0.05) : .white)
           .padding(.bottom)
           .frame(height: 35)
-          .minimumScaleFactor(0.8)
+          .minimumScaleFactor(0.8)         // long words shrink a little instead of being cut
         Spacer()
-          .overlay(alignment: .topTrailing) {
+          .overlay(alignment: .topTrailing) {   // reset button pinned to the right edge
             Button {
               resetGuess()
             } label: {

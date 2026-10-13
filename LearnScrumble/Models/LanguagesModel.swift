@@ -1,9 +1,16 @@
 import Foundation
 
+// MARK: - Flow of this file
+// Every language the app offers, both as the user's native language and as the language to learn.
+//   rawValue  = BCP-47 code ("uk-UA") — sent to GPT, used as Firebase translation key, voice language, SwiftData scope
+//   locale    -> AppManager.locale: the whole UI is shown in the native language
+//   isRtL     -> right-to-left layout for Arabic, Hebrew, Farsi…
+//   displayName -> the language's own name ("Deutsch"), shown in the pickers (EntryView, SettingsView)
+
 enum Languages: String, CaseIterable, Codable, Identifiable {
-  var id: String { rawValue }
-  var locale: Locale { Locale(identifier: rawValue) }
-  var isRtL: Bool {
+  var id: String { rawValue }                                   // pickers / ForEach need an id — the code is unique
+  var locale: Locale { Locale(identifier: rawValue) }           // for SwiftUI's environment and number/percent formatting
+  var isRtL: Bool {                                             // written right-to-left
     locale.language.characterDirection == .rightToLeft
   }
     // MARK: - Albanian
@@ -204,7 +211,7 @@ enum Languages: String, CaseIterable, Codable, Identifiable {
 
     // MARK: - Display
 
-  var displayName: String {
+  var displayName: String {                                     // name in the language itself — readable for its speakers whatever the UI language
     switch self {
     case .albanian:           "Shqip"
     case .arabic:             "العربية"

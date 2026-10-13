@@ -9,34 +9,43 @@ import SwiftUI
 import StoreKit
 import AVFoundation
 
+// MARK: - Flow of this file
+// The settings screen (phase .settings), opened from the gear or ErrorView's "Change profession".
+//   Learning: native language, profession, target language -> written into RequestModel + saved like EntryView does
+//   Audio: voice (paid; free users get the locked alert) saved per language, speech speed, "Try it" -> SpeechManager
+//   Progress: "Reset progress" -> PersistenceController.resetProgress for the current target language
+//   Subscription: Apple's manage-subscriptions sheet, restore purchases (StoreKit AppStore.sync)
+//   Legal: privacy, terms, support email links
+//   "Done" (only when the setup is usable) -> onDone -> AppManager.closeSettings() -> WelcomeBackView.
+
 struct SettingsView: View {
-  @Bindable var requestModel: RequestModel
+  @Bindable var requestModel: RequestModel                         // languages and profession are edited right in it
   let hasAccess: Bool                                              // paid/unlocked: languages and profession can be changed
   var onShowPaywall: () -> Void                                    // "See plans" in the locked alert
   var onDone: () -> Void                                           // back to the welcome-back screen
   
-  @AppStorage("nativeLanguage") private var nativeLanguage = "en-US"
+  @AppStorage("nativeLanguage") private var nativeLanguage = "en-US"   // saved copies, same keys as EntryView
   @AppStorage("pickedLanguage") private var pickedLanguage = "en-US"
   @AppStorage("pickedProffession") private var pickedProfession = ""
   @AppStorage("speechRate") private var speechRate = 0.45          // 0.5 = the system's normal speaking speed
   
-  @State private var showLockedAlert = false
-  @State private var showResetAlert = false
-  @State private var showDeleteAlert = false
-  @State private var showManageSubscriptions = false
-  @State private var showRestoreAlert = false
-  @State private var restoreMessage: LocalizedStringKey = ""
+  @State private var showLockedAlert = false                       // "Premium feature" alert (learning block lock, currently unused)
+  @State private var showResetAlert = false                        // "Reset progress?" confirmation
+  @State private var showDeleteAlert = false                       // delete-all-data alert (section commented out)
+  @State private var showManageSubscriptions = false               // Apple's subscription sheet
+  @State private var showRestoreAlert = false                      // result of "Restore purchases"
+  @State private var restoreMessage: LocalizedStringKey = ""       // text of that result alert
   @State private var selectedVoiceID = ""                       // "" = Default
   @State private var speechManager = SpeechManager()            // for the "Try" button
   @State private var showVoiceLockedAlert = false          // NEW — free user tapped the locked voice row
-  @FocusState private var professionFocused: Bool
+  @FocusState private var professionFocused: Bool                 // passed into ProfessionPicker
   
   private let supportEmail = "support@example.com"                 // TODO: real support address
   private let privacyURL = URL(string: "https://your-site.com/privacy")!   // TODO: real privacy policy (blocked by the kits decision)
   private let termsURL = URL(string: "https://your-site.com/terms")!       // TODO: real terms of use
-  private let maxProfessionLength = 40
+  private let maxProfessionLength = 40                             // same limit as EntryView
   
-  private var sameLanguage: Bool { requestModel.nativeLanguage == requestModel.selectedLanguage }
+  private var sameLanguage: Bool { requestModel.nativeLanguage == requestModel.selectedLanguage }   // not allowed
   private var trimmedProfession: String { requestModel.proffession.trimmingCharacters(in: .whitespacesAndNewlines) }
   private var canClose: Bool { !sameLanguage && !trimmedProfession.isEmpty }  // never leave with an unusable setup
   
@@ -49,7 +58,7 @@ struct SettingsView: View {
   
   var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: 28) {
+      VStack(alignment: .leading, spacing: 28) {                 // the sections, top to bottom
         header
         learningSection
         audioSection
@@ -71,21 +80,21 @@ struct SettingsView: View {
     .background(.black)
     .onChange(of: requestModel.nativeLanguage) { _, new in nativeLanguage = new.rawValue }      // same saved keys as EntryView
     .onChange(of: requestModel.selectedLanguage) { _, new in pickedLanguage = new.rawValue }
-    .onChange(of: requestModel.proffession) { _, new in
+    .onChange(of: requestModel.proffession) { _, new in         // cut to 40 characters, then save
       if new.count > maxProfessionLength {
         requestModel.proffession = String(new.prefix(maxProfessionLength))
       }
       pickedProfession = requestModel.proffession
     }
     .manageSubscriptionsSheet(isPresented: $showManageSubscriptions)   // Apple's own subscription screen
-    .alert(MenuAlert.settingsLocked.title, isPresented: $showLockedAlert) {
+    .alert(MenuAlert.settingsLocked.title, isPresented: $showLockedAlert) {   // premium lock -> plans
       Button(MenuAlert.settingsLocked.confirmTitle) { onShowPaywall() }
       Button("Cancel", role: .cancel) { }
     } message: {
       Text(MenuAlert.settingsLocked.message)
     }
     .alert("Reset progress?", isPresented: $showResetAlert) {
-      Button("Reset", role: .destructive) {
+      Button("Reset", role: .destructive) {                     // deletes this target language's answers
         PersistenceController.shared.resetProgress(targetLanguage: requestModel.selectedLanguage.rawValue)
       }
       Button("Cancel", role: .cancel) { }
@@ -102,7 +111,7 @@ struct SettingsView: View {
   
   // MARK: - Sections
   
-  private var header: some View {
+  private var header: some View {                                  // title + Done (disabled until the setup is usable)
     HStack {
       Text("Settings")
         .font(.largeTitle.bold())
@@ -121,7 +130,7 @@ struct SettingsView: View {
     }
   }
   
-  private var learningSection: some View {
+  private var learningSection: some View {                         // languages + profession, with a hint under them
     VStack(alignment: .leading, spacing: 12) {
       VStack(alignment: .leading, spacing: 20) {
         languageCard(title: "I speak", icon: "person.wave.2", selection: $requestModel.nativeLanguage)
@@ -159,8 +168,8 @@ struct SettingsView: View {
     }
   }
   
-  private var audioSection: some View {
-    let language = requestModel.selectedLanguage.id
+  private var audioSection: some View {                            // voice, speed, try it
+    let language = requestModel.selectedLanguage.id               // voices are per target language
     return FieldCard(title: "Audio", icon: "speaker.wave.2") {
       VStack(alignment: .leading, spacing: 14) {
         HStack {
@@ -211,9 +220,9 @@ struct SettingsView: View {
           .foregroundStyle(.white.opacity(0.5))
       }
     }
-    .onAppear { loadVoice() }
+    .onAppear { loadVoice() }                                     // show this language's saved voice
     .onChange(of: requestModel.selectedLanguage) { _, _ in loadVoice() }   // other language: show that language's saved voice
-    .onChange(of: selectedVoiceID) { _, id in
+    .onChange(of: selectedVoiceID) { _, id in                     // save the picked voice for this language
       let key = SpeechManager.voiceKey(for: requestModel.selectedLanguage.id)
       if id.isEmpty {
         UserDefaults.standard.removeObject(forKey: key)              // Default: forget any saved voice
@@ -230,17 +239,19 @@ struct SettingsView: View {
     .alertSound(isPresented: showVoiceLockedAlert)
   }
   
+  // MARK: - loadVoice
+  // Reads the voice saved for the current target language into the picker ("" = Default when none saved).
   private func loadVoice() {
     selectedVoiceID = UserDefaults.standard.string(forKey: SpeechManager.voiceKey(for: requestModel.selectedLanguage.id)) ?? ""
   }
   
-  private var progressSection: some View {
+  private var progressSection: some View {                         // reset progress (with confirmation)
     FieldCard(title: "Progress", icon: "chart.bar") {
       row("Reset progress", icon: "arrow.counterclockwise", tint: .orange) { showResetAlert = true }
     }
   }
   
-  private var subscriptionSection: some View {
+  private var subscriptionSection: some View {                     // manage + restore
     FieldCard(title: "Subscription", icon: "star") {
       VStack(spacing: 12) {
         row("Manage subscription", icon: "creditcard") { showManageSubscriptions = true }
@@ -250,7 +261,7 @@ struct SettingsView: View {
     }
   }
   
-  private var legalSection: some View {
+  private var legalSection: some View {                            // privacy, terms, support email
     FieldCard(title: "Legal and support", icon: "doc.text") {
       VStack(spacing: 12) {
         linkRow("Privacy Policy", icon: "hand.raised", url: privacyURL)
@@ -264,6 +275,8 @@ struct SettingsView: View {
   
   // MARK: - Building blocks
   
+  // MARK: - languageCard(title:icon:selection:)
+  // A FieldCard with a menu of every language (translated names); the picked one is written into `selection`.
   private func languageCard(title: LocalizedStringKey, icon: String, selection: Binding<Languages>) -> some View {
     FieldCard(title: title, icon: icon) {
       Picker(title, selection: selection) {
@@ -277,31 +290,38 @@ struct SettingsView: View {
     }
   }
   
+  // MARK: - row(_:icon:tint:action:)
+  // A tappable settings row (icon + title + chevron) that runs `action`.
   private func row(_ title: LocalizedStringKey, icon: String, tint: Color = .white, action: @escaping () -> Void) -> some View {
     Button(action: action) {
       rowLabel(title, icon: icon, tint: tint)
     }
   }
   
+  // MARK: - linkRow(_:icon:url:)
+  // Same look as row, but opens a URL (web page or mail) instead of running code.
   private func linkRow(_ title: LocalizedStringKey, icon: String, url: URL) -> some View {
     Link(destination: url) {
       rowLabel(title, icon: icon, tint: .white)
     }
   }
   
+  // MARK: - rowLabel(_:icon:tint:)
+  // The shared look of row and linkRow: icon + title on one side, a small chevron on the other
+  // (chevron.forward flips automatically in right-to-left languages). The whole row is tappable.
   private func rowLabel(_ title: LocalizedStringKey, icon: String, tint: Color) -> some View {
     HStack {
       Label(title, systemImage: icon)
         .foregroundStyle(tint)
       Spacer()
-      Image(systemName: "chevron.forward")                          // flips automatically in right-to-left languages
+      Image(systemName: "chevron.forward")
         .font(.footnote.weight(.semibold))
         .foregroundStyle(.white.opacity(0.4))
     }
     .contentShape(Rectangle())
   }
   
-  private var divider: some View {
+  private var divider: some View {                                 // thin line between rows
     Rectangle()
       .fill(.white.opacity(0.15))
       .frame(height: 1)
@@ -309,7 +329,10 @@ struct SettingsView: View {
   
   // MARK: - Actions
   
-  private func restorePurchases() {                                 // StoreKit for now; RevenueCat's restore replaces this later
+  // MARK: - restorePurchases
+  // StoreKit for now; RevenueCat's restore replaces this later.
+  // AppStore.sync() asks Apple for the user's purchases -> success or failure message -> shows the result alert.
+  private func restorePurchases() {
     Task {
       do {
         try await AppStore.sync()

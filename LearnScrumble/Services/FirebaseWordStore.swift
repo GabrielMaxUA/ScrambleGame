@@ -10,28 +10,37 @@ import FirebaseFirestore
 // MARK: - Flow of this file
 // FirebaseWordStore is the Firestore layer for word documents, one doc per
 // toolName under the "words" collection. It knows nothing about GPT, SwiftData,
-// or sessions — RequestModel.buildQuestions is the only caller in the live flow.
+// or sessions — RequestModel is the only caller.
 //
-// Called FROM RequestModel.buildQuestions, per batch:
-//   fetchExisting(toolNames:)  <- one batched read: "which of these words do
-//                                  we already have cached, and with what data?"
-//   saveIfNeeded(...)          <- called once per word after buildQuestions
-//                                  resolves its image, to create the doc if it's
-//                                  new, or fill in whichever translation/image
-//                                  slot was still missing (origin, target, or both)
-//
-// createWord(...) and addMissingTranslations(...) are NOT called anywhere in
-// the current app — saveIfNeeded already covers both jobs (create-if-missing +
-// fill-if-partial) in one function. Left in as unused/dead code for now.
+//   fetchExisting(toolNames:)  <- RequestModel.buildQuestions (and generateStruggleReview), once per batch:
+//                                 "which of these words do we already have cached, and with what data?"
+//                                 -> cached image URLs are reused instead of paying for new images
+//   saveIfNeeded(...)          <- RequestModel.resolveImage, once per word after its image is resolved:
+//                                 creates the doc if it's new, or fills in whichever translation/image
+//                                 slot was still missing (origin, target, or both)
+//   documentID(for:)           <- both of the above: toolName -> safe Firestore document id
 
 enum FirebaseWordStore {
+  // MARK: - documentID(for:)
   // Firestore document IDs can't contain "/" (it separates path levels), so "a/c unit" -> "a-c unit".
   // Only "/" changes, so every ID already saved stays exactly the same.
   private static func documentID(for toolName: String) -> String {
     toolName.replacingOccurrences(of: "/", with: "-")
   }
-  private static let maxInQueryValues = 30
-  static func saveIfNeeded(                                          // create-or-fill: the single entry point buildQuestions actually uses
+  private static let maxInQueryValues = 30                           // Firestore's limit for one "in" query
+  
+  // MARK: - saveIfNeeded
+  // Create-or-fill: the single entry point buildQuestions actually uses (through resolveImage).
+  // 1. Points at this word's doc — one doc per toolName, the word's canonical Firebase record — and reads it.
+  // 2. Case 1 — doc doesn't exist yet (or can't be decoded): builds a brand-new doc with the two languages
+  //    we have right now (origin + target) and the image URL, and writes it.
+  // 3. Otherwise checks what the doc already has: origin translation? target translation? image URL?
+  //    Case 2 — both translations already there: nothing new to add, no write.
+  // 4. Case 3 — word exists but is missing one or both translations: fills only the missing slots,
+  //    sets the image only if the doc had none and we have one, and merges that into the doc
+  //    (everything else in it stays untouched).
+  // Any Firestore error is only logged — a failed save never stops the game.
+  static func saveIfNeeded(
     toolName: String,
     originLanguage: Languages,
     originWord: String,
@@ -39,16 +48,14 @@ enum FirebaseWordStore {
     targetWord: String,
     imageURL: String
   ) async {
-    let docRef = Firestore.firestore().collection("words").document(documentID(for: toolName)) // one doc per toolName — this word's canonical Firebase record
-    print("🔥 saveIfNeeded — checking '\(toolName)' (origin=\(originLanguage.rawValue), target=\(targetLanguage.rawValue))") // NEW
+    let docRef = Firestore.firestore().collection("words").document(documentID(for: toolName))
+    print("🔥 saveIfNeeded — checking '\(toolName)' (origin=\(originLanguage.rawValue), target=\(targetLanguage.rawValue))")
     
     do {
-      let snapshot = try await docRef.getDocument()                    // read the current state of this word's doc, if any
+      let snapshot = try await docRef.getDocument()
       
-      //checking on word if its in the base. if not else would write it
-      guard snapshot.exists, var existing = try? snapshot.data(as: FirebaseWordModel.self) else { // doc doesn't exist yet, or failed to decode
-        // Case 1: word doesn't exist yet — create it
-        let newWord = FirebaseWordModel(                               // build a brand-new doc with just the two languages we currently have
+      guard snapshot.exists, var existing = try? snapshot.data(as: FirebaseWordModel.self) else {
+        let newWord = FirebaseWordModel(
           id: toolName,
           word: toolName,
           translation: [
@@ -57,38 +64,42 @@ enum FirebaseWordStore {
           ],
           image: imageURL
         )
-        try docRef.setData(from: newWord)                              // write it as a new document
-        print("🆕 saveIfNeeded — '\(toolName)' did not exist, created new doc with [\(originLanguage.rawValue), \(targetLanguage.rawValue)]") // NEW
+        try docRef.setData(from: newWord)
+        print("🆕 saveIfNeeded — '\(toolName)' did not exist, created new doc with [\(originLanguage.rawValue), \(targetLanguage.rawValue)]")
         return
       }
-      //if word is in the base we check if it has users translation laready or not so as image
-      let hasOrigin = existing.translation[originLanguage.rawValue] != nil // does the doc already have this origin language's translation?
-      let hasTarget = existing.translation[targetLanguage.rawValue] != nil // does the doc already have this target language's translation?
-      let hasImage = !existing.image.isEmpty                            // does the doc already have an image URL?
-      if hasOrigin && hasTarget {                                       // both languages already present — nothing new to add
-        // Case 2: both translations already there — nothing to do
-        print("✅ saveIfNeeded — '\(toolName)' already has both [\(originLanguage.rawValue), \(targetLanguage.rawValue)], no write needed") // NEW
+      let hasOrigin = existing.translation[originLanguage.rawValue] != nil
+      let hasTarget = existing.translation[targetLanguage.rawValue] != nil
+      let hasImage = !existing.image.isEmpty
+      if hasOrigin && hasTarget {
+        print("✅ saveIfNeeded — '\(toolName)' already has both [\(originLanguage.rawValue), \(targetLanguage.rawValue)], no write needed")
         return
       }
       
-      // Case 3: word exists, but missing one or both translations — adding up
-      if !hasOrigin { existing.translation[originLanguage.rawValue] = originWord } // fill the origin slot only if it was actually missing
-      if !hasTarget { existing.translation[targetLanguage.rawValue] = targetWord } // fill the target slot only if it was actually missing
-      if !hasImage && !imageURL.isEmpty { existing.image = imageURL }   // only overwrite image if the doc had none and we actually have one to add
-      try docRef.setData(from: existing, merge: true)                  // merge the fill-ins into the existing doc, leaving everything else untouched
-      print("➕ saveIfNeeded — '\(toolName)' existed, filled missing slots (origin=\(!hasOrigin), target=\(!hasTarget), image=\(!hasImage && !imageURL.isEmpty))") // NEW
+      if !hasOrigin { existing.translation[originLanguage.rawValue] = originWord }
+      if !hasTarget { existing.translation[targetLanguage.rawValue] = targetWord }
+      if !hasImage && !imageURL.isEmpty { existing.image = imageURL }
+      try docRef.setData(from: existing, merge: true)
+      print("➕ saveIfNeeded — '\(toolName)' existed, filled missing slots (origin=\(!hasOrigin), target=\(!hasTarget), image=\(!hasImage && !imageURL.isEmpty))")
       
     } catch {
       print("FirebaseWordStore error for \(toolName): \(error)")
     }
   }
   
+    // MARK: - fetchExisting(toolNames:)
+    // Reads the Firestore docs for a list of words in as few requests as possible.
+    // 1. toolNames -> document ids, duplicates removed. Nothing to look up -> empty result.
+    // 2. Firestore allows at most 30 ids per "in" query, so the ids go in groups of 30, one query per group.
+    // 3. Every doc that decodes into a FirebaseWordModel goes into the result, keyed by its id (toolName).
+    // One group failing is only logged — the other groups' results are still returned.
+    // Returns [toolName: FirebaseWordModel] — words missing from it aren't cached yet.
     static func fetchExisting(toolNames: [String]) async -> [String: FirebaseWordModel] {
-      let ids = Array(Set(toolNames.map { documentID(for: $0) }))        // no duplicates
+      let ids = Array(Set(toolNames.map { documentID(for: $0) }))
       guard !ids.isEmpty else { return [:] }
 
       var result: [String: FirebaseWordModel] = [:]
-      for start in stride(from: 0, to: ids.count, by: maxInQueryValues) { // one query per group of 30
+      for start in stride(from: 0, to: ids.count, by: maxInQueryValues) {
         let chunk = Array(ids[start..<min(start + maxInQueryValues, ids.count)])
         do {
           let snapshot = try await Firestore.firestore()
@@ -101,7 +112,7 @@ enum FirebaseWordStore {
             }
           }
         } catch {
-          print("fetchExisting error for chunk \(start / maxInQueryValues): \(error)")  // one group failing doesn't lose the others
+          print("fetchExisting error for chunk \(start / maxInQueryValues): \(error)")
         }
       }
       return result

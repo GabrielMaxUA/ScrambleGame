@@ -6,11 +6,15 @@
 import SwiftUI
 import UIKit
 
-/// Tapping anywhere on the view (outside a text field) dismisses the keyboard.
-/// Buttons, pickers and text fields inside still get their taps first.
-///
-///     ScrollView { ... }
-///         .dismissKeyboardOnTap()
+// MARK: - Flow of this file
+// A modifier that hides the keyboard when the user taps outside a text field.
+//   EntryView: ScrollView { ... }.dismissKeyboardOnTap()
+//   -> tap on empty space -> UIKit asks the active field to give up the keyboard.
+// Buttons, pickers and text fields inside still get their taps first.
+//
+//     ScrollView { ... }
+//         .dismissKeyboardOnTap()
+
 struct DismissKeyboardOnTap: ViewModifier {
     func body(content: Content) -> some View {
         content
@@ -25,6 +29,8 @@ struct DismissKeyboardOnTap: ViewModifier {
 }
 
 extension View {
+    // MARK: - dismissKeyboardOnTap
+    // Shortcut so views can write .dismissKeyboardOnTap() instead of .modifier(DismissKeyboardOnTap()).
     func dismissKeyboardOnTap() -> some View {
         modifier(DismissKeyboardOnTap())
     }
