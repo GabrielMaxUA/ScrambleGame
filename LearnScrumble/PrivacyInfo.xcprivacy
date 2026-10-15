@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LearnScrumble privacy manifest (required by App Store Connect since May 2024).
+  Describes what THIS app's own code does; Firebase and SDWebImage ship their own manifests.
+
+  - No tracking, no tracking domains.
+  - Collected data = what leaves the device (Apple's definition), all for App Functionality, none linked to the user:
+      * Other User Content: the profession the user picks or types, sent to OpenAI to choose the words.
+      * Other Usage Data:   the English names of words already practised, sent to OpenAI so they aren't repeated.
+    Settings, progress (SwiftData) and the daily free-word counter (Keychain) never leave the device -> not "collected".
+    New words / pictures written to the shared Firebase library contain no user data.
+  - Required-reason API: UserDefaults (@AppStorage / UserDefaults.standard), reason CA92.1 = only this app reads/writes it.
+
+  Keep in sync with WebsiteContent/privacy.html. Update before adding Crashlytics, Analytics, sign-in or RevenueCat.
+-->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeOtherUserContent</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeOtherUsageData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

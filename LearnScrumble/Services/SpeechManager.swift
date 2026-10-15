@@ -13,9 +13,15 @@ import AVFoundation
 //   RootView owns one SpeechManager -> ButtonsTopRow's speaker button -> speak(word, language)
 //   SettingsView -> voices(for:) lists voices to pick from, saved under voiceKey(for:) in UserDefaults
 //   speak() reads that saved voice and the "speechRate" setting.
+//   Speech uses its own audio session, not the app's: tapping the speaker plays the word even when the phone is on silent,
+//   while the game's sound effects (SoundManager, ambient) stay quiet.
 
 final class SpeechManager {
-  private let synthesizer = AVSpeechSynthesizer()                 // iOS text-to-speech engine, kept so a new word can stop the last one
+  private let synthesizer: AVSpeechSynthesizer = {                // iOS text-to-speech engine, kept so a new word can stop the last one
+    let synthesizer = AVSpeechSynthesizer()
+    synthesizer.usesApplicationAudioSession = false               // its own audio session: the word plays even on silent (SoundManager's ambient effects don't)
+    return synthesizer
+  }()
   
   // MARK: - voices(for:)
   // Installed voices for a language, best quality first. Falls back to the same base language

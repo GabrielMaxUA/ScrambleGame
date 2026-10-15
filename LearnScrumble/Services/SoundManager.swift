@@ -14,7 +14,7 @@ import SwiftUI
 //   .alertSound(isPresented:) plays "notification" whenever an alert opens.
 // All audio work runs on its own background queue, never on the main thread:
 // activating the audio session can block for a moment (iOS warns about it), which made taps feel sticky.
-//   init -> the audio session is set up once (playback, mixed with the user's music)
+//   init -> the audio session is set up once (ambient: silent when the phone's silent switch is on, mixed with the user's music)
 //   play -> returns immediately; on the queue: reuse that sound's player (rewound) or load it once, then play.
 
 nonisolated final class SoundManager: @unchecked Sendable {        // @unchecked: `players` is only ever touched on `queue`
@@ -25,13 +25,14 @@ nonisolated final class SoundManager: @unchecked Sendable {        // @unchecked
   
   // MARK: - init
   // Private: only `shared` exists. Sets the audio session up once, on the background queue:
-  // playback, mixed with other audio (doesn't stop the user's music), then activated.
+  // ambient — game sounds follow the silent switch (muted phone = no sounds) and mix with the user's music —
+  // then activated.
   // Any audio error is logged, never shown to the user.
   private init() {
     queue.async {
       do {
         let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+        try session.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
         try session.setActive(true)
       } catch {
         print("❌ Audio session error: \(error.localizedDescription)")

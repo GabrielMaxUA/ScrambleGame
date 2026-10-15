@@ -57,8 +57,9 @@ Apple asks what data the app "collects" (sends off the device and keeps longer t
 
 - **Tracking:** No.
 - **Data linked to the user:** None (no account, no identifiers).
-- **Data not linked to the user:**
-  - *User Content → Other User Content*: the profession text and the list of practised words sent to OpenAI to generate words — purpose: App Functionality.
+- **Data not linked to the user** (the same as `LearnScrumble/PrivacyInfo.xcprivacy`):
+  - *User Content → Other User Content*: the profession text sent to OpenAI — purpose: App Functionality.
+  - *Usage Data → Other Usage Data*: the names of words already practised, sent to OpenAI so they aren't repeated — purpose: App Functionality.
 - On-device data (settings, progress, Keychain counter) is not "collected" because it never leaves the device.
 - Purchases are handled by Apple and aren't declared by the app.
 

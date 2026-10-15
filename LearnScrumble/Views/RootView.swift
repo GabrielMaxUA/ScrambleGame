@@ -8,7 +8,7 @@ import SwiftData
 //   phase -> EntryView / WelcomeBackView / LoadingView / MainView / ErrorView / OfflineView / ResultView / SettingsView
 //   Each view's buttons call back into AppManager (startGame, startStruggleReview, retry, exitToWelcome, openSettings…),
 //   which changes phase -> RootView redraws with the new screen.
-//   On top: LaunchScreen for the first 5s, and the top button row (ButtonsTopRow) on onboarding / playing.
+//   On top: LaunchScreen for the first 2s, and the top button row (ButtonsTopRow) on onboarding / playing.
 //   "How to play" tutorial (OnboardingView) over everything while showTutorial is true:
 //     after the setup screen's Start (the first words load behind it), at launch for anyone who finished setup
 //     but never saw it, and from Settings' "How to play".
@@ -100,7 +100,7 @@ struct RootView: View {
             }
           }
           .accessibilityHidden(showTutorial)                     // VoiceOver reads only the tutorial while it's on top
-          if launching {                                         // intro over everything for the first 5s
+          if launching {                                         // intro over everything for the first 2s
             LaunchScreen()
               .transition(.opacity)
               .zIndex(10)
@@ -124,7 +124,7 @@ struct RootView: View {
             manager.phase = .welcomeBack                         // NEW — returning user: welcome screen instead of setup
             if !hasSeenTutorial { showTutorial = true }          // set up before, never saw (or closed the app mid-) tutorial
           }
-          try? await Task.sleep(for: .seconds(5))                // keep LaunchScreen up for 5s
+          try? await Task.sleep(for: .seconds(2))                // keep LaunchScreen up for 2s
           withAnimation(.easeOut(duration: 0.8)) {
             launching = false
           }
