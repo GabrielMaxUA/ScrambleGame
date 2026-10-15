@@ -12,51 +12,61 @@ import SwiftUI
 // Plays short sound effects bundled with the app (.mp3 or .wav).
 //   Views call SoundManager.shared.play("name") on taps, right/wrong answers, etc.
 //   .alertSound(isPresented:) plays "notification" whenever an alert opens.
+// All audio work runs on its own background queue, never on the main thread:
+// activating the audio session can block for a moment (iOS warns about it), which made taps feel sticky.
+//   init -> the audio session is set up once (playback, mixed with the user's music)
+//   play -> returns immediately; on the queue: reuse that sound's player (rewound) or load it once, then play.
 
-final class SoundManager {
+nonisolated final class SoundManager: @unchecked Sendable {        // @unchecked: `players` is only ever touched on `queue`
   static let shared = SoundManager()                               // one shared player for the whole app
   
-  private var players: [String: AVAudioPlayer] = [:]              // keeps each playing sound alive until it finishes (a released player goes silent)
+  private let queue = DispatchQueue(label: "LearnScrumble.SoundManager", qos: .userInitiated)   // every audio call runs here, in order
+  private var players: [String: AVAudioPlayer] = [:]              // one loaded player per sound, reused (a released player goes silent)
   
   // MARK: - init
-  // Private: only `shared` exists.
-  private init() {}
+  // Private: only `shared` exists. Sets the audio session up once, on the background queue:
+  // playback, mixed with other audio (doesn't stop the user's music), then activated.
+  // Any audio error is logged, never shown to the user.
+  private init() {
+    queue.async {
+      do {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+        try session.setActive(true)
+      } catch {
+        print("❌ Audio session error: \(error.localizedDescription)")
+      }
+    }
+  }
   
   // MARK: - play
-  // 1. Finds the sound file in the app bundle, as .mp3 or .wav — missing: logs and stops.
-  // 2. Sets the audio session to playback, mixed with other audio (doesn't stop the user's music).
-  // 3. Creates a player, stores it in `players` so it isn't released mid-sound, and plays.
+  // Returns right away — the caller (a tap on the main thread) never waits. On the background queue:
+  // 1. This sound was played before -> rewind its player.
+  // 2. First time -> find the file in the app bundle (.mp3 or .wav; missing: log and stop), load it once, keep it.
+  // 3. Play.
   // Any audio error is logged, never shown to the user.
   func play(_ sound: String) {
-    print("🔊 Requested sound: \(sound)")
-    
-    guard let url =
-            Bundle.main.url(forResource: sound, withExtension: "mp3")
-            ?? Bundle.main.url(forResource: sound, withExtension: "wav")
-            else {
-      print("❌ Sound not found: \(sound).mp3 or \(sound).wav")
-      return
-    }
-    
-    do {
-      let session = AVAudioSession.sharedInstance()
-      try session.setCategory(
-        .playback,
-        mode: .default,
-        options: [.mixWithOthers]
-      )
-      try session.setActive(true)
-      
-      let player = try AVAudioPlayer(contentsOf: url)
-      players[sound] = player
-      
-      player.prepareToPlay()
-      let didPlay = player.play()
-      
-      print("🎵 Playing: \(url.lastPathComponent)")
-      print("🎵 Playback started: \(didPlay)")
-    } catch {
-      print("❌ Audio error: \(error.localizedDescription)")
+    queue.async { [self] in
+      let player: AVAudioPlayer
+      if let loaded = players[sound] {
+        loaded.currentTime = 0
+        player = loaded
+      } else {
+        guard let url = Bundle.main.url(forResource: sound, withExtension: "mp3")
+                ?? Bundle.main.url(forResource: sound, withExtension: "wav") else {
+          print("❌ Sound not found: \(sound).mp3 or \(sound).wav")
+          return
+        }
+        do {
+          player = try AVAudioPlayer(contentsOf: url)
+          player.prepareToPlay()
+          players[sound] = player
+        } catch {
+          print("❌ Audio error: \(error.localizedDescription)")
+          return
+        }
+      }
+      player.play()
     }
   }
 }
