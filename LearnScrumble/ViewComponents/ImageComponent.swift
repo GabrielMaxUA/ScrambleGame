@@ -12,10 +12,12 @@ import SwiftUI
 //   MainView passes WordVM.image (the current word's picture) and WordVM.hintWord (word in the native language)
 //   -> no picture yet: a placeholder icon
 //   -> lightbulb tap -> popover with the hint; it closes by itself when the word changes.
+//   Tutorial (OnboardingView): onHintToggled reports the hint opening/closing; the lightbulb reports its place for the pointer.
 
 struct ImageComponent: View {
     let image: UIImage?                         // current word's picture; nil = not loaded / failed
     let hint: String                            // the word in the user's native language
+    var onHintToggled: (Bool) -> Void = { _ in }   // tutorial only: tells OnboardingService the hint opened (true) / closed (false)
     @State private var showHint = false         // is the hint popover open
 
     var body: some View {
@@ -44,6 +46,7 @@ struct ImageComponent: View {
             hintButton.padding(10)
         }
         .onChange(of: hint) { showHint = false }                        // close a leftover popover when the word changes
+        .onChange(of: showHint) { _, shown in onHintToggled(shown) }    // tutorial: hint opened / closed
     }
 
     private var hintButton: some View {                                 // lightbulb button + its hint popover
@@ -57,6 +60,7 @@ struct ImageComponent: View {
         }
         
         .accessibilityLabel("Show hint")
+        .anchorPreference(key: TutorialAnchorKey.self, value: .bounds) { [.hint: $0] }   // where the lightbulb is, for the tutorial's pointer
         .popover(isPresented: $showHint) {                              // small bubble: "Hint" + the native word
             VStack(spacing: 4) {
                 Text("Hint")

@@ -77,6 +77,7 @@ class WordVM {
   private let onWordAnswered: (() -> Void)?            // AppManager: count this word toward today's free allowance
   private let canContinue: (() -> Bool)?               // AppManager: may the user play another word?
   private let canFetchMore: ((Int) -> Bool)?           // AppManager: may we download more, given how many words are still unplayed?
+  private let isPractice: Bool                         // tutorial word (OnboardingService): answers aren't saved to progress
   private let modelContext: ModelContext                         // SwiftData context, shared singleton from PersistenceController
   private let targetLanguage: String                             // Languages.rawValue for this session — scopes all progress queries below
   var overlayShown: Bool = false                                 // controls the correct/incorrect result overlay shown after checkAnswer()
@@ -123,6 +124,7 @@ class WordVM {
   //   onCheckpoint    — fired every 10th word; AppManager wires this to show ResultView
   //   onResume        — fired when leaving the checkpoint; AppManager wires this to resume play
   //   onFetchFailed / onWordAnswered / canContinue / canFetchMore — see the properties above
+  //   isPractice      — true for the "How to play" tutorial: nothing is saved to SwiftData
   // Steps: grab the shared SwiftData context once, up front -> store the starting batch, lock in the language
   // this session tracks progress against, store every injected closure (or nil) -> scramble letters for the
   // very first word immediately -> start a prefetch if the batch is already short.
@@ -135,7 +137,8 @@ class WordVM {
        onFetchFailed: (() -> Void)? = nil,
        onWordAnswered: (() -> Void)? = nil,
        canContinue: (() -> Bool)? = nil,
-       canFetchMore: ((Int) -> Bool)? = nil
+       canFetchMore: ((Int) -> Bool)? = nil,
+       isPractice: Bool = false
   ) {
     self.modelContext = PersistenceController.shared.context
     self.questions = questions
@@ -148,6 +151,7 @@ class WordVM {
     self.onWordAnswered = onWordAnswered
     self.canContinue = canContinue
     self.canFetchMore = canFetchMore
+    self.isPractice = isPractice
     print("🟢 WordVM.init — \(questions.count) starting questions, targetLanguage=\(targetLanguage), fetchMore=\(fetchMore != nil)")
     setupCurrentWord()
     requestMoreIfNeeded()
@@ -233,7 +237,8 @@ class WordVM {
   // 1. Only scores when the answer is complete and there's a real word.
   // 2. Compares the guess to the target word, case-insensitive (resultWord is already lowercased, with spaces between words).
   // 3. Records the verdict for the UI (guessResult) and shows the result overlay.
-  // 4. recordGuess: saves this attempt to SwiftData, keyed by the canonical concept name.
+  // 4. recordGuess: saves this attempt to SwiftData, keyed by the canonical concept name
+  //    (skipped for the tutorial's practice word, so it never shows up in stats or struggle review).
   // 5. onWordAnswered: counts it toward today's free allowance, right or wrong.
   func checkAnswer() {
     guard isComplete, let word else { return }
@@ -241,7 +246,7 @@ class WordVM {
     guessResult = isCorrect ? .correct : .incorrect
     overlayShown = true
     print("✅❌ checkAnswer — guessed='\(resultWord)' target='\(word.targetWord)' -> \(isCorrect ? "CORRECT" : "INCORRECT")")
-    recordGuess(for: word.toolName, result: guessResult!)
+    if !isPractice { recordGuess(for: word.toolName, result: guessResult!) }
     onWordAnswered?()
   }
   
@@ -437,7 +442,7 @@ class WordVM {
     }
 
     // MARK: - batchAccuracy
-    // Correct vs all answers for the current checkpoint's words only (ResultView "This set").
+    // Correct vs all answers for the current checkpoint's words only (ResultView "This round").
     // The words in currentBatchWindow -> their concepts -> fetch those records in this language -> accuracy(for:).
     // No words -> (0, 0).
     func batchAccuracy() -> (correct: Int, total: Int) {
@@ -453,7 +458,7 @@ class WordVM {
     }
 
     // MARK: - overallAccuracy
-    // Correct vs all answers across all-time history (ResultView "Overall") — the logic lives in PersistenceController.
+    // Correct vs all answers across all-time history (ResultView "All time") — the logic lives in PersistenceController.
     func overallAccuracy() -> (correct: Int, total: Int) {
       PersistenceController.shared.overallAccuracy(targetLanguage: targetLanguage)
     }

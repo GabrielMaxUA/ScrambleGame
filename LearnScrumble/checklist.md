@@ -4,7 +4,7 @@
 **From:** Konstantin
 **Based on:** your code at `1e60eb9` (1 October 2026), which I built and reviewed on 4 October. Nothing new had been pushed by 7 October.
 **Status:** revised 7 October to the direction "keep building toward a finished app". Ready to send after Konstantin's read-through.
-**Progress check (10 October, against the current code):** ✅ = done · ❓ **need discussion** = waiting on a conversation or decision · ⬜ **to do** = not started yet
+**Progress check (14 October, against the current code):** ✅ = done · ❓ **need discussion** = waiting on a conversation or decision · ⬜ **to do** = not started yet
 
 ---
 
@@ -23,9 +23,9 @@
 ## 2. The honest read
 
 The game itself is in good shape. **The app around it is not finished yet.**
-- ⬜ **to do** There is no first-run onboarding. *(Still one setup screen, now with a saved completion flag and a welcome-back screen; see §4.1)*
+- ✅ There is no first-run onboarding. *(Now: the setup screen, then an interactive "How to play" tutorial on the real game screen, with a saved completion flag and a welcome-back screen; see §4.1)*
 - ✅ "Settings" is the setup screen again, reached from the gear button. *(Now a real Settings screen: `SettingsView.swift`.)*
-- ⬜ **to do** There is no paywall, no reminders, and no support or terms pages. *(Support and terms rows exist in Settings, with placeholder links)*
+- ⬜ **to do** There is no paywall, no reminders, and no support or terms pages. *(Support and terms rows exist in Settings, with placeholder links. The daily reminder is done; see §4.1 #4)*
 - ❓ **need discussion** The things that block a public release are still open (§4.4).
 
 Since mid-September, about half of the new Swift code (52% of 3,469 added lines) went into screens, components and animations. Very little went into what a release needs:
@@ -63,13 +63,14 @@ Work in this order. The sizes are rough estimates.
 1. ✅ **Welcome.** One sentence on what the app does, in the user's own language, for example "Learn the words you need at work, in your language". The current welcome text is a good start.
 2. ✅ **Languages.** "I speak" and "I'm learning", using the existing pickers.
 3. ✅ **Job.** A short list of common jobs to tap, plus the existing free-text field. This also tells us which jobs people actually pick. *(`ProfessionPicker`: an occupation menu plus "Not listed?" free text)*
-4. ⬜ **to do** **Daily reminder.** Ask for a time, then ask for notification permission on this screen with a one-line reason. Not at launch. *(Not started: no `UserNotifications` code yet)*
+4. ✅ **Daily reminder.** Ask for a time, then ask for notification permission on this screen with a one-line reason. Not at launch. *(A "Daily reminder" card on the setup screen: a time picker (9:00 by default) with the reason under it, "We'll remind you once a day, only if you haven't played yet." Permission is asked once, on the Start button. The reminder goes out at that time on days the user hasn't played yet, booked 7 days ahead and renewed each time the app opens (`DailyReminder.swift`))*
 5. ❓ **need discussion** **Consent.** Say plainly that the job text is sent to OpenAI to create words and pictures, and get an explicit "OK", with a link to the real privacy policy. Apple's App Review rule 5.1.2(i) requires this; the current disclaimer isn't enough. *(Only the AI disclaimer so far; the wording depends on live AI vs packs and on the real privacy policy)*
 6. ✅ **Straight into the first round.** Aim for the first correct word within about a minute of opening the app.
+7. ✅ **How to play.** *(Added 14 October, not in the original list: an interactive tutorial right after the setup screen, while the first words load. It runs the real game screen with one practice word, "cat" in the language being learned, and a tapping pointer with a tooltip on every task: spell, send a wrong letter back, ↻, the hint, the speaker, the settings gear. It ends on the real "Correct!" screen with the daily free words and "Let's go!". Everything is in the user's language. Shown once, replayable from Settings)*
 
 **Rules for the whole flow:**
 - ✅ It is shown once, with a saved completion flag. *(`hasCompletedOnboarding`; returning users get the welcome-back screen)*
-- ⬜ **to do** Back and skip work. *(Not needed yet: onboarding is still a single screen)*
+- ✅ Back and skip work. *(Skip works at every moment of the tutorial. Back isn't needed: the tutorial is one continuous practice word, and every action can be redone in place)*
 - ✅ Every string is localized.
 - ✅ Changing languages later happens in Settings, not by re-running onboarding.
 
@@ -79,12 +80,12 @@ Work in this order. The sizes are rough estimates.
 
 **Build** a Settings screen with:
 - ✅ **Languages and job.** Tell the user what happens to their progress before they change these, because progress is stored per target language.
-- ⬜ **to do** **Reminder:** on/off and time.
+- ✅ **Reminder:** on/off and time. *(A "Daily reminder" card: on/off toggle and time picker, sharing the time picked during setup. Turning it on for someone who was never asked shows the iOS popup; if iOS notifications are off, a note and an "Open Settings" row appear)*
 - ✅ **Audio:** speech speed, and auto-play on or off. *(Speech speed and a voice picker are done. Auto-play is left out on purpose: speech stays on demand through the speaker button, because speaking every word automatically gets annoying. Worth telling Konstantin)*
 - ✅ **Progress:** reset progress, with a confirmation.
 - ✅ **Subscription:** manage subscription, and Restore Purchases.
 - ❓ **need discussion** **Legal and support:** privacy policy, terms of use, and a support email. *(The rows exist, but the URLs are still `your-site.com` and the email is `support@example.com`)*
-- ❓ **need discussion** **Delete my data:** local progress now, account data later. *(Built, but commented out in `SettingsView.swift:59` and `AppManager.swift`)*
+- ❓ **need discussion** **Delete my data:** local progress now, account data later. *(Built, but commented out in `SettingsView.swift:68` and `AppManager.swift`)*
 - ✅ **App version.**
 
 ### 4.3 Paywall (about 3–5 days)
@@ -181,10 +182,10 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 
 | | First external test (TestFlight) | Public App Store release |
 |---|---|---|
-| ⬜ **to do** Onboarding | The full flow in §4.1 | The same, polished, plus store screenshots |
-| ⬜ **to do** Settings | The full screen in §4.2 *(only the reminder is missing; legal links and delete data need discussion)* | The same |
+| ✅ *(partly)* Onboarding | The full flow in §4.1 *(setup, daily reminder and the "How to play" tutorial are done; the consent step needs discussion)* | The same, polished, plus store screenshots |
+| ✅ *(partly)* Settings | The full screen in §4.2 *(the reminder is done; legal links and delete data need discussion)* | The same |
 | ⬜ **to do** Paywall | Subscription in sandbox, with an access-code path ready | Live products in Auxility's account, prices tuned with data |
-| ⬜ **to do** Engagement | Daily reminder at a chosen time; missed-word review *(the missed-word review is done; the reminder isn't)* | Plus streaks and a weekly recap |
+| ✅ Engagement | Daily reminder at a chosen time; missed-word review *(the missed-word review and the daily reminder at a chosen time are both done)* | Plus streaks and a weekly recap |
 | ✅ Loading | Clear progress and error states (mostly done) *(progress ring, retry-or-exit error screen, earlier prefetch)* | Polished, or largely unnecessary with packs |
 | ❓ **need discussion** Design | One consistent design pass over all screens *(glass buttons with iOS 18 fallbacks are shared across screens; whether that counts as the design pass needs a review)* | Full design system |
 | ❓ **need discussion** Always required | No API key in the app, locked-down Firebase, consent, a real privacy policy and terms, crash reporting and analytics | The same, plus account deletion if accounts exist, App Review compliance, and an Android plan |
@@ -199,14 +200,12 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 
 ---
 
-## 9. Summary (10 October)
+## 9. Summary (14 October)
 
 ### ⬜ Remaining: to do
 
-1. ⬜ **Daily reminder.** Pick a time and ask for notification permission in onboarding, then an on/off and time setting in Settings. *(§4.1 #4, §4.2, §7)*
-2. ⬜ **Multi-step onboarding** with back and skip. Today it's a single setup screen. *(§2, §4.1)*
-3. ⬜ **Paywall.** RevenueCat on StoreKit; the paywall screen after the first completed round, showing price, period, what's included and the auto-renewal terms; Restore Purchases on the paywall too; a local StoreKit or sandbox setup with no live products. *(§2, §4.3, §7)*
-4. ⬜ **Crash reporting and analytics**, with the events: onboarding finished, round finished, paywall shown, trial started. *(§2, §4.4)*
+1. ⬜ **Paywall.** RevenueCat on StoreKit; the paywall screen after the first completed round, showing price, period, what's included and the auto-renewal terms; Restore Purchases on the paywall too; a local StoreKit or sandbox setup with no live products. *(§2, §4.3, §7)*
+2. ⬜ **Crash reporting and analytics**, with the events: onboarding finished, round finished, paywall shown, trial started. *(§2, §4.4)*
 
 ### ❓ Remaining: need discussion
 
@@ -215,7 +214,7 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 3. ❓ **Lock down Firebase:** anonymous sign-in, read-only rules for the shared word bank, App Check. *(§4.4)*
 4. ❓ **Real privacy policy, terms of use and support email.** All are placeholders today, in `EntryView` and `SettingsView`. The paywall links depend on them too. *(§3 #1, §4.2, §4.3, §4.4)*
 5. ❓ **Consent step:** a plain explanation that the job text goes to OpenAI, with an explicit "OK". *(§2, §4.1 #5)*
-6. ❓ **Delete my data.** It's built but commented out in `SettingsView.swift:59` and `AppManager.swift`. *(§4.2)*
+6. ❓ **Delete my data.** It's built but commented out in `SettingsView.swift:68` and `AppManager.swift`. *(§4.2)*
 7. ❓ **Plans and prices:** monthly and annual, with a free trial. *(§4.3)*
 8. ❓ **Design pass:** does the shared glass style count as the "one consistent design pass"? *(§7)*
 9. ❓ **§8 Q2–Q5:** weekly hours until mid-December, IP clause, Android approach, the order in §6.
@@ -263,3 +262,23 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 **Also done on 10 October (not in the original list)**
 - ✅ Sound effects through a new `SoundManager`: letter taps, a success sound for correct answers, and a notification sound on every alert.
 - ✅ All 54 localized languages are now listed in the project's known regions.
+
+**Also done on 12 October (not in the original list)**
+- ✅ Daily reminder at 9am with local notifications: booked 7 days ahead, renewed each time the app opens, and skipped on days the user has already played. Permission is asked once, on the setup screen's Start button.
+- ✅ Loading screen: the PNG-to-WebP conversion and the unpacking of GPT's image reply run on a background thread, so the animation freezes less. The percentage glides and creeps between steps instead of jumping. *(Some freezes remain; being measured)*
+- ✅ Every file starts with a short flow summary, and each method's comments sit above it.
+
+**Daily reminder finished (14 October)** *(§4.1 #4, §4.2, §7)*
+- ✅ Setup screen: a "Daily reminder" card with a time picker (9:00 by default) and the one-line reason, before the permission popup on Start.
+- ✅ Settings: an on/off toggle and the time, shared with the setup screen. Turning it on asks iOS if it never asked before; if notifications are off in iOS, a note and an "Open Settings" row appear.
+
+**"How to play" tutorial (14 October)** *(§2, §4.1, §7)*
+- ✅ Shown right after the setup screen's Start, while the first words load; also once at launch for anyone set up before it existed; replayable from Settings → How to play.
+- ✅ One session on the real game screen with a practice word ("cat" in the language being learned, English "cat" for scripts that join letters) and a cat picture.
+- ✅ A tapping pointer and a tooltip on every task: first letter, a wrong letter on purpose, send it back, ↻, the hint (in the user's language), the speaker, the settings gear, then the whole word.
+- ✅ Ends on the real "Correct!" screen with "You get 20 free words every day." and "Let's go!". Skip works at any moment.
+- ✅ Nothing from the practice word is saved to the user's progress.
+- ✅ Tutorial and reminder texts translated into all 54 app languages *(AI-made, like the rest; native review recommended)*.
+- ✅ Rarely supported languages removed: Bhojpuri, Bodo, Dogri, Konkani, Maithili, Manipuri, Sanskrit.
+- ✅ Closing the tutorial over the welcome screen goes straight into the game.
+- ✅ Clearer score cards: "This round" and "All time" (instead of "This set" and "Overall"), with "Share of words you answered correctly" under them, and "No answers yet" instead of "—".

@@ -2,23 +2,29 @@
 import SwiftUI
 
 // MARK: - Flow of this file
-// First-launch setup screen (phase .onboarding): native language, profession, language to learn.
+// First-launch setup screen (phase .onboarding): native language, profession, language to learn, reminder time.
 //   Pickers write straight into RequestModel (nativeLanguage, selectedLanguage, proffession)
+//   Reminder card: the time is saved straight to UserDefaults (DailyReminder.timeKey), with the reason shown under it
 //   -> onChange copies each into UserDefaults (@AppStorage) so the next launch restores them
 //   -> "Start Learning" (only when profession is filled and the two languages differ)
-//   -> onSubmit -> RootView: hasCompletedOnboarding = true, notification permission, AppManager.startGame().
+//   -> onSubmit -> RootView: hasCompletedOnboarding = true, notification permission
+//      (DailyReminder books the reminders at the time picked here), AppManager.startGame().
 //   A raccoon runs onto the button when the form is ready and runs off when it isn't.
 
 struct EntryView: View {
   @AppStorage("nativeLanguage") private var nativeLanguage = "en-US"         // saved copy of requestModel.nativeLanguage
   @AppStorage("pickedLanguage") private var pickedLanguage = "en-US"         // saved copy of requestModel.selectedLanguage
   @AppStorage("pickedProffession") private var pickedProfession = ""         // saved copy of requestModel.proffession
+  @AppStorage(DailyReminder.timeKey) private var reminderMinutes = DailyReminder.defaultMinutes   // reminder time, minutes after midnight (9:00 by default)
   @Bindable var requestModel: RequestModel                                   // the pickers write into it directly
   let onSubmit: () async -> Void                                             // RootView: mark onboarding done + start the game
   private let nativePick: LocalizedStringKey = "I speak"                     // card titles / warning, translated by the catalog
   private let professionPick: LocalizedStringKey = "My profession"
   private let wantToLearnPick: LocalizedStringKey = "I want to learn"
   private let languageAlertMessage: LocalizedStringKey = "Pick two different languages."
+  private let reminderPick: LocalizedStringKey = "Daily reminder"
+  private let reminderTimeLabel: LocalizedStringKey = "Remind me at"
+  private let reminderReason: LocalizedStringKey = "We'll remind you once a day, only if you haven't played yet."
   @FocusState private var professionFocused: Bool                 // passed into ProfessionPicker so the raccoon and the button can react to typing
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var raccoonX: CGFloat = -600                          // raccoon's horizontal position relative to the button center
@@ -58,6 +64,17 @@ struct EntryView: View {
               .font(.footnote)
               .foregroundStyle(.orange)
               .frame(maxWidth: .infinity, alignment: .leading)
+          }
+          
+          FieldCard(title: reminderPick, icon: "bell") {        // reminder time + why we'll ask for notifications on Start
+            VStack(alignment: .leading, spacing: 8) {
+              DatePicker(reminderTimeLabel, selection: DailyReminder.timeBinding($reminderMinutes), displayedComponents: .hourAndMinute)
+                .foregroundStyle(.white)
+                .environment(\.colorScheme, .dark)               // white time pill on the black screen
+              Text(reminderReason)                              // the one-line reason, read before the iOS popup
+                .font(.footnote)
+                .foregroundStyle(.white.opacity(0.6))
+            }
           }
         }
       }

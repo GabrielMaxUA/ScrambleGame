@@ -15,10 +15,17 @@ import SwiftUI
 //   -> every slot filled (vm.isComplete) -> vm.checkAnswer() -> guessResult set -> AnswerResultView overlay
 //   -> "next" on that overlay -> vm.nextWord()
 //   No current word yet (next batch still loading) -> LoadingView instead.
+//   Also used by the "How to play" tutorial (OnboardingView) with a practice word: extra top space (topInset),
+//   hooks for the hint / ↻ taps, a custom last button ("Let's go!") and note; every tile reports its place for the pointer.
 
 struct MainView: View {
     let vm: WordVM                                                     // the running session: words, letters, answers
     let manager: AppManager                                            // only used for the loading progress
+    var topInset: CGFloat = 72                                         // room above the picture: RootView's top buttons, or the tutorial's instructions (OnboardingView)
+    var onHintToggled: (Bool) -> Void = { _ in }                       // tutorial only: the hint popover opened (true) / closed (false)
+    var onReset: () -> Void = {}                                       // tutorial only: ↻ was tapped (after the answer is cleared)
+    var resultButtonTitle: LocalizedStringKey = "Next"                 // tutorial only: the right/wrong screen's button ("Let's go!")
+    var resultNote: LocalizedStringKey? = nil                          // tutorial only: highlighted line on the right/wrong screen
     private let minTile: CGFloat = 40                                  // smallest tray tile (the size every tile used to be)
     private let maxTile: CGFloat = 52                                  // short words get bigger, easier tiles
     private let spacing: CGFloat = 8                                   // gap between tiles and between tray rows
@@ -34,10 +41,10 @@ struct MainView: View {
                     LoadingView(progress: manager.requestModel.progress)                                        // next word not ready yet
                 } else {
                     VStack(spacing: 20) {
-                        ImageComponent(image: vm.image, hint: vm.hintWord)
+                        ImageComponent(image: vm.image, hint: vm.hintWord, onHintToggled: onHintToggled)
                             .layoutPriority(-1)                          // the image shrinks first on small screens, letters never get cut off
 
-                        ResultWordRow(result: vm.resultWord, resetGuess: vm.resetGuess)
+                        ResultWordRow(result: vm.resultWord, resetGuess: { vm.resetGuess(); onReset() })
                         .environment(\.layoutDirection, answerDirection)
 
                         GuessedLettersRow(                               // lays out every word of the answer with one shared slot size
@@ -53,7 +60,7 @@ struct MainView: View {
                         letterTray(width: contentWidth - trayPadding * 2)   // scrambled tiles at the bottom
                     }
                     .padding(.horizontal, horizontalPadding)
-                    .padding(.top, 72)                                   // room for RootView's top button row
+                    .padding(.top, topInset)                             // room for RootView's top button row (or the tutorial header)
                     .padding(.bottom, 12)
                 }
             }
@@ -65,7 +72,9 @@ struct MainView: View {
                 AnswerResultView(
                     result: result,
                     correctAnswer: vm.word?.targetWord ?? "",
-                    onNext: { vm.nextWord() }
+                    onNext: { vm.nextWord() },
+                    nextTitle: resultButtonTitle,
+                    note: resultNote
                 )
             }
         }
@@ -88,6 +97,7 @@ struct MainView: View {
                     ForEach(row) { letter in
                         LetterBoxView(letter: letter, size: tiles.size) { vm.selectLetter($0) }
                             .foregroundStyle(.white)
+                            .anchorPreference(key: TutorialAnchorKey.self, value: .bounds) { [.tile(letter.id): $0] }   // where this tile is, for the tutorial's pointer
                     }
                 }
                 .frame(maxWidth: .infinity)

@@ -60,13 +60,19 @@ struct ResultView: View {
             Spacer()
             
             // the owl perches on top of the score cards
-            HStack(spacing: 12) {
-                statTile(title: "This set", score: setScore)
-                statTile(title: "Overall", score: overallScore)
-            }
-            .overlay(alignment: .top) {
-                LineOwl(isCelebrating: owlCelebrates)
-                    .alignmentGuide(.top) { $0[.bottom] - 4 }      // feet rest on the cards
+            VStack(spacing: 8) {                                    // the score cards + what the numbers mean
+                HStack(spacing: 12) {
+                    statTile(title: "This round", score: setScore)
+                    statTile(title: "All time", score: overallScore)
+                }
+                .overlay(alignment: .top) {
+                    LineOwl(isCelebrating: owlCelebrates)
+                        .alignmentGuide(.top) { $0[.bottom] - 4 }  // feet rest on the cards
+                }
+                Text("Share of words you answered correctly")
+                    .font(.footnote)
+                    .foregroundStyle(.white.opacity(0.6))
+                    .multilineTextAlignment(.center)
             }
             .padding(.top, 80)                                      // room for the owl
             
@@ -131,9 +137,9 @@ struct ResultView: View {
     // MARK: - Building blocks
     
     // MARK: - statTile(title:score:)
-    // One score card: a title and a big percent, or "—" when there's no score yet (nil).
+    // One score card: a title and a big percent, or "No answers yet" when there's no score yet (nil).
     // The percent follows the app's locale (e.g. Arabic digits) and rolls when it changes.
-    // VoiceOver reads the card as one element, e.g. "This set, 80%".
+    // VoiceOver reads the card as one element, e.g. "This round, 80%".
     private func statTile(title: LocalizedStringKey, score: Double?) -> some View {
         VStack(spacing: 6) {
             Text(title)
@@ -142,11 +148,14 @@ struct ResultView: View {
             Group {
                 if let score {
                     Text(score, format: .percent.precision(.fractionLength(0)))
+                        .font(.system(size: 40, weight: .semibold, design: .rounded))
                 } else {
-                    Text(verbatim: "—")
+                    Text("No answers yet")                         // nothing answered yet
+                        .font(.title3.weight(.semibold))
+                        .multilineTextAlignment(.center)
+                        .frame(minHeight: 48)                      // same height as the big percent, so the card doesn't jump
                 }
             }
-            .font(.system(size: 40, weight: .semibold, design: .rounded))
             .foregroundStyle(.white)
             .contentTransition(.numericText())
         }

@@ -16,6 +16,7 @@ import SwiftUI
 //   MainView passes WordVM's segmentRanges (where each word starts/ends) + guessedWord (placed letters)
 //   -> layout() picks one slot size and splits the slots into lines -> body draws a GuessedLetterView per slot
 //   -> tapping a placed letter -> onDeselect -> WordVM.deselectLetter puts it back in the tray.
+//   Tutorial (OnboardingView): reports where each slot is through TutorialAnchorKey, so the pointer can find it (ignored by the real game).
 struct GuessedLettersRow: View {
   let segments: [Range<Int>]       // vm.segmentRanges, one range per word
   let guessedWord: [LetterModel?]  // one entry per slot; nil = still empty
@@ -52,6 +53,7 @@ struct GuessedLettersRow: View {
               ForEach(piece.slots, id: \.self) { slotIndex in
                 let letter = slotIndex < guessedWord.count ? guessedWord[slotIndex] : nil
                 GuessedLetterView(letter: letter, size: slot) { onDeselect($0) }
+                  .anchorPreference(key: TutorialAnchorKey.self, value: .bounds) { [.slot(slotIndex): $0] }   // where this slot is, for the tutorial's pointer
               }
               if piece.continues {                                   // word goes on next line: dim "-"
                 Text("-")

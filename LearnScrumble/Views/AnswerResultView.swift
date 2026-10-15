@@ -13,11 +13,15 @@ import SwiftUI
 //   -> correct: green title, the animals dance; incorrect: red title + the correct word, the animals droop and walk off
 //   -> "Next" -> onNext -> WordVM.nextWord() (which may fire a checkpoint -> ResultView).
 //   AnimalStage (below) draws the icon + animals and plays the success / incorrect sound.
+//   Tutorial (OnboardingView): a custom button title ("Let's go!") and a highlighted note (the daily free words);
+//   Next reports its place through TutorialAnchorKey for the pointer.
 
 struct AnswerResultView: View {
   let result: GuessResult                    // correct or incorrect
   let correctAnswer: String                  // the target word, shown when the answer was wrong
   let onNext: () -> Void                     // WordVM.nextWord
+  var nextTitle: LocalizedStringKey = "Next" // the button's text — the tutorial's last screen says "Let's go!"
+  var note: LocalizedStringKey? = nil        // optional highlighted line under the title (tutorial: the daily free words)
   
   private var isCorrect: Bool { result == .correct }   // shortcut used all over the view
   
@@ -38,6 +42,16 @@ struct AnswerResultView: View {
         Text(isCorrect ? "Correct!" : "Incorrect")
           .font(.largeTitle.bold())
           .foregroundStyle(isCorrect ? .green : .red)
+        
+        if let note {                                           // tutorial ending: e.g. "You get 20 free words every day."
+          Label(note, systemImage: "gift.fill")
+            .font(.headline)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(.green.opacity(0.25), in: Capsule())
+            .overlay { Capsule().stroke(.green.opacity(0.6), lineWidth: 1) }
+        }
         
         if !isCorrect {
           // Same catalog key as before ("Correct answer was: %@"), so every existing translation still applies;
@@ -60,13 +74,14 @@ struct AnswerResultView: View {
       Spacer()
       
       Button(action: onNext) {                                 // on to the next word
-        Text("Next")
+        Text(nextTitle)
           .font(.headline)
           .foregroundStyle(.white)
           .frame(maxWidth: .infinity)
           .padding(.vertical, 14)
       }
       .glassCompat(in: .capsule, interactive: true)
+      .anchorPreference(key: TutorialAnchorKey.self, value: .bounds) { [.next: $0] }   // where Next is, for the tutorial's pointer
     }
     .padding(.horizontal, 20)
     .padding(.bottom, 8)

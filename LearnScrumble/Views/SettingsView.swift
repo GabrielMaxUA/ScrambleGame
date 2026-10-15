@@ -13,9 +13,11 @@ import AVFoundation
 // The settings screen (phase .settings), opened from the gear or ErrorView's "Change profession".
 //   Learning: native language, profession, target language -> written into RequestModel + saved like EntryView does
 //   Audio: voice (paid; free users get the locked alert) saved per language, speech speed, "Try it" -> SpeechManager
+//   Daily reminder: on/off toggle + time (same saved values as EntryView's card) -> DailyReminder.reschedule()
+//     turned on but never asked -> the iOS permission popup; said Don't Allow -> a note + "Open Settings" (iOS)
 //   Progress: "Reset progress" -> PersistenceController.resetProgress for the current target language
 //   Subscription: Apple's manage-subscriptions sheet, restore purchases (StoreKit AppStore.sync)
-//   Legal: privacy, terms, support email links
+//   Legal and support: "How to play" (onHowToPlay -> RootView shows the tutorial again), privacy, terms, support email links
 //   "Done" (only when the setup is usable) -> onDone -> AppManager.closeSettings() -> WelcomeBackView.
 
 struct SettingsView: View {
@@ -23,11 +25,16 @@ struct SettingsView: View {
   let hasAccess: Bool                                              // paid/unlocked: languages and profession can be changed
   var onShowPaywall: () -> Void                                    // "See plans" in the locked alert
   var onDone: () -> Void                                           // back to the welcome-back screen
+  var onHowToPlay: () -> Void = {}                                 // RootView: show the "How to play" tutorial again
   
   @AppStorage("nativeLanguage") private var nativeLanguage = "en-US"   // saved copies, same keys as EntryView
   @AppStorage("pickedLanguage") private var pickedLanguage = "en-US"
   @AppStorage("pickedProffession") private var pickedProfession = ""
   @AppStorage("speechRate") private var speechRate = 0.45          // 0.5 = the system's normal speaking speed
+  @AppStorage(DailyReminder.enabledKey) private var reminderEnabled = true                        // reminder toggle, on by default
+  @AppStorage(DailyReminder.timeKey) private var reminderMinutes = DailyReminder.defaultMinutes   // reminder time, minutes after midnight
+  @Environment(\.scenePhase) private var scenePhase                // back from iOS Settings -> re-check the notification permission
+  @Environment(\.openURL) private var openURL                      // opens the app's page in iOS Settings
   
   @State private var showLockedAlert = false                       // "Premium feature" alert (learning block lock, currently unused)
   @State private var showResetAlert = false                        // "Reset progress?" confirmation
@@ -38,6 +45,7 @@ struct SettingsView: View {
   @State private var selectedVoiceID = ""                       // "" = Default
   @State private var speechManager = SpeechManager()            // for the "Try" button
   @State private var showVoiceLockedAlert = false          // NEW — free user tapped the locked voice row
+  @State private var notificationsDenied = false                   // user said Don't Allow in iOS: the toggle can't override it
   @FocusState private var professionFocused: Bool                 // passed into ProfessionPicker
   
   private let supportEmail = "support@example.com"                 // TODO: real support address
@@ -62,6 +70,7 @@ struct SettingsView: View {
         header
         learningSection
         audioSection
+        reminderSection
         progressSection
         subscriptionSection
         legalSection
@@ -245,6 +254,64 @@ struct SettingsView: View {
     selectedVoiceID = UserDefaults.standard.string(forKey: SpeechManager.voiceKey(for: requestModel.selectedLanguage.id)) ?? ""
   }
   
+  private var reminderSection: some View {                         // daily reminder: on/off, time, permission note
+    FieldCard(title: "Daily reminder", icon: "bell") {
+      VStack(alignment: .leading, spacing: 14) {
+        Toggle("Remind me every day", isOn: $reminderEnabled)
+          .foregroundStyle(.white)
+        
+        if reminderEnabled {                                       // time and details only while it's on
+          divider
+          DatePicker("Remind me at", selection: DailyReminder.timeBinding($reminderMinutes), displayedComponents: .hourAndMinute)
+            .foregroundStyle(.white)
+            .environment(\.colorScheme, .dark)                     // white time pill on the black screen
+          Text("We'll remind you once a day, only if you haven't played yet.")
+            .font(.footnote)
+            .foregroundStyle(.white.opacity(0.6))
+          
+          if notificationsDenied {                                 // iOS blocks it: explain and offer the way out
+            Label("Notifications are off for LearnScrumble in the iPhone's Settings.", systemImage: "bell.slash")
+              .font(.footnote)
+              .foregroundStyle(.orange)
+            row("Open Settings", icon: "gear") {
+              if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
+            }
+          }
+        }
+      }
+    }
+    .task { await refreshNotificationStatus() }                    // show the note right away if iOS blocks it
+    .onChange(of: reminderEnabled) { _, on in                      // toggle -> ask (first time) or re-book / clear
+      Task { await reminderToggled(on: on) }
+    }
+    .onChange(of: reminderMinutes) { _, _ in                        // new time -> re-book at that time
+      Task { await DailyReminder.reschedule() }
+    }
+    .onChange(of: scenePhase) { _, phase in                         // coming back from iOS Settings
+      if phase == .active { Task { await refreshNotificationStatus() } }
+    }
+  }
+  
+  // MARK: - reminderToggled(on:)
+  // Toggle turned on and iOS has never asked (e.g. onboarding finished before reminders existed)
+  //   -> DailyReminder.requestPermission(): the iOS popup, then the reminders are booked.
+  // Any other change -> DailyReminder.reschedule(): on = book at the saved time, off = remove every booked reminder.
+  // Then re-checks the permission, so the "notifications are off" note is up to date.
+  private func reminderToggled(on: Bool) async {
+    if on, await DailyReminder.authorizationStatus() == .notDetermined {
+      await DailyReminder.requestPermission()
+    } else {
+      await DailyReminder.reschedule()
+    }
+    await refreshNotificationStatus()
+  }
+  
+  // MARK: - refreshNotificationStatus
+  // Asks iOS whether the user said Don't Allow, for the note under the reminder toggle.
+  private func refreshNotificationStatus() async {
+    notificationsDenied = await DailyReminder.authorizationStatus() == .denied
+  }
+  
   private var progressSection: some View {                         // reset progress (with confirmation)
     FieldCard(title: "Progress", icon: "chart.bar") {
       row("Reset progress", icon: "arrow.counterclockwise", tint: .orange) { showResetAlert = true }
@@ -261,9 +328,11 @@ struct SettingsView: View {
     }
   }
   
-  private var legalSection: some View {                            // privacy, terms, support email
+  private var legalSection: some View {                            // how to play, privacy, terms, support email
     FieldCard(title: "Legal and support", icon: "doc.text") {
       VStack(spacing: 12) {
+        row("How to play", icon: "questionmark.circle") { onHowToPlay() }
+        divider
         linkRow("Privacy Policy", icon: "hand.raised", url: privacyURL)
         divider
         linkRow("Terms of Use", icon: "doc.plaintext", url: termsURL)

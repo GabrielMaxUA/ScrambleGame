@@ -10,6 +10,7 @@ import SwiftUI
 // MARK: - Flow of this file
 // The line above the letters in MainView: shows a word/result text with a small reset button on the right.
 //   MainView passes the text and resetGuess -> tap the arrow -> resetGuess() -> WordVM clears the placed letters.
+//   Tutorial (OnboardingView): reports where ↻ is through TutorialAnchorKey, so the pointer can find it (ignored by the real game).
 
 struct ResultWordRow: View {
   let result: String                       // text shown in the middle
@@ -35,6 +36,7 @@ struct ResultWordRow: View {
                 .padding(3)
                 .foregroundStyle(.white)
                 .glassCompat(in: .circle)
+                .anchorPreference(key: TutorialAnchorKey.self, value: .bounds) { [.reset: $0] }   // where ↻ is, for the tutorial's pointer
             }
             .padding(.trailing)
           }

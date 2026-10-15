@@ -9,6 +9,11 @@ import SwiftData
 //   Each view's buttons call back into AppManager (startGame, startStruggleReview, retry, exitToWelcome, openSettings…),
 //   which changes phase -> RootView redraws with the new screen.
 //   On top: LaunchScreen for the first 5s, and the top button row (ButtonsTopRow) on onboarding / playing.
+//   "How to play" tutorial (OnboardingView) over everything while showTutorial is true:
+//     after the setup screen's Start (the first words load behind it), at launch for anyone who finished setup
+//     but never saw it, and from Settings' "How to play".
+//     Closing it ("Let's go!" or Skip) over the welcome screen starts the game; after Start the game is already
+//     loading behind it; from Settings it returns to Settings.
 //   Applies the user's native language (locale + left/right direction) to every screen below it.
 
 struct RootView: View {
@@ -18,6 +23,8 @@ struct RootView: View {
     @State private var launching: Bool = true                         // LaunchScreen visible
     @AppStorage("pickedLanguage") private var pickedLanguage = "en-US"   // target language code, saved by EntryView/Settings
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false   // true after the first "Let's go"
+    @AppStorage(OnboardingService.seenKey) private var hasSeenTutorial = false        // true once "How to play" was finished or skipped
+    @State private var showTutorial = false                           // the "How to play" tutorial is on screen
     @Query(filter: #Predicate<SwiftDataWordModel> { $0.incorrect > 0 })
     private var missed: [SwiftDataWordModel]                          // every word missed at least once (any language), kept live by SwiftData
     var direction: Bool {                                             // true = native language reads left-to-right
@@ -29,6 +36,7 @@ struct RootView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
+          Group {                                                // the current screen
             switch manager.phase {
             case .onboarding:                                    // first launch: languages + profession
               EntryView(requestModel: manager.requestModel, onSubmit: {
@@ -38,6 +46,7 @@ struct RootView: View {
                 //   Allow -> DailyReminder.reschedule() books the 9am reminders for the next 7 days
                 // Separate Task so startGame() below starts loading words while the popup is on screen
                 Task { await DailyReminder.requestPermission() }
+                if !hasSeenTutorial { showTutorial = true }        // tutorial while the first words load behind it
                 await manager.startGame()
               })
             case .welcomeBack:                                   // NEW — returning user's start screen
@@ -85,21 +94,35 @@ struct RootView: View {
                 requestModel: manager.requestModel,
                 hasAccess: manager.hasAccess,
                 onShowPaywall: { print("💳 paywall — not built yet") },
-                onDone: { manager.closeSettings() }
+                onDone: { manager.closeSettings() },
+                onHowToPlay: { showTutorial = true }             // replay the tutorial over Settings
               )
             }
+          }
+          .accessibilityHidden(showTutorial)                     // VoiceOver reads only the tutorial while it's on top
           if launching {                                         // intro over everything for the first 5s
             LaunchScreen()
               .transition(.opacity)
               .zIndex(10)
           }
           topRow                                                 // top buttons, only on some phases
+          if showTutorial {                                      // "How to play", over the game and its buttons
+            OnboardingView(manager: manager) {                   // "Let's go!" or Skip
+              withAnimation { showTutorial = false }
+              if case .welcomeBack = manager.phase, manager.canPlay {   // opened over the welcome screen (at launch): go straight into the game
+                Task { await manager.startGame() }
+              }                                                  // after Start the game is already loading behind it; from Settings: back to Settings
+            }
+            .transition(.opacity)
+            .zIndex(5)
+          }
         }//zs
         .environment(\.locale, manager.locale)                   // whole app in the user's native language
         .environment(\.layoutDirection, manager.layoutDirection) // right-to-left for Arabic, Hebrew…
         .task {                                                  // once at launch
           if hasCompletedOnboarding && !manager.requestModel.proffession.isEmpty {
             manager.phase = .welcomeBack                         // NEW — returning user: welcome screen instead of setup
+            if !hasSeenTutorial { showTutorial = true }          // set up before, never saw (or closed the app mid-) tutorial
           }
           try? await Task.sleep(for: .seconds(5))                // keep LaunchScreen up for 5s
           withAnimation(.easeOut(duration: 0.8)) {

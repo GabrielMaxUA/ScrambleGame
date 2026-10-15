@@ -56,12 +56,18 @@ struct WelcomeBackView: View {
       
       Spacer()
       
-      statTile(title: "Overall", score: score)
-        .overlay(alignment: .top) {
-          LineOwl(isCelebrating: (score ?? 0) >= 0.8)   // nil (no history) counts as 0: owl sits still
-            .alignmentGuide(.top) { $0[.bottom] - 4 }  // feet rest on the card
-        }
-        .padding(.top, 80)                             // room for the owl
+      VStack(spacing: 8) {                             // the score card + what the number means
+        statTile(title: "All time", score: score)
+          .overlay(alignment: .top) {
+            LineOwl(isCelebrating: (score ?? 0) >= 0.8)   // nil (no history) counts as 0: owl sits still
+              .alignmentGuide(.top) { $0[.bottom] - 4 }  // feet rest on the card
+          }
+        Text("Share of words you answered correctly")
+          .font(.footnote)
+          .foregroundStyle(.white.opacity(0.6))
+          .multilineTextAlignment(.center)
+      }
+      .padding(.top, 80)                               // room for the owl
       
       Spacer()
       
@@ -123,8 +129,8 @@ struct WelcomeBackView: View {
   }
   
   // MARK: - statTile(title:score:)
-  // Same tile as ResultView: a title and a big percent, or "—" when there's no score yet (nil).
-  // VoiceOver reads the tile as one element, e.g. "Overall, 80%".
+  // Same tile as ResultView: a title and a big percent, or "No answers yet" when there's no score yet (nil).
+  // VoiceOver reads the tile as one element, e.g. "All time, 80%".
   private func statTile(title: LocalizedStringKey, score: Double?) -> some View {
     VStack(spacing: 6) {
       Text(title)
@@ -133,11 +139,14 @@ struct WelcomeBackView: View {
       Group {
         if let score {
           Text(score, format: .percent.precision(.fractionLength(0)))
+            .font(.system(size: 40, weight: .semibold, design: .rounded))
         } else {
-          Text(verbatim: "—")
+          Text("No answers yet")                         // nothing answered in this language yet
+            .font(.title3.weight(.semibold))
+            .multilineTextAlignment(.center)
+            .frame(minHeight: 48)                        // same height as the big percent, so the card doesn't jump
         }
       }
-      .font(.system(size: 40, weight: .semibold, design: .rounded))
       .foregroundStyle(.white)
     }
     .frame(maxWidth: .infinity)

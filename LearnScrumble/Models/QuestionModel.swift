@@ -25,6 +25,6 @@ struct QuestionModel: Identifiable, Equatable  {
   var imageData: Data?            // PNG/WebP bytes; nil = no image yet (filtered out before play)
   
   static let mockQuestions = [    // preview data for MainView
-    QuestionModel(id: "1", word: WordModel(toolName: "hammer", originWord: "пукавичка", targetWord: "пукавичка ", imagePrompt: ""), imageData: nil)
+    QuestionModel(id: "1", word: WordModel(toolName: "hammer", originWord: "молоток", targetWord: "hummer", imagePrompt: ""), imageData: nil)
   ]
 }
