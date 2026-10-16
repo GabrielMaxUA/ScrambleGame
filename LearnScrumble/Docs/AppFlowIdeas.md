@@ -107,12 +107,12 @@
 
 ## 9. Firebase work, done together step by step
 
-- ⬜ **to do** **Step 1: Crashlytics and Analytics.** Small and low-risk, and they start collecting data straight away: crashes, plus the events "onboarding finished", "round finished", "paywall shown" and "trial started". *(`checklist.md` §4.4)*
+- ✅ *(partly)* **Step 1: Crashlytics and Analytics.** Small and low-risk, and they start collecting data straight away: crashes, plus the events "onboarding finished", "round finished", "paywall shown" and "trial started". *(`checklist.md` §4.4)* *(15 October: both libraries are added and crash reports work, tested in a separate dev project `scrumblegame-dev`. The events and the analytics consent switch are still to do; details in `ServerMigrationPlan.md` Phase 1)*
 - ⬜ **to do** **Step 2: Cloud Functions.**
   - the OpenAI key moves to the server, with all generation;
   - Firestore rules: the app only reads, the functions write;
   - App Check and anonymous sign-in.
-- ⬜ **to do** **Before step 2: the Blaze plan.** Firebase requires the pay-as-you-go plan for Cloud Functions and for calling outside services like OpenAI. It needs a payment card. Small usage stays within the free allowance; set a budget alert in Google Cloud from day one.
+- ✅ **Before step 2: the Blaze plan.** Firebase requires the pay-as-you-go plan for Cloud Functions and for calling outside services like OpenAI. It needs a payment card. Small usage stays within the free allowance; set a budget alert in Google Cloud from day one. *(Done: `scrumblegame` and `scrumblegame-dev` are both on Blaze, with budget alerts of €10 and €5. On 15 October the OpenAI monthly limit was set and auto recharge turned off)*
 
 ---
 
@@ -120,7 +120,7 @@
 
 ### ⬜ To do
 
-1. ⬜ **Firebase step 1:** Crashlytics and Analytics, together. *(§9)*
+1. ⬜ **Firebase step 1:** Crashlytics and Analytics, together. *(§9)* *(Started 15 October: crash reports work; events and consent are next)*
 2. ⬜ **Firebase step 2:** Cloud Functions with the OpenAI key, the hybrid word bank and locked-down rules, after the Blaze plan. *(§1, §9)*
 3. ⬜ **Word quality:** Report button, a status per word, a meaning-aware bank key. *(§2)*
 4. ⬜ **Safety disclaimer** in the app and terms; no safety commands or instructions. *(§3)*

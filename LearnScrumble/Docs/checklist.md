@@ -108,7 +108,7 @@ Work in this order. The sizes are rough estimates.
 | ❓ **need discussion** Get the OpenAI key off the phone (a server function), or remove OpenAI from the app entirely if we switch to pre-created packs (§5) | Any key inside an app can be extracted. Let's settle the packs question (§8) first, so you don't build a server you won't need *(Plan: move AI calls and Firestore reads and writes into Firebase Cloud Functions, and enforce the daily limit there too)* |
 | ❓ **need discussion** Firebase: sign-in, read-only rules for the shared word bank, App Check | Today any phone can overwrite words and pictures that every user sees *(Deferred to the Cloud Functions move; anonymous sign-in is the likely path, since there's no user model)* |
 | ❓ **need discussion** A real privacy policy and terms of use | Required by App Review, by the paywall and by the consent step |
-| ⬜ **to do** Crash reporting and basic analytics: onboarding finished, round finished, paywall shown, trial started | Without them we can't tell whether onboarding or the paywall works *(Started 15 October: Crashlytics and Analytics are linked, with the dSYM upload, and Debug builds report to a separate `scrumblegame-dev` project. The events, logs and consent switch are next; see `ServerMigrationPlan.md` Phase 1)* |
+| ⬜ **to do** Crash reporting and basic analytics: onboarding finished, round finished, paywall shown, trial started | Without them we can't tell whether onboarding or the paywall works *(Started 15 October: Crashlytics and Analytics are linked, with the dSYM upload, and Debug builds report to a separate `scrumblegame-dev` project. A test crash arrived decoded in dev Crashlytics. The events, logs and consent switch are next; see `ServerMigrationPlan.md` Phase 1)* |
 | ✅ App icon; a realistic minimum iOS (26.0 is a settings change, older needs fallbacks for the glass effects); iPhone locked to portrait | Install base, store listing and the landscape layout problem *(Icon set; minimum iOS 18.0 with glass fallbacks in `ButtonModifier.swift`; portrait only)* |
 
 ## 5. ❓ **need discussion** The question behind the content: pre-created packs instead of live AI
@@ -205,7 +205,7 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 ### ⬜ Remaining: to do
 
 1. ⬜ **Paywall.** RevenueCat on StoreKit; the paywall screen after the first completed round, showing price, period, what's included and the auto-renewal terms; Restore Purchases on the paywall too; a local StoreKit or sandbox setup with no live products. *(§2, §4.3, §7)*
-2. ⬜ **Crash reporting and analytics**, with the events: onboarding finished, round finished, paywall shown, trial started. *(§2, §4.4)* *(Started 15 October: the libraries, crash upload and dev/prod split are done; the events and consent are next)*
+2. ⬜ **Crash reporting and analytics**, with the events: onboarding finished, round finished, paywall shown, trial started. *(§2, §4.4)* *(Started 15 October: the libraries, crash upload and dev/prod split are done, and a test crash arrived in dev Crashlytics; the events and consent are next)*
 
 ### ❓ Remaining: need discussion
 
