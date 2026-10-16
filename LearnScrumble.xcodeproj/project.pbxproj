@@ -11,6 +11,8 @@
 		3853E12F30634A2D00AE6251 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 3853E12E30634A2D00AE6251 /* FirebaseFirestore */; };
 		3853E1383064928300AE6251 /* SDWebImageWebPCoder in Frameworks */ = {isa = PBXBuildFile; productRef = 3853E1373064928300AE6251 /* SDWebImageWebPCoder */; };
 		3853E13D3064930300AE6251 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 3853E13C3064930300AE6251 /* FirebaseStorage */; };
+		3888EBCC3081A86900968885 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3888EBCB3081A86900968885 /* FirebaseAnalytics */; };
+		3888EBCE3081A89F00968885 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3888EBCD3081A89F00968885 /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +35,8 @@
 				3853E12D30634A2D00AE6251 /* FirebaseCore in Frameworks */,
 				3853E13D3064930300AE6251 /* FirebaseStorage in Frameworks */,
 				3853E12F30634A2D00AE6251 /* FirebaseFirestore in Frameworks */,
+				3888EBCE3081A89F00968885 /* FirebaseCrashlytics in Frameworks */,
+				3888EBCC3081A86900968885 /* FirebaseAnalytics in Frameworks */,
 				3853E1383064928300AE6251 /* SDWebImageWebPCoder in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -75,6 +79,7 @@
 				38D4344E3048C7720046E55F /* Frameworks */,
 				38D4344F3048C7720046E55F /* Resources */,
 				3888EBCA30819BBF00968885 /* Copy Firebase plist */,
+				3888EBCF3081A8F000968885 /* Upload Crashlytics dSYM */,
 			);
 			buildRules = (
 			);
@@ -89,6 +94,8 @@
 				3853E12E30634A2D00AE6251 /* FirebaseFirestore */,
 				3853E1373064928300AE6251 /* SDWebImageWebPCoder */,
 				3853E13C3064930300AE6251 /* FirebaseStorage */,
+				3888EBCB3081A86900968885 /* FirebaseAnalytics */,
+				3888EBCD3081A89F00968885 /* FirebaseCrashlytics */,
 			);
 			productName = LearnScrumble;
 			productReference = 38D434513048C7720046E55F /* LearnScrumble.app */;
@@ -217,6 +224,31 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if [ \"${CONFIGURATION}\" = \"Release\" ]; then\n  ENV=\"Prod\"\nelse\n  ENV=\"Dev\"\nfi\n\nSRC=\"${SRCROOT}/FirebaseConfig/${ENV}/GoogleService-Info.plist\"\nDEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\n\ncp \"$SRC\" \"$DEST\"\necho \"Copied ${ENV} plist\"\n";
+			showEnvVarsInLog = 0;
+		};
+		3888EBCF3081A8F000968885 /* Upload Crashlytics dSYM */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+			);
+			name = "Upload Crashlytics dSYM";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -362,6 +394,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 7XZJ4BCPR6;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -506,6 +539,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
+		};
+		3888EBCB3081A86900968885 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		3888EBCD3081A89F00968885 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

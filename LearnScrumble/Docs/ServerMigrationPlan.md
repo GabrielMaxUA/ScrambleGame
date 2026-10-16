@@ -74,7 +74,13 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 
 ### Phase 1: crash reports and analytics (small, useful straight away)
 
-- ⬜ **Me:** add FirebaseCrashlytics and FirebaseAnalytics (without the advertising ID parts), plus the dSYM upload build step. The app must keep "no tracking, no advertising identifier" (`AppStoreReadiness.md` §4). The dSYM upload script reads the plist from inside the app, so it must come **after** the Copy Firebase plist phase.
+- ✅ **You:** add FirebaseCrashlytics and FirebaseAnalytics (without the advertising ID parts), plus the dSYM upload build step. The app must keep "no tracking, no advertising identifier" (`AppStoreReadiness.md` §4). The dSYM upload script reads the plist from inside the app, so it must come **after** the Copy Firebase plist phase. *(15 October)*
+  - Added `FirebaseAnalytics` and `FirebaseCrashlytics` from the existing `firebase-ios-sdk` package. `FirebaseAnalyticsIdentitySupport` (the advertising ID part) was left out on purpose.
+  - An **Upload Crashlytics dSYM** Run Script phase sits last, after Copy Firebase plist, with its 5 input files declared for the sandbox.
+  - Debug Information Format = **DWARF with dSYM File** for Debug and Release, so crashes during testing show file and line too.
+  - Crashlytics is enabled in the `scrumblegame-dev` console and sees the app. In `scrumblegame` it switches on by itself with the first Release build (TestFlight, or Run with the scheme set to Release).
+- ⬜ **Both:** see a test crash arrive in dev Crashlytics. A temporary **Test crash** button (`#if DEBUG`) is at the bottom of `SettingsView`. Crash it with the app opened from the simulator icon (not attached to Xcode), then reopen it and leave it open, because the report is sent on the next launch. **Delete the button** afterwards.
+- ⚠️ Analytics now starts collecting on launch by default, before the consent switch below exists. That's fine on dev, but no TestFlight or App Store build should go out until the consent switch and the privacy updates are done.
 - ⬜ **Me:** turn the `print` lines into proper logs, add crash breadcrumbs ("round finished", "generation failed") and report every `GenerationError` as a non-fatal error.
 - ⬜ **Me:** analytics events: `onboarding_completed`, `tutorial_completed`, `tutorial_skipped`, `round_completed`, `daily_limit_reached`, `paywall_shown`, `trial_started`, `review_started`, `reminder_enabled`, `generation_failed` (error type only). The checklist requires at least onboarding finished, round finished, paywall shown and trial started (§4.4). `paywall_shown` and `trial_started` only start firing once the paywall exists (checklist §4.3).
 - ⬜ **Me:** analytics consent switch in onboarding and Settings, connected to Firebase's consent settings; off until the user agrees (EU).
@@ -85,8 +91,8 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 
 - ✅ **You:** `scrumblegame` (production) is on the **Blaze** plan *(already done)*.
 - ✅ **You:** switch `scrumblegame-dev` to Blaze too (needed for its Storage bucket, and later for functions). *(15 October)*
-- ⬜ **You:** set a **budget alert** in Google Cloud Billing (for example €10 / €25 / €50 emails).
-- ⬜ **You:** set a **monthly spend limit** on the OpenAI dashboard.
+- ✅ **You:** set a **budget alert** in Google Cloud Billing: **€10** for `scrumblegame`, **€5** for `scrumblegame-dev`, emails at 50%, 90% and 100% to billing admins. *(15 October)* These are alerts only; they don't stop spending.
+- ✅ **You:** set a **monthly spend limit** on the OpenAI dashboard (Settings → Limits, e.g. $20 with an email at $10). *(15 October)* This is an alert too, not a hard stop. The real cap is **prepaid credit with auto recharge off** (Settings → Billing). *(Auto recharge turned off on 15 October.)* When the credit runs out, the app shows "service unavailable" to everyone, which is fine while testing.
 
 ### Phase 3: anonymous sign-in
 
