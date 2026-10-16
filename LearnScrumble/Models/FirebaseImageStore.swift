@@ -19,7 +19,14 @@ import SDWebImageWebPCoder
 enum FirebaseImageStore {
   // Point this at your actual bucket. If "scrumblegame-tools" is the bucket
   // itself (not a folder inside the default bucket), keep the gs:// form below.
-  private static let storage = Storage.storage(url: "gs://scrumblegame-tools")
+  
+  // Debug (Run in Xcode) → dev project's default bucket, taken from the dev plist.
+  // Release (Archive) → the production bucket "scrumblegame-tools".
+  #if DEBUG
+    private static let storage = Storage.storage()
+  #else
+    private static let storage = Storage.storage(url: "gs://scrumblegame-tools")
+  #endif
   private static let folder = "tools" // adjust if your folder is named differently
   
   enum ImageStoreError: Error { case encodingFailed }              // PNG couldn't be turned into WebP

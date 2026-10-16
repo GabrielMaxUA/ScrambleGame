@@ -74,6 +74,7 @@
 				38D4344D3048C7720046E55F /* Sources */,
 				38D4344E3048C7720046E55F /* Frameworks */,
 				38D4344F3048C7720046E55F /* Resources */,
+				3888EBCA30819BBF00968885 /* Copy Firebase plist */,
 			);
 			buildRules = (
 			);
@@ -193,6 +194,32 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		3888EBCA30819BBF00968885 /* Copy Firebase plist */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/FirebaseConfig/Dev/GoogleService-Info.plist",
+				"$(SRCROOT)/FirebaseConfig/Prod/GoogleService-Info.plist",
+			);
+			name = "Copy Firebase plist";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"${CONFIGURATION}\" = \"Release\" ]; then\n  ENV=\"Prod\"\nelse\n  ENV=\"Dev\"\nfi\n\nSRC=\"${SRCROOT}/FirebaseConfig/${ENV}/GoogleService-Info.plist\"\nDEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\n\ncp \"$SRC\" \"$DEST\"\necho \"Copied ${ENV} plist\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		38D4344D3048C7720046E55F /* Sources */ = {
