@@ -1,6 +1,6 @@
 # LearnScrumble: moving the AI to the server (plan)
 
-*Written 15 October 2026. Progress updated 15 October (evening): Phase 0 mostly done. Tick items off as we finish them, the same way as `checklist.md`.*
+*Written 15 October 2026. Progress updated 16 October: Phases 0–2 done; only the analytics DebugView check (and Node + CLI on the second Mac) are left. Phases 3–9 are planned, not started. Tick items off as we finish them, the same way as `checklist.md`.*
 
 **Where this stands against `checklist.md`**
 - ✅ **Can go ahead now:** Phases 0–2. Crash reporting and analytics are an open ⬜ **to do** in the checklist (§4.4, §9), and they don't depend on any decision.
@@ -64,12 +64,14 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
   - The plists live outside the app folder: `FirebaseConfig/Dev/` and `FirebaseConfig/Prod/`, both named `GoogleService-Info.plist`. They have to stay outside, because everything in `LearnScrumble/` is a synced folder that goes into the app.
   - A **Copy Firebase plist** Run Script build phase copies the right one into the app: `Release` (Archive) → Prod, anything else (Run) → Dev. Its input and output files are declared, because the project has User Script Sandboxing on.
   - The plists are **not in git** (`.gitignore`). Keep a backup; on a new Mac, download them again from the console.
+  - ⚠️ *(16 October)* **Every Mac needs its own `FirebaseConfig/` folder.** After pulling the project onto the second Mac, the folder was missing: the copy step failed without stopping the build, and the only sign was "Could not get GOOGLE_APP_ID" from the dSYM upload step. Fixed by downloading the plists again. The dSYM zip, by contrast, is per Debug build, not per Mac.
+  - ✅ *(16 October)* The **Copy Firebase plist** script now stops the build when the plist is missing, with a red Xcode error naming the file and the console to download it from (`scrumblegame-dev` for Debug, `scrumblegame` for Release).
   - To fill the **production** bank while playing, as before: Edit Scheme → Run → Build Configuration → **Release**. Switch back to Debug for coding.
 - ✅ **You:** Firestore in `scrumblegame-dev`: `(default)` database, Standard edition, **test mode**, no backups. *(15 October)* ⚠️ Test mode ends around **14 November 2026**; extend it or write the rules (Phase 6) before then.
 - ✅ **You:** Storage in `scrumblegame-dev`: default bucket `scrumblegame-dev.firebasestorage.app` (no-cost US region, test data only), test mode. *(15 October; needed Blaze, see Phase 2)*
 - ✅ **You:** `FirebaseImageStore` had the production bucket `gs://scrumblegame-tools` hard-coded, so dev pictures would still have gone to production. Now `#if DEBUG` uses the dev plist's default bucket, and Release keeps `scrumblegame-tools`. *(15 October, commit `a43ee47`)*
 - ✅ **Both:** confirmed that Debug runs fill the dev Firestore and Storage and leave production untouched. *(15 October)*
-- ⬜ **You:** upgrade Node first: you have **Node 18**, and the current Firebase CLI and Cloud Functions need **Node 20 or newer** (`nvm install 22`). Then install the Firebase CLI and log in.
+- ✅ *(partly)* **You:** upgrade Node first: you have **Node 18**, and the current Firebase CLI and Cloud Functions need **Node 20 or newer** (`nvm install 22`). Then install the Firebase CLI and log in. *(16 October, on the main Mac: Node 22.15 was already there; `npm install -g firebase-tools` (CLI 15.34), `firebase login`, and `firebase projects:list` shows both projects. The CLI is a developer tool only: nothing of it goes into the app. Still to do on the second Mac, which has Node 18)*
 - ⬜ **Me:** add a `functions/` folder (TypeScript) and Firebase config files to the repo, outside the app folder. *(Only once Phases 3–9 are agreed)*
 
 ### Phase 1: crash reports and analytics (small, useful straight away)
@@ -84,8 +86,16 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
   - How to test again (add the button back for a moment): open the app from the simulator icon (a crash isn't recorded while Xcode's debugger is attached), crash it, then reopen it and leave it open for a minute, because the report is sent on the next launch.
   - **Debug quirk:** in Debug, Xcode puts your code in a separate `LearnScrumble.debug.dylib`, and the upload script doesn't send its decoder, so Crashlytics shows "Missing (required)" under dSYMs. For a Debug test, zip `LearnScrumble.app.dSYM` from DerivedData (`Build/Products/Debug-iphonesimulator`) and drag it onto the dSYMs page. Every new build needs a new upload. Release builds don't have this split.
 - ✅ ~~Analytics starts collecting on launch by default.~~ Fixed 15 October: `LearnScrumble-Info.plist` (outside the synced app folder, merged into the generated Info.plist) sets `FIREBASE_ANALYTICS_COLLECTION_ENABLED = NO`, so nothing is collected until the user agrees.
-- ⬜ **Me:** turn the `print` lines into proper logs, add crash breadcrumbs ("round finished", "generation failed") and report every `GenerationError` as a non-fatal error.
-- ⬜ **Me:** analytics events: `onboarding_completed`, `tutorial_completed`, `tutorial_skipped`, `round_completed`, `daily_limit_reached`, `paywall_shown`, `trial_started`, `review_started`, `reminder_enabled`, `generation_failed` (error type only). The checklist requires at least onboarding finished, round finished, paywall shown and trial started (§4.4). `paywall_shown` and `trial_started` only start firing once the paywall exists (checklist §4.3).
+- ✅ **Me:** turn the `print` lines into proper logs, add crash breadcrumbs ("round finished", "generation failed") and report every `GenerationError` as a non-fatal error. *(16 October: `Services/Log.swift`)*
+  - All `print` lines are now `Log.debug` / `Log.info` / `Log.error` (Apple's `os.Logger`), each with a category (`game`, `words`, `app`, ...). They show in Xcode's console as before, and in Console.app without Xcode (search `subsystem:com.MaxGabriel.LearnScrumble`).
+  - `info` and `error` lines are also Crashlytics breadcrumbs, so a crash report shows the steps before it. `debug` lines (every tap) aren't.
+  - When a load fails for the user (`generate`, `generateMore`, `generateStruggleReview`), the `GenerationError` is recorded as a non-fatal issue: one issue per case (fixed `reportCode`), with the step, both languages and the original error.
+  - The typed profession is logged only as private detail: Xcode shows it, device logs show `<private>`, and it never goes to Crashlytics.
+  - ✅ **Both:** tested 16 October. With no OpenAI key, starting a game failed with 401 → `serviceUnavailable`. The Xcode console showed the lines, and dev Crashlytics → **Non-fatals** got the issue *Domain: GenerationError, Code: 5*, with the keys (step, origin, target, underlying) and the breadcrumbs in its Logs tab.
+  - Reading a non-fatal: the issue title is Crashlytics' own line (`FIRCLSNonFatalError.m`), ignore it. In the stack trace, the first **bold** lines are ours (`Log.report` → `reportFailure` → `generate()` → `AppManager.startGame()`): that says which load failed. *Why* it failed is in the **Logs** tab (e.g. `🚨 send — status=401…`) and the `underlying` key.
+  - A non-fatal is sent on the **next launch**, like a crash; it can take 5–30 minutes to show. Debug builds need the dSYM zipped and uploaded by hand for line numbers (see the Debug quirk above).
+- ✅ *(partly)* **Me:** analytics events: `onboarding_completed`, `tutorial_completed`, `tutorial_skipped`, `round_completed`, `daily_limit_reached`, `paywall_shown`, `trial_started`, `review_started`, `reminder_enabled`, `generation_failed` (error type only). The checklist requires at least onboarding finished, round finished, paywall shown and trial started (§4.4). `paywall_shown` and `trial_started` only start firing once the paywall exists (checklist §4.3). *(16 October: `Services/Track.swift`, one function per event. All are wired except `paywall_shown` and `trial_started`, which wait for the paywall. Parameters are languages, counts and error names only, never the profession. Sent only with the user's consent)*
+  - Where they fire: `onboarding_completed` (+ origin, target) on the first Start Learning; `tutorial_completed` / `tutorial_skipped` when the tutorial closes; `round_completed` (mode game/review) at every checkpoint; `daily_limit_reached` when a round ends on the free limit; `review_started` (word count); `reminder_enabled` (source onboarding/settings) only when iOS allows notifications; `generation_failed` (error, step) next to the Crashlytics non-fatal.
 - ✅ **Me:** analytics consent switch in onboarding and Settings, connected to Firebase's consent settings; off until the user agrees (EU). *(15 October: an optional "Share usage statistics" checkbox in the setup screen's "Your data" card and a toggle in Settings → Legal and support, both calling `AnalyticsConsent.apply`; AppDelegate applies the saved choice at every launch)*
 - ⬜ **Both:** check the events arrive in the dev project (DebugView).
 - ✅ *(partly)* **Me:** before any build with Crashlytics or Analytics goes to TestFlight, update `PrivacyInfo.xcprivacy`, `privacy.html` and the App Store privacy answers together (`AppStoreReadiness.md` §1.1 says to keep them in sync). Don't wait for Phase 10. *(15 October: the manifest, `privacy.html`, `support.html` and the suggested App Store answers in `WebsiteContent/README.md` are updated. Still to do: **You** enter the answers in App Store Connect once the app exists there)*
@@ -149,9 +159,9 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 
 ### Phase 10: privacy and App Store updates (before release)
 
-- ⬜ **Me:** `PrivacyInfo.xcprivacy`: add crash data, product interaction (analytics), user ID (anonymous); profession text gets the extra purpose "Analytics" (improving the job list).
-- ⬜ **Me:** `privacy.html`: OpenAI now called from our server; anonymous ID; crash reports; analytics with consent; typed jobs stored in English without a user ID; server region `europe-west1`.
-- ⬜ **Me:** `WebsiteContent/README.md` privacy table and App Store answers updated.
+- ✅ *(partly)* **Me:** `PrivacyInfo.xcprivacy`: add crash data, product interaction (analytics), user ID (anonymous); *(15 October: Crash Data, Device ID and Product Interaction added; the anonymous user ID comes with Phase 3)* profession text gets the extra purpose "Analytics" (improving the job list).
+- ✅ *(partly)* **Me:** `privacy.html`: OpenAI now called from our server; anonymous ID; crash reports; analytics with consent; *(15 October: crash reports and analytics with consent are in; the server parts come with Phases 3–8)* typed jobs stored in English without a user ID; server region `europe-west1`.
+- ✅ *(partly)* **Me:** `WebsiteContent/README.md` privacy table and App Store answers updated. *(15 October: updated for Crashlytics and Analytics; the server parts come later)*
 - ⬜ **You:** update the App Store Connect privacy answers to match. Today they say "not linked to the user"; with an anonymous ID and server-side limits, check again whether that still holds.
 - ⬜ **Me:** move the internal docs (`checklist.md`, `AppFlowIdeas.md`, `AppStoreReadiness.md`, this file) out of `LearnScrumble/`. That folder is synced to the app, so they ship inside it and anyone can read them (`AppStoreReadiness.md` §3).
 - ⬜ **Me:** update `checklist.md` and `AppStoreReadiness.md` (key off the phone, Firebase lock-down, crash reports and analytics → done).
@@ -169,10 +179,10 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 
 ## Still open (not part of this plan)
 
-- Consent step for sending the job to OpenAI (App Review 5.1.2). It could share a screen with the analytics consent. The proposed design is in `AppStoreReadiness.md` §1.4 (a sentence and an "I agree" checkbox on the setup screen).
+- ✅ ~~Consent step for sending the job to OpenAI (App Review 5.1.2).~~ Done 15 October, on the same setup-screen card as the analytics consent (`AppStoreReadiness.md` §1.4).
 - Paywall with RevenueCat; it can use the same anonymous ID. Sandbox only, with no live products in your own App Store Connect account (checklist §4.3).
 - Report button for wrong words or pictures; it would write to a `reports` collection through a function. App Review may expect it for AI content (`AppStoreReadiness.md` §2.1).
 - "Delete my data": with the server it also needs to delete the user's limit documents. It's built but commented out today (`SettingsView.swift:68`, `AppManager.swift`).
-- Privacy policy, terms and support pages on Firebase Hosting in `scrumblegame` (`AppStoreReadiness.md` §1.3). This needs the Firebase CLI from Phase 0.
+- Privacy policy, terms and support pages on Firebase Hosting in `scrumblegame` (`AppStoreReadiness.md` §1.3). This needs the Firebase CLI from Phase 0 *(installed 16 October, so this can go ahead)*.
 - Scheduled Firestore backups for **production** once real users are in the bank (none for dev).
-- The OpenAI key still lives in `RequestModel.swift` on your Mac only, not in git. Always add files to a commit by name until Phase 5 removes the key from the app.
+- The OpenAI key still lives in `RequestModel.swift` on your Mac only, not in git. Always add files to a commit by name until Phase 5 removes the key from the app. ⚠️ *(16 October)* Replace that key **soon**, not only in Phase 8: besides being inside app builds, it was printed in a local Claude session log. Create a new key on the OpenAI dashboard, delete the old one, and keep the new one out of git the same way.

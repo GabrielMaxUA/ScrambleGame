@@ -54,6 +54,22 @@ enum GenerationError: Error, Equatable {
     }
   }
   
+  /// Fixed number per case for Crashlytics (Log.report): each case is its own non-fatal issue there.
+  /// Never renumber a case — that would split its history into a new issue. New cases get the next number.
+  var reportCode: Int {
+    switch self {
+    case .offline:            1
+    case .timedOut:           2
+    case .serverBusy:         3
+    case .badResponse:        4
+    case .serviceUnavailable: 5
+    case .noWordsAvailable:   6
+    case .reviewUnavailable:  7
+    case .noStruggleWords:    8
+    case .unknown:            9
+    }
+  }
+
   // MARK: - from(_:)
   // Turns ANY thrown error into one of our cases:
   //   already a GenerationError -> kept as is

@@ -107,7 +107,7 @@
 
 ## 9. Firebase work, done together step by step
 
-- ✅ *(partly)* **Step 1: Crashlytics and Analytics.** Small and low-risk, and they start collecting data straight away: crashes, plus the events "onboarding finished", "round finished", "paywall shown" and "trial started". *(`checklist.md` §4.4)* *(15 October: both libraries are added and crash reports work, tested in a separate dev project `scrumblegame-dev`. The events and the analytics consent switch are still to do; details in `ServerMigrationPlan.md` Phase 1)*
+- ✅ *(partly)* **Step 1: Crashlytics and Analytics.** Small and low-risk, and they start collecting data straight away: crashes, plus the events "onboarding finished", "round finished", "paywall shown" and "trial started". *(`checklist.md` §4.4)* *(15 October: both libraries are added and crash reports work, tested in a separate dev project `scrumblegame-dev`. The analytics consent switch (15 October) and logs, crash breadcrumbs and non-fatal errors (16 October) are done too; only the events are left. Details in `ServerMigrationPlan.md` Phase 1)*
 - ⬜ **to do** **Step 2: Cloud Functions.**
   - the OpenAI key moves to the server, with all generation;
   - Firestore rules: the app only reads, the functions write;
@@ -120,7 +120,7 @@
 
 ### ⬜ To do
 
-1. ⬜ **Firebase step 1:** Crashlytics and Analytics, together. *(§9)* *(Started 15 October: crash reports work; events and consent are next)*
+1. ⬜ **Firebase step 1:** Crashlytics and Analytics, together. *(§9)* *(Crash reports, consent, logs and non-fatal errors done 15–16 October; the events are next)*
 2. ⬜ **Firebase step 2:** Cloud Functions with the OpenAI key, the hybrid word bank and locked-down rules, after the Blaze plan. *(§1, §9)*
 3. ⬜ **Word quality:** Report button, a status per word, a meaning-aware bank key. *(§2)*
 4. ⬜ **Safety disclaimer** in the app and terms; no safety commands or instructions. *(§3)*

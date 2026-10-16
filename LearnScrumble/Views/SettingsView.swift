@@ -298,12 +298,16 @@ struct SettingsView: View {
   // Toggle turned on and iOS has never asked (e.g. onboarding finished before reminders existed)
   //   -> DailyReminder.requestPermission(): the iOS popup, then the reminders are booked.
   // Any other change -> DailyReminder.reschedule(): on = book at the saved time, off = remove every booked reminder.
+  // Turned on and allowed -> reminder_enabled event (Track).
   // Then re-checks the permission, so the "notifications are off" note is up to date.
   private func reminderToggled(on: Bool) async {
     if on, await DailyReminder.authorizationStatus() == .notDetermined {
       await DailyReminder.requestPermission()
     } else {
       await DailyReminder.reschedule()
+    }
+    if on, await DailyReminder.authorizationStatus() == .authorized {   // only counts if iOS really allows it
+      Track.reminderEnabled(source: .settings)
     }
     await refreshNotificationStatus()
   }

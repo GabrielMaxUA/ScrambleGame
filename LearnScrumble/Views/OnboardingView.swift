@@ -180,6 +180,7 @@ struct OnboardingView: View {
   // MARK: - finish
   // Skip or Next on "Correct!": saves the tutorial as seen (OnboardingService), then RootView hides it.
   private func finish() {
+    Track.tutorialFinished(skipped: !service.completed)        // completed = the practice word reached "Correct!"
     service.finish()
     onDone()
   }

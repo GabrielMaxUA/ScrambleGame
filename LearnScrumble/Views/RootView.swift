@@ -46,11 +46,14 @@ struct RootView: View {
             case .onboarding:                                    // first launch: languages + profession
               EntryView(requestModel: manager.requestModel, onSubmit: {
                 hasCompletedOnboarding = true                    // setup done: next launch shows the welcome-back screen
+                Track.onboardingCompleted(origin: manager.requestModel.nativeLanguage, target: manager.requestModel.selectedLanguage)
                 // MARK: - Daily reminder permission
                 // "Let's go" -> DailyReminder.requestPermission() -> iOS Allow / Don't Allow popup (iOS shows it once ever)
                 //   Allow -> DailyReminder.reschedule() books the 9am reminders for the next 7 days
                 // Separate Task so startGame() below starts loading words while the popup is on screen
-                Task { await DailyReminder.requestPermission() }
+                Task {
+                  if await DailyReminder.requestPermission() { Track.reminderEnabled(source: .onboarding) }
+                }
                 if !hasSeenTutorial { showTutorial = true }        // tutorial while the first words load behind it
                 await manager.startGame()
               })
@@ -61,7 +64,7 @@ struct RootView: View {
                 canPlay: manager.canPlay,
                 onContinue: { withConsent { Task { await manager.startGame() } } },
                 onReview: { withConsent { Task { await manager.startStruggleReview() } } },
-                onShowPaywall: { print("💳 paywall — not built yet") },
+                onShowPaywall: { Log.info("💳 paywall — not built yet", .app) },
                 onSettings: { manager.openSettings() })
             case .generating:                                    // words/images loading
                 LoadingView(progress: manager.requestModel.progress)
@@ -92,13 +95,13 @@ struct RootView: View {
                         }
                     },
                     onRetry: { Task { await manager.startStruggleReview() }},
-                    onShowPaywall: { print("💳 paywall — not built yet") },   // NEW
+                    onShowPaywall: { Log.info("💳 paywall — not built yet", .app) },   // NEW
                     exitToWelcome: { manager.exitToWelcome() })
             case .settings:
               SettingsView(
                 requestModel: manager.requestModel,
                 hasAccess: manager.hasAccess,
-                onShowPaywall: { print("💳 paywall — not built yet") },
+                onShowPaywall: { Log.info("💳 paywall — not built yet", .app) },
                 onDone: { manager.closeSettings() },
                 onHowToPlay: { showTutorial = true }             // replay the tutorial over Settings
               )
@@ -172,7 +175,7 @@ struct RootView: View {
       word: word,
       direction: direction,
       hasAccess: manager.hasAccess,
-      onShowPaywall: { print("💳 paywall — not built yet") },
+      onShowPaywall: { Log.info("💳 paywall — not built yet", .app) },
       onOpenSettings: { manager.openSettings() },
       onReviewStruggle: { withConsent { Task { await manager.startStruggleReview() } } },
       buttons: buttons)

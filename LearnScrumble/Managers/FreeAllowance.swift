@@ -55,9 +55,9 @@ final class FreeAllowance {
        let header = (response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Date"),
        let date = Self.httpDateFormatter.date(from: header) {
       reference = (date, clock_gettime_nsec_np(CLOCK_MONOTONIC))
-      print("🕒 FreeAllowance — internet time \(date)")
+      Log.debug("🕒 FreeAllowance — internet time \(date)", .allowance)
     } else {
-      print("🕒 FreeAllowance — no internet time, using the phone's clock")
+      Log.info("🕒 FreeAllowance — no internet time, using the phone's clock", .allowance)
     }
     refresh()
   }
@@ -70,7 +70,7 @@ final class FreeAllowance {
     stored.count += 1
     Self.save(stored)
     wordsUsedToday = stored.count
-    print("🧮 FreeAllowance — \(wordsUsedToday)/\(Self.dailyWordLimit) words today")
+    Log.debug("🧮 FreeAllowance — \(wordsUsedToday)/\(Self.dailyWordLimit) words today", .allowance)
   }
   
   // MARK: - refresh

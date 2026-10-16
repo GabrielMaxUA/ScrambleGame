@@ -39,7 +39,7 @@ final class PersistenceController {
     private init() {
         do {
             container = try ModelContainer(for: SwiftDataWordModel.self)
-            print("🟢 PersistenceController.init — ModelContainer created")
+            Log.info("🟢 PersistenceController.init — ModelContainer created", .storage)
         } catch {
             fatalError("Couldn't initialize ModelContainer: \(error)")
         }
@@ -52,12 +52,12 @@ final class PersistenceController {
         let descriptor = FetchDescriptor<SwiftDataWordModel>()
         do {
             let all = try context.fetch(descriptor)
-            print("📦 SwiftData word count: \(all.count)")
+            Log.debug("📦 SwiftData word count: \(all.count)", .storage)
             for record in all {
-                print("  • \(record.concept) [\(record.targetLanguage)] — correct: \(record.correct), incorrect: \(record.incorrect), lastSeen: \(record.lastSeen), struggle: \(record.isStruggle)")
+                Log.debug("  • \(record.concept) [\(record.targetLanguage)] — correct: \(record.correct), incorrect: \(record.incorrect), lastSeen: \(record.lastSeen), struggle: \(record.isStruggle)", .storage)
             }
         } catch {
-            print("📦 Fetch failed: \(error)")
+            Log.error("📦 Fetch failed: \(error)", .storage)
         }
     }
     
@@ -71,7 +71,7 @@ final class PersistenceController {
         )
         let records = (try? context.fetch(descriptor)) ?? []
         let result = Set(records.map { $0.concept })
-        print("🧠 seenToolNames — lang=\(targetLanguage) -> \(result.count) concepts: \(result)")
+        Log.debug("🧠 seenToolNames — lang=\(targetLanguage) -> \(result.count) concepts: \(result)", .storage)
         return result
     }
     
@@ -90,7 +90,7 @@ final class PersistenceController {
             .sorted { ($0.accuracy, $0.lastSeen) < ($1.accuracy, $1.lastSeen) }
             .map { $0.concept }
         let result = limit.map { Array(struggling.prefix($0)) } ?? struggling
-        print("🎯 struggleToolNames — lang=\(targetLanguage), limit=\(limit.map(String.init) ?? "none") -> \(result.count) struggling: \(result)")
+        Log.debug("🎯 struggleToolNames — lang=\(targetLanguage), limit=\(limit.map(String.init) ?? "none") -> \(result.count) struggling: \(result)", .storage)
         return result
     }
     
@@ -105,7 +105,7 @@ final class PersistenceController {
         let records = (try? context.fetch(descriptor)) ?? []
         let correct = records.reduce(0) { $0 + $1.correct }
         let incorrect = records.reduce(0) { $0 + $1.incorrect }
-        print("📈 overallAccuracy — lang=\(targetLanguage) -> \(correct)/\(correct + incorrect)")
+        Log.debug("📈 overallAccuracy — lang=\(targetLanguage) -> \(correct)/\(correct + incorrect)", .storage)
         return (correct, correct + incorrect)
     }
     
@@ -119,7 +119,7 @@ final class PersistenceController {
         let records = (try? context.fetch(descriptor)) ?? []
         records.forEach { context.delete($0) }
         try? context.save()
-        print("🗑️ resetProgress — lang=\(targetLanguage), deleted \(records.count) records")
+        Log.info("🗑️ resetProgress — lang=\(targetLanguage), deleted \(records.count) records", .storage)
     }
     
     // MARK: - deleteAllProgress
@@ -127,6 +127,6 @@ final class PersistenceController {
     func deleteAllProgress() {
         try? context.delete(model: SwiftDataWordModel.self)
         try? context.save()
-        print("🗑️ deleteAllProgress — all records deleted")
+        Log.info("🗑️ deleteAllProgress — all records deleted", .storage)
     }
 }

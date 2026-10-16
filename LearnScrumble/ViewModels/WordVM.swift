@@ -152,7 +152,7 @@ class WordVM {
     self.canContinue = canContinue
     self.canFetchMore = canFetchMore
     self.isPractice = isPractice
-    print("🟢 WordVM.init — \(questions.count) starting questions, targetLanguage=\(targetLanguage), fetchMore=\(fetchMore != nil)")
+    Log.info("🟢 WordVM.init — \(questions.count) starting questions, targetLanguage=\(targetLanguage), fetchMore=\(fetchMore != nil)", .game)
     setupCurrentWord()
     requestMoreIfNeeded()
   }
@@ -180,7 +180,7 @@ class WordVM {
     guard let word else {
       guessedWord = []
       scrumbledWord = []
-      print("⚪️ setupCurrentWord — no word at index \(currentIndex), clearing tiles")
+      Log.debug("⚪️ setupCurrentWord — no word at index \(currentIndex), clearing tiles", .game)
       return
     }
     let letters = word.targetWord
@@ -206,7 +206,7 @@ class WordVM {
     scrumbledWord = shuffledLetters
       .enumerated()
       .map { LetterModel(id: $0.offset, letter: $0.element, isUsed: false) }
-    print("🔤 setupCurrentWord — index \(currentIndex): '\(word.targetWord)' (\(totalLetters) letters), hint='\(word.originWord)'")
+    Log.debug("🔤 setupCurrentWord — index \(currentIndex): '\(word.targetWord)' (\(totalLetters) letters), hint='\(word.originWord)'", .game)
   }
   
   // MARK: - selectLetter
@@ -218,7 +218,7 @@ class WordVM {
     guard let index = scrumbledWord.firstIndex(where: { $0.id == tile.id }) else { return }
     scrumbledWord[index].isUsed = true
     guessedWord[emptySlot] = tile
-    print("👉 selectLetter — placed '\(tile.letter)' at slot \(emptySlot), current guess='\(resultWord)'")
+    Log.debug("👉 selectLetter — placed '\(tile.letter)' at slot \(emptySlot), current guess='\(resultWord)'", .game)
   }
   
   // MARK: - deselectLetter
@@ -229,7 +229,7 @@ class WordVM {
     guard let index = scrumbledWord.firstIndex(where: { $0.id == tile.id }) else { return }
     scrumbledWord[index].isUsed = false
     guessedWord[slotIndex] = nil
-    print("👈 deselectLetter — removed '\(tile.letter)' from slot \(slotIndex), current guess='\(resultWord)'")
+    Log.debug("👈 deselectLetter — removed '\(tile.letter)' from slot \(slotIndex), current guess='\(resultWord)'", .game)
   }
   
   // MARK: - checkAnswer
@@ -245,7 +245,7 @@ class WordVM {
     let isCorrect = resultWord == word.targetWord.lowercased()
     guessResult = isCorrect ? .correct : .incorrect
     overlayShown = true
-    print("✅❌ checkAnswer — guessed='\(resultWord)' target='\(word.targetWord)' -> \(isCorrect ? "CORRECT" : "INCORRECT")")
+    Log.debug("✅❌ checkAnswer — guessed='\(resultWord)' target='\(word.targetWord)' -> \(isCorrect ? "CORRECT" : "INCORRECT")", .game)
     if !isPractice { recordGuess(for: word.toolName, result: guessResult!) }
     onWordAnswered?()
   }
@@ -261,7 +261,7 @@ class WordVM {
     guessResult = nil
     if let canContinue, !canContinue() {
       isAtCheckpoint = true
-      print("⛔️ nextWord — daily free limit reached, ending the round")
+      Log.info("⛔️ nextWord — daily free limit reached, ending the round", .game)
       onCheckpoint?()
       return
     }
@@ -271,7 +271,7 @@ class WordVM {
     case .everyN(let interval):
       if nextIndex % interval == 0 {
         isAtCheckpoint = true
-        print("🏁 nextWord — checkpoint at word #\(nextIndex) (every \(interval)), holding at index \(currentIndex)")
+        Log.info("🏁 nextWord — checkpoint at word #\(nextIndex) (every \(interval)), holding at index \(currentIndex)", .game)
         onCheckpoint?()
         return
       }
@@ -279,13 +279,13 @@ class WordVM {
       if nextIndex >= questions.count {
         isAtCheckpoint = true
         isFinished = true
-        print("🏁 nextWord — final word answered (\(questions.count) total), showing end-of-session result")
+        Log.info("🏁 nextWord — final word answered (\(questions.count) total), showing end-of-session result", .game)
         onCheckpoint?()
         return
       }
     }
 
-    print("➡️ nextWord — advancing from index \(currentIndex) to \(nextIndex)")
+    Log.debug("➡️ nextWord — advancing from index \(currentIndex) to \(nextIndex)", .game)
     advance(to: nextIndex)
   }
   
@@ -297,17 +297,17 @@ class WordVM {
   //    so onResume is only signalled here when the next word was ready.
   func continueFromCheckpoint() {
     if let canContinue, !canContinue() {
-      print("⛔️ continueFromCheckpoint — daily free limit reached, not advancing")
+      Log.info("⛔️ continueFromCheckpoint — daily free limit reached, not advancing", .game)
       onResume?()
       return
     }
     isAtCheckpoint = false
     guard !isFinished else {
-      print("🔚 continueFromCheckpoint — session already finished, nothing to advance, letting AppManager route away")
+      Log.info("🔚 continueFromCheckpoint — session already finished, nothing to advance, letting AppManager route away", .game)
       onResume?()
       return
     }
-    print("▶️ continueFromCheckpoint — leaving checkpoint, attempting advance to index \(currentIndex + 1)")
+    Log.info("▶️ continueFromCheckpoint — leaving checkpoint, attempting advance to index \(currentIndex + 1)", .game)
     advance(to: currentIndex + 1)
       if !pendingAdvance { onResume?() }
   }
@@ -326,14 +326,14 @@ class WordVM {
     guard index < questions.count else {
       if isLoadingMore {
         pendingAdvance = true
-        print("⏳ advance(\(index)) — out of bounds (\(questions.count) loaded), fetch already in flight, setting pendingAdvance")
+        Log.info("⏳ advance(\(index)) — out of bounds (\(questions.count) loaded), fetch already in flight, setting pendingAdvance", .game)
       } else if fetchMore != nil {
         pendingAdvance = true
-        print("🚨 advance(\(index)) — out of bounds, no fetch in flight, triggering safety-net fetch now")
+        Log.info("🚨 advance(\(index)) — out of bounds, no fetch in flight, triggering safety-net fetch now", .game)
         requestMoreNow()
       } else {
         isFinished = true
-        print("🔚 advance(\(index)) — out of bounds, no fetchMore source, marking session isFinished")
+        Log.info("🔚 advance(\(index)) — out of bounds, no fetchMore source, marking session isFinished", .game)
       }
       onResume?()
       return
@@ -342,7 +342,7 @@ class WordVM {
     setupCurrentWord()
     requestMoreIfNeeded()
     overlayShown = false
-    print("📍 advance — now at index \(currentIndex) of \(questions.count) loaded questions")
+    Log.debug("📍 advance — now at index \(currentIndex) of \(questions.count) loaded questions", .game)
   }
   
   private let prefetchThreshold = 3                                    // start the next batch when only this many words (incl. the current one) are left — 3 words of play time to hide GPT + image generation
@@ -360,10 +360,10 @@ class WordVM {
           fetchMore != nil else { return }
     let unplayed = questions.count - currentIndex
     guard canFetchMore?(unplayed) ?? true else {
-      print("⛔️ requestMoreIfNeeded — skipping prefetch, daily free limit")
+      Log.debug("⛔️ requestMoreIfNeeded — skipping prefetch, daily free limit", .game)
       return
     }
-    print("🛰️ requestMoreIfNeeded — index \(currentIndex), \(unplayed) of \(questions.count) left, triggering prefetch")
+    Log.info("🛰️ requestMoreIfNeeded — index \(currentIndex), \(unplayed) of \(questions.count) left, triggering prefetch", .game)
     requestMoreNow()
   }
   
@@ -379,26 +379,26 @@ class WordVM {
   //    User was waiting and words arrived -> advance() to the next word + onResume.
   private func requestMoreNow() {
     guard let fetchMore, !isLoadingMore else {
-      print("⛔️ requestMoreNow — skipped (fetchMore=\(self.fetchMore != nil), isLoadingMore=\(isLoadingMore))")
+      Log.debug("⛔️ requestMoreNow — skipped (fetchMore=\(self.fetchMore != nil), isLoadingMore=\(isLoadingMore))", .game)
       return
     }
     hasRequestedMore = true
     isLoadingMore = true
     let existingToolNames = questions.map { $0.word.toolName }
-    print("📡 requestMoreNow — fetching more, excluding \(existingToolNames.count) toolNames: \(existingToolNames)")
+    Log.info("📡 requestMoreNow — fetching more, excluding \(existingToolNames.count) toolNames: \(existingToolNames)", .game)
 
     Task { @MainActor in
       let newQuestions = await fetchMore(existingToolNames)
       questions.append(contentsOf: newQuestions)
       isLoadingMore = false
       hasRequestedMore = false
-      print("📥 requestMoreNow — fetch resolved, appended \(newQuestions.count) new questions, total now \(questions.count)")
+      Log.info("📥 requestMoreNow — fetch resolved, appended \(newQuestions.count) new questions, total now \(questions.count)", .game)
 
       guard pendingAdvance else { return }
       pendingAdvance = false
 
       if newQuestions.isEmpty {
-        print("❌ requestMoreNow — user was waiting and fetch returned nothing, reporting failure")
+        Log.error("❌ requestMoreNow — user was waiting and fetch returned nothing, reporting failure", .game)
         onFetchFailed?()
         return
       }
@@ -417,7 +417,7 @@ class WordVM {
       }
     }
     guessedWord = Array(repeating: nil, count: guessedWord.count)
-    print("♻️ resetGuess — cleared all answer slots for index \(currentIndex)")
+    Log.debug("♻️ resetGuess — cleared all answer slots for index \(currentIndex)", .game)
   }
   
   // MARK: - SwiftData stats (scoped to this session's target language)
@@ -453,7 +453,7 @@ class WordVM {
         predicate: #Predicate { concepts.contains($0.concept) && $0.targetLanguage == lang }
       )
       let result = accuracy(for: (try? modelContext.fetch(descriptor)) ?? [])
-      print("📊 batchAccuracy — \(concepts.count) concepts, lang=\(lang) -> \(result.correct)/\(result.total)")
+      Log.debug("📊 batchAccuracy — \(concepts.count) concepts, lang=\(lang) -> \(result.correct)/\(result.total)", .game)
       return result
     }
 
@@ -480,7 +480,7 @@ class WordVM {
         modelContext.insert(new)
         return new
       }()
-      print("💾 recordGuess — concept='\(toolName)' lang=\(lang) [\(existing == nil ? "NEW row" : "existing row")], result=\(result)")
+      Log.debug("💾 recordGuess — concept='\(toolName)' lang=\(lang) [\(existing == nil ? "NEW row" : "existing row")], result=\(result)", .game)
 
       switch result {
       case .correct: record.correct += 1
@@ -489,6 +489,6 @@ class WordVM {
       record.lastSeen = .now
 
       try? modelContext.save()
-      print("💾 recordGuess — saved. '\(toolName)' now correct=\(record.correct) incorrect=\(record.incorrect) accuracy=\(record.accuracy)")
+      Log.debug("💾 recordGuess — saved. '\(toolName)' now correct=\(record.correct) incorrect=\(record.incorrect) accuracy=\(record.accuracy)", .game)
     }
 }

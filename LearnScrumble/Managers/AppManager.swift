@@ -49,7 +49,7 @@ final class AppManager {
   // RootView switches it to .welcomeBack at launch for a returning user.
   init(requestModel: RequestModel) {
     self.requestModel = requestModel
-    print("🟢 AppManager.init")
+    Log.info("🟢 AppManager.init", .app)
   }
   
   // MARK: - startGame
@@ -80,11 +80,11 @@ final class AppManager {
   //    then phase = .playing(vm) hands control to MainView.
   @MainActor
   func startGame() async {
-    guard !isStarting else { print("🎮 startGame — already loading, ignoring"); return }
+    guard !isStarting else { Log.debug("🎮 startGame — already loading, ignoring", .app); return }
     isStarting = true
     defer { isStarting = false }
     lastSession = .game
-    print("🎮 startGame — starting")
+    Log.info("🎮 startGame — starting", .app)
       requestModel.progress = 0
     phase = .generating
     await FreeAllowance.shared.syncClock()
@@ -95,12 +95,12 @@ final class AppManager {
     await requestModel.generate()
     
     if requestModel.questions.isEmpty {
-      print("Error: \(requestModel.errorMessage ?? "Unknown error")")
+      Log.error("❌ startGame — no questions: \(requestModel.errorMessage ?? "unknown error")", .app)
       await showFailure()
       return
     }
     
-    print("🎮 startGame — got \(requestModel.questions.count) questions, building WordVM")
+    Log.info("🎮 startGame — got \(requestModel.questions.count) questions, building WordVM", .app)
     let vm = WordVM(
       questions: requestModel.questions,
       targetLanguage: requestModel.selectedLanguage.rawValue,
@@ -109,23 +109,25 @@ final class AppManager {
       },
       onCheckpoint: { [weak self] in
         guard let self, let vm = self.activeVM else { return }
-        print("🏁 startGame.onCheckpoint — showing ResultView")
+        Log.info("🏁 startGame.onCheckpoint — showing ResultView", .app)
+        Track.roundCompleted(mode: .game)
+        if !self.canPlay { Track.dailyLimitReached() }             // the round ended because today's free words are used up
         self.phase = .result(vm)
       },
       onResume: { [weak self] in
         guard let self, let vm = self.activeVM else { return }
         guard self.canPlay else {
-          print("⛔️ startGame.onResume — daily free limit reached, back to welcome")
+          Log.info("⛔️ startGame.onResume — daily free limit reached, back to welcome", .app)
           self.exitToWelcome()
           return
         }
-        print("▶️ startGame.onResume — pendingAdvance=\(vm.pendingAdvance), routing to \(vm.pendingAdvance ? ".generating" : ".playing")")
+        Log.info("▶️ startGame.onResume — pendingAdvance=\(vm.pendingAdvance), routing to \(vm.pendingAdvance ? ".generating" : ".playing")", .app)
           if vm.pendingAdvance && self.requestModel.progress >= 1 { self.requestModel.progress = 0}
         self.phase = vm.pendingAdvance ? .generating : .playing(vm)
       },
       onFetchFailed: { [weak self] in
           guard let self, self.activeVM != nil else { return }
-          print("❌ startGame.onFetchFailed — showing ErrorView")
+          Log.error("❌ startGame.onFetchFailed — showing ErrorView", .app)
           self.activeVM = nil
           Task { @MainActor in
             await self.showFailure()
@@ -162,29 +164,30 @@ final class AppManager {
   // 5. activeVM = vm, phase = .playing(vm).
   @MainActor
   func startStruggleReview() async {
-    guard !isStarting else { print("🎯 startStruggleReview — already loading, ignoring"); return }
+    guard !isStarting else { Log.debug("🎯 startStruggleReview — already loading, ignoring", .app); return }
     isStarting = true
     defer { isStarting = false }
-    print("🎯 startStruggleReview — starting")
+    Log.info("🎯 startStruggleReview — starting", .app)
     lastSession = .review
     phase = .generating
       let toolNames = PersistenceController.shared.struggleToolNames(targetLanguage: requestModel.selectedLanguage.rawValue, limit: 10)
     
     guard !toolNames.isEmpty else {
-      print("🎯 startStruggleReview — no struggle words found")
+      Log.info("🎯 startStruggleReview — no struggle words found", .app)
       phase = .failed(.noStruggleWords)
       return
     }
     
-    print("🎯 startStruggleReview — reviewing \(toolNames.count) struggle words: \(toolNames)")
+    Log.info("🎯 startStruggleReview — reviewing \(toolNames.count) struggle words: \(toolNames)", .app)
     let reviewQuestions = await requestModel.generateStruggleReview(toolNames: toolNames)
       guard !reviewQuestions.isEmpty else {
-        print("🎯 startStruggleReview — resolution produced 0 questions")
+        Log.error("🎯 startStruggleReview — resolution produced 0 questions", .app)
         await showFailure(fallback: .reviewUnavailable)
         return
       }
     
-    print("🎯 startStruggleReview — built \(reviewQuestions.count) reviewable questions, building WordVM")
+    Log.info("🎯 startStruggleReview — built \(reviewQuestions.count) reviewable questions, building WordVM", .app)
+    Track.reviewStarted(words: reviewQuestions.count)
     let vm = WordVM(
       questions: reviewQuestions,
       targetLanguage: requestModel.selectedLanguage.rawValue,
@@ -192,12 +195,13 @@ final class AppManager {
       fetchMore: nil,
       onCheckpoint: { [weak self] in
         guard let self, let vm = self.activeVM else { return }
-        print("🏁 startStruggleReview.onCheckpoint — review complete, showing ResultView")
+        Log.info("🏁 startStruggleReview.onCheckpoint — review complete, showing ResultView", .app)
+        Track.roundCompleted(mode: .review)
         self.phase = .result(vm)
       },
       onResume: { [weak self] in
         guard let self, let vm = self.activeVM else { return }
-        print("▶️ startStruggleReview.onResume — isLoadingMore=\(vm.isLoadingMore)")
+        Log.info("▶️ startStruggleReview.onResume — isLoadingMore=\(vm.isLoadingMore)", .app)
         self.phase = vm.isLoadingMore ? .generating : .playing(vm)
       }
     )
@@ -219,11 +223,11 @@ final class AppManager {
     if error == .offline {
       phase = .offline
     } else if !(await Connectivity.isOnline()) {
-      print("📵 showFailure — '\(error)' but the phone is offline, showing OfflineView")
+      Log.info("📵 showFailure — '\(error)' but the phone is offline, showing OfflineView", .app)
       phase = .offline
     } else {
       if error == .serviceUnavailable {
-        print("🚨 showFailure — SERVICE UNAVAILABLE: every user is blocked until the key/billing/request is fixed")
+        Log.error("🚨 showFailure — SERVICE UNAVAILABLE: every user is blocked until the key/billing/request is fixed", .app)
       }
       phase = .failed(error)
     }
@@ -233,7 +237,7 @@ final class AppManager {
   // Called when the user leaves a session (result, error or offline screen).
   // Drops activeVM — the last strong-ish reference; the vm deallocates once phase changes — then shows WelcomeBackView.
   func exitToWelcome() {
-    print("🚪 exitToWelcome — dropping activeVM, returning to Welcome Screen")
+    Log.info("🚪 exitToWelcome — dropping activeVM, returning to Welcome Screen", .app)
     activeVM = nil
     phase = .welcomeBack
   }

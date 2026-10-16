@@ -49,7 +49,7 @@ enum FirebaseWordStore {
     imageURL: String
   ) async {
     let docRef = Firestore.firestore().collection("words").document(documentID(for: toolName))
-    print("🔥 saveIfNeeded — checking '\(toolName)' (origin=\(originLanguage.rawValue), target=\(targetLanguage.rawValue))")
+    Log.debug("🔥 saveIfNeeded — checking '\(toolName)' (origin=\(originLanguage.rawValue), target=\(targetLanguage.rawValue))", .firebase)
     
     do {
       let snapshot = try await docRef.getDocument()
@@ -65,14 +65,14 @@ enum FirebaseWordStore {
           image: imageURL
         )
         try docRef.setData(from: newWord)
-        print("🆕 saveIfNeeded — '\(toolName)' did not exist, created new doc with [\(originLanguage.rawValue), \(targetLanguage.rawValue)]")
+        Log.info("🆕 saveIfNeeded — '\(toolName)' did not exist, created new doc with [\(originLanguage.rawValue), \(targetLanguage.rawValue)]", .firebase)
         return
       }
       let hasOrigin = existing.translation[originLanguage.rawValue] != nil
       let hasTarget = existing.translation[targetLanguage.rawValue] != nil
       let hasImage = !existing.image.isEmpty
       if hasOrigin && hasTarget {
-        print("✅ saveIfNeeded — '\(toolName)' already has both [\(originLanguage.rawValue), \(targetLanguage.rawValue)], no write needed")
+        Log.debug("✅ saveIfNeeded — '\(toolName)' already has both [\(originLanguage.rawValue), \(targetLanguage.rawValue)], no write needed", .firebase)
         return
       }
       
@@ -80,10 +80,10 @@ enum FirebaseWordStore {
       if !hasTarget { existing.translation[targetLanguage.rawValue] = targetWord }
       if !hasImage && !imageURL.isEmpty { existing.image = imageURL }
       try docRef.setData(from: existing, merge: true)
-      print("➕ saveIfNeeded — '\(toolName)' existed, filled missing slots (origin=\(!hasOrigin), target=\(!hasTarget), image=\(!hasImage && !imageURL.isEmpty))")
+      Log.info("➕ saveIfNeeded — '\(toolName)' existed, filled missing slots (origin=\(!hasOrigin), target=\(!hasTarget), image=\(!hasImage && !imageURL.isEmpty))", .firebase)
       
     } catch {
-      print("FirebaseWordStore error for \(toolName): \(error)")
+      Log.error("FirebaseWordStore error for \(toolName): \(error)", .firebase)
     }
   }
   
@@ -112,7 +112,7 @@ enum FirebaseWordStore {
             }
           }
         } catch {
-          print("fetchExisting error for chunk \(start / maxInQueryValues): \(error)")
+          Log.error("fetchExisting error for chunk \(start / maxInQueryValues): \(error)", .firebase)
         }
       }
       return result

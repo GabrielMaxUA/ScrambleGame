@@ -58,10 +58,13 @@ enum DailyReminder {
   // Called from: RootView -> EntryView onSubmit ("Let's go" at the end of onboarding)
   // 1. iOS popup — waits here until the user taps; true = Allow (an error counts as not allowed).
   // 2. reschedule(): allowed -> books the next 7 days now; denied -> reschedule() stops at its guard.
-  static func requestPermission() async {
+  // Returns the answer (true = Allow), so the caller can send the reminder_enabled event (Track).
+  @discardableResult
+  static func requestPermission() async -> Bool {
     let granted = (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
-    print("🔔 DailyReminder — permission \(granted ? "granted" : "denied")")
+    Log.info("🔔 DailyReminder — permission \(granted ? "granted" : "denied")", .reminder)
     await reschedule()
+    return granted
   }
 
   // MARK: - reschedule
@@ -100,7 +103,7 @@ enum DailyReminder {
         trigger: UNCalendarNotificationTrigger(dateMatching: parts, repeats: false))
       try? await center.add(request)
     }
-    print("🔔 DailyReminder — scheduled next \(daysAhead) days at \(hour):\(String(format: "%02d", minute)) (today skipped: \(playedToday))")
+    Log.info("🔔 DailyReminder — scheduled next \(daysAhead) days at \(hour):\(String(format: "%02d", minute)) (today skipped: \(playedToday))", .reminder)
   }
 
   // MARK: - authorizationStatus

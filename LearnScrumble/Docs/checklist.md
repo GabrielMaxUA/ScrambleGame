@@ -30,8 +30,8 @@ The game itself is in good shape. **The app around it is not finished yet.**
 
 Since mid-September, about half of the new Swift code (52% of 3,469 added lines) went into screens, components and animations. Very little went into what a release needs:
 - ❓ **need discussion** server-side AI calls: none; *(planned as Firebase Cloud Functions, but depends on the packs decision in §5)*
-- ⬜ **to do** analytics and crash reporting: none;
-- ❓ **need discussion** consent and privacy: an AI disclaimer and a placeholder privacy link so far;
+- ✅ *(partly)* analytics and crash reporting: none; *(15–16 October: Crashlytics, opt-in Analytics, logs with crash breadcrumbs and non-fatal errors are in and tested; the analytics events are next)*
+- ✅ *(partly)* consent and privacy: an AI disclaimer and a placeholder privacy link so far; *(15 October: the OpenAI consent step and the usage-statistics opt-in are done; the privacy link stays a placeholder until the website is live)*
 - ⬜ **to do** a paywall or seat access: none. *(The single `hasAccess` check is ready for it)*
 
 That's about direction, not effort. We never agreed on a clear target, and that's on me. **This document is that target: §3, then §4, in that order.**
@@ -108,7 +108,7 @@ Work in this order. The sizes are rough estimates.
 | ❓ **need discussion** Get the OpenAI key off the phone (a server function), or remove OpenAI from the app entirely if we switch to pre-created packs (§5) | Any key inside an app can be extracted. Let's settle the packs question (§8) first, so you don't build a server you won't need *(Plan: move AI calls and Firestore reads and writes into Firebase Cloud Functions, and enforce the daily limit there too)* |
 | ❓ **need discussion** Firebase: sign-in, read-only rules for the shared word bank, App Check | Today any phone can overwrite words and pictures that every user sees *(Deferred to the Cloud Functions move; anonymous sign-in is the likely path, since there's no user model)* |
 | ❓ **need discussion** A real privacy policy and terms of use | Required by App Review, by the paywall and by the consent step |
-| ⬜ **to do** Crash reporting and basic analytics: onboarding finished, round finished, paywall shown, trial started | Without them we can't tell whether onboarding or the paywall works *(Started 15 October: Crashlytics and Analytics are linked, with the dSYM upload, and Debug builds report to a separate `scrumblegame-dev` project. A test crash arrived decoded in dev Crashlytics. The events, logs and consent switch are next; see `ServerMigrationPlan.md` Phase 1)* |
+| ⬜ **to do** Crash reporting and basic analytics: onboarding finished, round finished, paywall shown, trial started | Without them we can't tell whether onboarding or the paywall works *(Started 15 October: Crashlytics and Analytics are linked, with the dSYM upload, and Debug builds report to a separate `scrumblegame-dev` project. A test crash arrived decoded in dev Crashlytics. The consent switch (15 October) and logs with crash breadcrumbs and non-fatal errors (16 October) are done; the events are next. See `ServerMigrationPlan.md` Phase 1)* |
 | ✅ App icon; a realistic minimum iOS (26.0 is a settings change, older needs fallbacks for the glass effects); iPhone locked to portrait | Install base, store listing and the landscape layout problem *(Icon set; minimum iOS 18.0 with glass fallbacks in `ButtonModifier.swift`; portrait only)* |
 
 ## 5. ❓ **need discussion** The question behind the content: pre-created packs instead of live AI
@@ -169,8 +169,8 @@ Everything in §4 carries over either way: onboarding, settings and the paywall 
 | When | What happens |
 |---|---|
 | ❓ **need discussion** This week | We talk this through, including your answers to §8 |
-| ✅ *(partly)* Next 2 weeks | §3 fixes, then onboarding (§4.1) and settings (§4.2) *(7 of 8 §3 fixes done; Settings mostly done; onboarding is missing the reminder and consent steps)* |
-| ⬜ **to do** Following 1–2 weeks | The paywall in sandbox (§4.3), plus crash reporting and analytics |
+| ✅ *(partly)* Next 2 weeks | §3 fixes, then onboarding (§4.1) and settings (§4.2) *(7 of 8 §3 fixes done; Settings mostly done; onboarding's reminder (14 October) and consent (15 October) steps are done too)* |
+| ✅ *(partly)* Following 1–2 weeks | The paywall in sandbox (§4.3), plus crash reporting and analytics *(crash reporting, consent, logs and non-fatal errors done 15–16 October; the analytics events and the paywall are still to do)* |
 | ❓ **need discussion** Once the packs question is settled | The §4.4 security work, in whichever form we choose |
 | ❓ **need discussion** Every week | A short update from you: what shipped, what's blocked. You get feedback on each build |
 
@@ -182,13 +182,13 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 
 | | First external test (TestFlight) | Public App Store release |
 |---|---|---|
-| ✅ *(partly)* Onboarding | The full flow in §4.1 *(setup, daily reminder and the "How to play" tutorial are done; the consent step needs discussion)* | The same, polished, plus store screenshots |
+| ✅ Onboarding | The full flow in §4.1 *(setup, daily reminder, the "How to play" tutorial and the consent step (15 October) are all done)* | The same, polished, plus store screenshots |
 | ✅ *(partly)* Settings | The full screen in §4.2 *(the reminder is done; legal links and delete data need discussion)* | The same |
 | ⬜ **to do** Paywall | Subscription in sandbox, with an access-code path ready | Live products in Auxility's account, prices tuned with data |
 | ✅ Engagement | Daily reminder at a chosen time; missed-word review *(the missed-word review and the daily reminder at a chosen time are both done)* | Plus streaks and a weekly recap |
 | ✅ Loading | Clear progress and error states (mostly done) *(progress ring, retry-or-exit error screen, earlier prefetch)* | Polished, or largely unnecessary with packs |
 | ❓ **need discussion** Design | One consistent design pass over all screens *(glass buttons with iOS 18 fallbacks are shared across screens; whether that counts as the design pass needs a review)* | Full design system |
-| ❓ **need discussion** Always required | No API key in the app, locked-down Firebase, consent, a real privacy policy and terms, crash reporting and analytics | The same, plus account deletion if accounts exist, App Review compliance, and an Android plan |
+| ❓ **need discussion** Always required | No API key in the app, locked-down Firebase, consent, a real privacy policy and terms, crash reporting and analytics *(consent and crash reporting done 15–16 October; analytics events still to do)* | The same, plus account deletion if accounts exist, App Review compliance, and an Android plan |
 
 ## 8. Questions for you
 

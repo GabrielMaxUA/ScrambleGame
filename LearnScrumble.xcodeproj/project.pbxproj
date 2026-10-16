@@ -223,7 +223,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"${CONFIGURATION}\" = \"Release\" ]; then\n  ENV=\"Prod\"\nelse\n  ENV=\"Dev\"\nfi\n\nSRC=\"${SRCROOT}/FirebaseConfig/${ENV}/GoogleService-Info.plist\"\nDEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\n\ncp \"$SRC\" \"$DEST\"\necho \"Copied ${ENV} plist\"\n";
+			shellScript = "if [ \"${CONFIGURATION}\" = \"Release\" ]; then\n  ENV=\"Prod\"\n  PROJECT=\"scrumblegame\"\nelse\n  ENV=\"Dev\"\n  PROJECT=\"scrumblegame-dev\"\nfi\n\nSRC=\"${SRCROOT}/FirebaseConfig/${ENV}/GoogleService-Info.plist\"\nDEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\n\n# The plists are not in git: every Mac needs its own FirebaseConfig folder.\nif [ ! -f \"$SRC\" ]; then\n  echo \"error: FirebaseConfig/${ENV}/GoogleService-Info.plist is missing. Download it from the Firebase console (${PROJECT} -> Project settings -> Your apps) and put it there.\"\n  exit 1\nfi\n\ncp \"$SRC\" \"$DEST\" || exit 1\necho \"Copied ${ENV} plist\"\n";
 			showEnvVarsInLog = 0;
 		};
 		3888EBCF3081A8F000968885 /* Upload Crashlytics dSYM */ = {

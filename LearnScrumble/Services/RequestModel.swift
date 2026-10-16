@@ -71,7 +71,7 @@ class RequestModel {
             self.selectedLanguage = restored
         }
         self.proffession = UserDefaults.standard.string(forKey: "pickedProffession") ?? ""
-        print("🟢 RequestModel.init — restored origin=\(nativeLanguage.rawValue), target=\(selectedLanguage.rawValue), profession='\(proffession)'")
+        Log.info("🟢 RequestModel.init — restored origin=\(nativeLanguage.rawValue), target=\(selectedLanguage.rawValue)", .words, private: "profession='\(proffession)'")
     }
 
     // MARK: - Entry points
@@ -95,7 +95,7 @@ class RequestModel {
 
         do {
             let seen = PersistenceController.shared.seenToolNames(targetLanguage: selectedLanguage.rawValue)
-            print("🧠 generate() — \(seen.count) toolNames already seen in \(selectedLanguage.rawValue)")
+            Log.info("🧠 generate() — \(seen.count) toolNames already seen in \(selectedLanguage.rawValue)", .words)
             let words = try await generateUniqueWordList(
                 profession: proffession,
                 originLanguage: nativeLanguage,
@@ -105,13 +105,14 @@ class RequestModel {
             progress = 0.2
             let built = try await buildQuestions(from: words)
             guard !built.isEmpty else { throw GenerationError.noWordsAvailable }
-            print("Generated \(built.count) questions: \(built.map { $0.word.targetWord })")
+            Log.info("Generated \(built.count) questions: \(built.map { $0.word.targetWord })", .words)
             self.questions = built
         } catch is CancellationError {
-            print("generate() cancelled")
+            Log.info("generate() cancelled", .words)
         } catch {
-            print("GENERATE ERROR:", error)
+            Log.error("❌ generate() failed: \(error)", .words)
             lastError = GenerationError.from(error)
+            reportFailure(during: "generate", underlying: error)
         }
     }
 
@@ -122,7 +123,7 @@ class RequestModel {
     // (the caller decides whether to surface it — it only matters if the user is waiting on an empty buffer).
     @MainActor
     func generateMore(excluding existingToolNames: [String]) async -> [QuestionModel] {
-        print("Generating more questions")
+        Log.info("Generating more questions", .words)
         lastError = nil
         progress = 0
         do {
@@ -139,8 +140,9 @@ class RequestModel {
         } catch is CancellationError {
             return []
         } catch {
-            print("generateMore failed: \(error)")
+            Log.error("❌ generateMore failed: \(error)", .words)
             lastError = GenerationError.from(error)
+            reportFailure(during: "generateMore", underlying: error)
             return []
         }
     }
@@ -160,7 +162,7 @@ class RequestModel {
             lastError = .reviewUnavailable
             return []
         }
-        print("🎯 generateStruggleReview — resolving \(toolNames.count) struggle words")
+        Log.info("🎯 generateStruggleReview — resolving \(toolNames.count) struggle words", .words)
         let existing = await FirebaseWordStore.fetchExisting(toolNames: toolNames)
         let originLanguage = self.nativeLanguage
         let targetLanguage = self.selectedLanguage
@@ -168,7 +170,7 @@ class RequestModel {
         let words: [WordModel] = toolNames.compactMap { toolName in
             guard let doc = existing[toolName],
                   let targetWord = doc.translation[targetLanguage.rawValue] else {
-                print("⚠️ generateStruggleReview — '\(toolName)' missing its \(targetLanguage.rawValue) translation, skipping")
+                Log.info("⚠️ generateStruggleReview — '\(toolName)' missing its \(targetLanguage.rawValue) translation, skipping", .words)
                 return nil
             }
             let originWord = doc.translation[originLanguage.rawValue] ?? targetWord
@@ -178,15 +180,31 @@ class RequestModel {
         do {
             let built = try await buildQuestions(from: words, progressBase: 0)
             guard !built.isEmpty else { throw GenerationError.reviewUnavailable }
-            print("🎯 generateStruggleReview — built \(built.count) reviewable questions")
+            Log.info("🎯 generateStruggleReview — built \(built.count) reviewable questions", .words)
             return built
         } catch is CancellationError {
             return []
         } catch {
-            print("generateStruggleReview failed: \(error)")
+            Log.error("❌ generateStruggleReview failed: \(error)", .words)
             lastError = GenerationError.from(error)
+            reportFailure(during: "generateStruggleReview", underlying: error)
             return []
         }
+    }
+
+    // MARK: - reportFailure(during:underlying:)
+    // A load failed for the user (the three entry points above): records lastError in Crashlytics as a
+    // non-fatal issue, with the languages and the original error. Never the profession (user text).
+    // Also sends the generation_failed analytics event (error name only).
+    @MainActor
+    private func reportFailure(during step: String, underlying: Error) {
+        guard let lastError else { return }
+        Track.generationFailed(lastError, during: step)
+        Log.report(lastError, during: step, info: [
+            "origin": nativeLanguage.rawValue,
+            "target": selectedLanguage.rawValue,
+            "underlying": "\(underlying)"
+        ])
     }
 
     // MARK: - Building questions
@@ -203,9 +221,9 @@ class RequestModel {
     // 4. Keeps only questions that actually have an image. Every word failed -> that IS an error: batchFailure explains why.
     private func buildQuestions(from words: [WordModel], progressBase: Double = 0.2) async throws -> [QuestionModel] {
         guard !words.isEmpty else { return [] }
-        print("🏗️ buildQuestions — starting for \(words.count) words: \(words.map { $0.toolName })")
+        Log.info("🏗️ buildQuestions — starting for \(words.count) words: \(words.map { $0.toolName })", .words)
         let existing = await FirebaseWordStore.fetchExisting(toolNames: words.map { $0.toolName })
-        print("🔥 buildQuestions — Firebase already has \(existing.count)/\(words.count) cached")
+        Log.debug("🔥 buildQuestions — Firebase already has \(existing.count)/\(words.count) cached", .words)
         let originLanguage = self.nativeLanguage
         let targetLanguage = self.selectedLanguage
 
@@ -236,7 +254,7 @@ class RequestModel {
                         } catch is CancellationError {
                             throw CancellationError()
                         } catch {
-                            print("⚠️ buildQuestions — skipping '\(word.toolName)': \(error)")
+                            Log.error("⚠️ buildQuestions — skipping '\(word.toolName)': \(error)", .words)
                             return (globalIndex, nil, GenerationError.from(error))
                         }
                     }
@@ -253,7 +271,7 @@ class RequestModel {
         }
 
         let playable = built.filter { $0.imageData != nil }
-        print("🏗️ buildQuestions — finished, \(playable.count)/\(built.count) questions playable")
+        Log.info("🏗️ buildQuestions — finished, \(playable.count)/\(built.count) questions playable", .words)
         if playable.isEmpty { throw Self.batchFailure(from: failures) }
         return playable
     }
@@ -292,7 +310,7 @@ class RequestModel {
             do {
                 let data = try await send(URLRequest(url: url), retries: 1)
                 guard UIImage(data: data) != nil else { throw GenerationError.badResponse }
-                print("📦 resolveImage — reused cached image for '\(word.toolName)'")
+                Log.debug("📦 resolveImage — reused cached image for '\(word.toolName)'", .words)
                 await FirebaseWordStore.saveIfNeeded(
                     toolName: word.toolName, originLanguage: originLanguage, originWord: word.originWord,
                     targetLanguage: targetLanguage, targetWord: word.targetWord, imageURL: cachedImageURL
@@ -301,18 +319,18 @@ class RequestModel {
             } catch is CancellationError {
                 throw CancellationError()
             } catch {
-                print("Cached image unusable for \(word.toolName), regenerating: \(error)")
+                Log.error("Cached image unusable for \(word.toolName), regenerating: \(error)", .words)
             }
         }
 
-        print("🎨 resolveImage — generating a new image for '\(word.toolName)'")
+        Log.info("🎨 resolveImage — generating a new image for '\(word.toolName)'", .words)
         let pngData = try await generateImage(for: word.toolName, description: word.imagePrompt)
         var imageURL = ""
         do {
             imageURL = try await FirebaseImageStore.uploadWebP(pngData, toolName: word.toolName)
-            print("☁️ resolveImage — uploaded new image for '\(word.toolName)'")
+            Log.info("☁️ resolveImage — uploaded new image for '\(word.toolName)'", .words)
         } catch {
-            print("WebP upload failed for \(word.toolName): \(error)")
+            Log.error("WebP upload failed for \(word.toolName): \(error)", .words)
         }
         await FirebaseWordStore.saveIfNeeded(
             toolName: word.toolName, originLanguage: originLanguage, originWord: word.originWord,
@@ -341,7 +359,7 @@ class RequestModel {
         var collected: [WordModel] = []
 
         for attempt in 1...maxGenerationAttempts {
-            print("🎲 generateUniqueWordList — attempt \(attempt)/\(maxGenerationAttempts), have \(collected.count)/5")
+            Log.debug("🎲 generateUniqueWordList — attempt \(attempt)/\(maxGenerationAttempts), have \(collected.count)/5", .words)
             let batch: [WordModel]
             do {
                 batch = try await generateWordList(
@@ -351,7 +369,7 @@ class RequestModel {
                     excluding: Array(exclusion)
                 )
             } catch GenerationError.badResponse where attempt < maxGenerationAttempts {
-                print("🎲 generateUniqueWordList — GPT reply unreadable, retrying")
+                Log.info("🎲 generateUniqueWordList — GPT reply unreadable, retrying", .words)
                 continue
             }
 
@@ -367,7 +385,7 @@ class RequestModel {
 
         if collected.isEmpty { throw GenerationError.noWordsAvailable }
         if collected.count < 5 {
-            print("⚠️ generateUniqueWordList — only found \(collected.count)/5 unique words")
+            Log.info("⚠️ generateUniqueWordList — only found \(collected.count)/5 unique words", .words)
         }
         return Array(collected.prefix(5))
     }
@@ -423,7 +441,7 @@ class RequestModel {
             "messages": [["role": "user", "content": prompt]]
         ])
 
-        print("🌐 generateWordList — calling GPT for '\(profession)' \(originLanguage.rawValue)->\(targetLanguage.rawValue)")
+        Log.info("🌐 generateWordList — calling GPT, \(originLanguage.rawValue)->\(targetLanguage.rawValue)", .words, private: "profession='\(profession)'")
         let data = try await send(request)
 
         struct Envelope: Decodable { struct Choice: Decodable { struct Msg: Decodable { let content: String }; let message: Msg }; let choices: [Choice] }
@@ -435,10 +453,10 @@ class RequestModel {
                 .replacingOccurrences(of: "```", with: "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             let decoded = try JSONDecoder().decode([WordModel].self, from: Data(cleaned.utf8))
-            print("🌐 generateWordList — GPT returned \(decoded.count) words: \(decoded.map { $0.toolName })")
+            Log.info("🌐 generateWordList — GPT returned \(decoded.count) words: \(decoded.map { $0.toolName })", .words)
             return decoded
         } catch {
-            print("generateWordList decode failed: \(error)")
+            Log.error("generateWordList decode failed: \(error)", .words)
             throw GenerationError.badResponse
         }
     }
@@ -478,7 +496,7 @@ class RequestModel {
             "n": 1
         ])
 
-        print("🌐 generateImage — requesting image for '\(toolName)'")
+        Log.debug("🌐 generateImage — requesting image for '\(toolName)'", .words)
         let data = try await send(request)
 
         guard let imgData = await Self.unpackImage(data) else {
@@ -547,15 +565,15 @@ class RequestModel {
             case 408, 429, 500...599:
                 guard attempt < retries else { throw GenerationError.serverBusy }
                 attempt += 1
-                print("⏳ send — status \(status), retry \(attempt)/\(retries)")
+                Log.info("⏳ send — status \(status), retry \(attempt)/\(retries)", .words)
                 try await Task.sleep(nanoseconds: UInt64(attempt) * 2_000_000_000)
             case 400..<500:
                 let body = String(data: data, encoding: .utf8) ?? "no body"
-                print("🚨 send — status=\(status), service unavailable (our side), body=\(body)")
+                Log.error("🚨 send — status=\(status), service unavailable (our side), body=\(body)", .words)
                 throw GenerationError.serviceUnavailable
             default:
                 let body = String(data: data, encoding: .utf8) ?? "no body"
-                print("Bad response: status=\(status), body=\(body)")
+                Log.error("Bad response: status=\(status), body=\(body)", .words)
                 throw GenerationError.badResponse
             }
         }

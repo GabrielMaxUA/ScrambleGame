@@ -35,7 +35,7 @@ nonisolated final class SoundManager: @unchecked Sendable {        // @unchecked
         try session.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
         try session.setActive(true)
       } catch {
-        print("❌ Audio session error: \(error.localizedDescription)")
+        Log.error("❌ Audio session error: \(error.localizedDescription)", .sound)
       }
     }
   }
@@ -55,7 +55,7 @@ nonisolated final class SoundManager: @unchecked Sendable {        // @unchecked
       } else {
         guard let url = Bundle.main.url(forResource: sound, withExtension: "mp3")
                 ?? Bundle.main.url(forResource: sound, withExtension: "wav") else {
-          print("❌ Sound not found: \(sound).mp3 or \(sound).wav")
+          Log.error("❌ Sound not found: \(sound).mp3 or \(sound).wav", .sound)
           return
         }
         do {
@@ -63,7 +63,7 @@ nonisolated final class SoundManager: @unchecked Sendable {        // @unchecked
           player.prepareToPlay()
           players[sound] = player
         } catch {
-          print("❌ Audio error: \(error.localizedDescription)")
+          Log.error("❌ Audio error: \(error.localizedDescription)", .sound)
           return
         }
       }
