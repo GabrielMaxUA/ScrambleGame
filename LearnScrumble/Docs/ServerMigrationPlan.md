@@ -1,6 +1,10 @@
 # LearnScrumble: moving the AI to the server (plan)
 
-*Written 15 October 2026. Nothing here is built yet. Tick items off as we finish them, the same way as `checklist.md`.*
+*Written 15 October 2026. Progress updated 15 October (evening): Phase 0 mostly done. Tick items off as we finish them, the same way as `checklist.md`.*
+
+**Where this stands against `checklist.md`**
+- ✅ **Can go ahead now:** Phases 0–2. Crash reporting and analytics are an open ⬜ **to do** in the checklist (§4.4, §9), and they don't depend on any decision.
+- ❓ **Waits for Konstantin:** Phases 3–9. The checklist marks "OpenAI key off the phone" and "lock down Firebase" as ❓ **need discussion**, because they depend on **packs vs live AI** (§5, §8 Q1). Konstantin asked to settle that first, "so you don't build a server you won't need". `AppFlowIdeas.md` §1 has the hybrid bank agreed between us, but it still needs his OK.
 
 **Goal:** the OpenAI key leaves the phone. All AI calls and all writes to the shared word library happen in Firebase Cloud Functions. The app only asks and reads. We add crash reports, analytics and server logging along the way.
 
@@ -50,28 +54,37 @@ Stored per job (Firestore `professions/{english-name}`): English name, how many 
 
 ## The steps
 
-Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **Me** = code and files. **Both** = testing together.
+Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **Me** = code and files. **Both** = testing together. *(Since 15 October you do the "Me" steps yourself too, guided one step at a time, so you learn the setup.)*
 
 ### Phase 0: preparation
 
 - ✅ **You:** the iOS app (bundle ID) is registered in `scrumblegame` (production) *(already done)*.
-- ⬜ **You:** create the Firebase project `scrumblegame-dev` and add the iOS app (same bundle ID) to it; download its `GoogleService-Info.plist`.
-- ⬜ **Me:** set up the app to use the dev plist in Debug builds and the production plist in Release builds.
-- ⬜ **You:** install the Firebase CLI and log in (I'll give you the exact commands).
-- ⬜ **Me:** add a `functions/` folder (TypeScript) and Firebase config files to the repo, outside the app folder.
+- ✅ **You:** create the Firebase project `scrumblegame-dev` with Google Analytics, and add the iOS app (same bundle ID, `com.MaxGabriel.LearnScrumble`) to it; download its `GoogleService-Info.plist`. *(15 October)*
+- ✅ **You:** set up the app to use the dev plist in Debug builds and the production plist in Release builds. *(15 October, commit `a43ee47`)*
+  - The plists live outside the app folder: `FirebaseConfig/Dev/` and `FirebaseConfig/Prod/`, both named `GoogleService-Info.plist`. They have to stay outside, because everything in `LearnScrumble/` is a synced folder that goes into the app.
+  - A **Copy Firebase plist** Run Script build phase copies the right one into the app: `Release` (Archive) → Prod, anything else (Run) → Dev. Its input and output files are declared, because the project has User Script Sandboxing on.
+  - The plists are **not in git** (`.gitignore`). Keep a backup; on a new Mac, download them again from the console.
+  - To fill the **production** bank while playing, as before: Edit Scheme → Run → Build Configuration → **Release**. Switch back to Debug for coding.
+- ✅ **You:** Firestore in `scrumblegame-dev`: `(default)` database, Standard edition, **test mode**, no backups. *(15 October)* ⚠️ Test mode ends around **14 November 2026**; extend it or write the rules (Phase 6) before then.
+- ✅ **You:** Storage in `scrumblegame-dev`: default bucket `scrumblegame-dev.firebasestorage.app` (no-cost US region, test data only), test mode. *(15 October; needed Blaze, see Phase 2)*
+- ✅ **You:** `FirebaseImageStore` had the production bucket `gs://scrumblegame-tools` hard-coded, so dev pictures would still have gone to production. Now `#if DEBUG` uses the dev plist's default bucket, and Release keeps `scrumblegame-tools`. *(15 October, commit `a43ee47`)*
+- ✅ **Both:** confirmed that Debug runs fill the dev Firestore and Storage and leave production untouched. *(15 October)*
+- ⬜ **You:** upgrade Node first: you have **Node 18**, and the current Firebase CLI and Cloud Functions need **Node 20 or newer** (`nvm install 22`). Then install the Firebase CLI and log in.
+- ⬜ **Me:** add a `functions/` folder (TypeScript) and Firebase config files to the repo, outside the app folder. *(Only once Phases 3–9 are agreed)*
 
 ### Phase 1: crash reports and analytics (small, useful straight away)
 
-- ⬜ **Me:** add FirebaseCrashlytics and FirebaseAnalytics (without the advertising ID parts), plus the dSYM upload build step.
+- ⬜ **Me:** add FirebaseCrashlytics and FirebaseAnalytics (without the advertising ID parts), plus the dSYM upload build step. The app must keep "no tracking, no advertising identifier" (`AppStoreReadiness.md` §4). The dSYM upload script reads the plist from inside the app, so it must come **after** the Copy Firebase plist phase.
 - ⬜ **Me:** turn the `print` lines into proper logs, add crash breadcrumbs ("round finished", "generation failed") and report every `GenerationError` as a non-fatal error.
-- ⬜ **Me:** analytics events: `onboarding_completed`, `tutorial_completed`, `tutorial_skipped`, `round_completed`, `daily_limit_reached`, `paywall_shown`, `trial_started`, `review_started`, `reminder_enabled`, `generation_failed` (error type only).
+- ⬜ **Me:** analytics events: `onboarding_completed`, `tutorial_completed`, `tutorial_skipped`, `round_completed`, `daily_limit_reached`, `paywall_shown`, `trial_started`, `review_started`, `reminder_enabled`, `generation_failed` (error type only). The checklist requires at least onboarding finished, round finished, paywall shown and trial started (§4.4). `paywall_shown` and `trial_started` only start firing once the paywall exists (checklist §4.3).
 - ⬜ **Me:** analytics consent switch in onboarding and Settings, connected to Firebase's consent settings; off until the user agrees (EU).
 - ⬜ **Both:** check the events arrive in the dev project (DebugView).
+- ⬜ **Me:** before any build with Crashlytics or Analytics goes to TestFlight, update `PrivacyInfo.xcprivacy`, `privacy.html` and the App Store privacy answers together (`AppStoreReadiness.md` §1.1 says to keep them in sync). Don't wait for Phase 10.
 
 ### Phase 2: billing and safety limits
 
 - ✅ **You:** `scrumblegame` (production) is on the **Blaze** plan *(already done)*.
-- ⬜ **You:** switch `scrumblegame-dev` to Blaze too, once it exists (needed to run functions there).
+- ✅ **You:** switch `scrumblegame-dev` to Blaze too (needed for its Storage bucket, and later for functions). *(15 October)*
 - ⬜ **You:** set a **budget alert** in Google Cloud Billing (for example €10 / €25 / €50 emails).
 - ⬜ **You:** set a **monthly spend limit** on the OpenAI dashboard.
 
@@ -84,6 +97,7 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 
 - ⬜ **You:** put the OpenAI key into Secret Manager with one CLI command (I give you the command; the key never goes into the repo or the chat).
 - ⬜ **Me:** `getWords`: job + languages + seen words in, 5 words out; English job name, bank first, OpenAI for the rest; saves typed jobs to `professions`.
+- ⬜ **Me:** a meaning-aware bank key, for example "pipe (plumbing)" instead of just "pipe", so the same English name with another meaning in another job doesn't share translations and a picture (`AppFlowIdeas.md` §2). Easiest to decide before the server bank fills up.
 - ⬜ **Me:** `getPicture`: one word in, picture link out; generates, converts to WebP, uploads and saves only if missing.
 - ⬜ **Me:** `getReviewWords`: struggle words in, translations + pictures out.
 - ⬜ **Me:** moderation of typed job text before anything is generated.
@@ -121,7 +135,7 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 ### Phase 9: the profession list in practice
 
 - ⬜ **Me:** a simple way for you to see the `professions` list sorted by count (Firestore console view to start; a small admin page later if useful).
-- ⬜ **Me:** background job `prepareProfession`: when a job is added to the menu, build its 100-word bank (first 10 fast, the rest after), plus 50 more on demand (AppFlowIdeas §1).
+- ⬜ **Me:** background job `prepareProfession`: when a job is added to the menu, build its 100-word bank (first 10 fast, the rest after), plus 50 more on demand (AppFlowIdeas §1). Run it once for **every profession already in the picker** too (AppFlowIdeas §1, "Pre-generate the listed professions"). This replaces filling the bank by playing.
 - ⬜ **Both:** decide the rule for adding a job (for example "typed 10+ times and looks right").
 
 ### Phase 10: privacy and App Store updates (before release)
@@ -129,7 +143,8 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 - ⬜ **Me:** `PrivacyInfo.xcprivacy`: add crash data, product interaction (analytics), user ID (anonymous); profession text gets the extra purpose "Analytics" (improving the job list).
 - ⬜ **Me:** `privacy.html`: OpenAI now called from our server; anonymous ID; crash reports; analytics with consent; typed jobs stored in English without a user ID; server region `europe-west1`.
 - ⬜ **Me:** `WebsiteContent/README.md` privacy table and App Store answers updated.
-- ⬜ **You:** update the App Store Connect privacy answers to match.
+- ⬜ **You:** update the App Store Connect privacy answers to match. Today they say "not linked to the user"; with an anonymous ID and server-side limits, check again whether that still holds.
+- ⬜ **Me:** move the internal docs (`checklist.md`, `AppFlowIdeas.md`, `AppStoreReadiness.md`, this file) out of `LearnScrumble/`. That folder is synced to the app, so they ship inside it and anyone can read them (`AppStoreReadiness.md` §3).
 - ⬜ **Me:** update `checklist.md` and `AppStoreReadiness.md` (key off the phone, Firebase lock-down, crash reports and analytics → done).
 
 ---
@@ -145,7 +160,10 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 
 ## Still open (not part of this plan)
 
-- Consent step for sending the job to OpenAI (App Review 5.1.2). It could share a screen with the analytics consent.
-- Paywall with RevenueCat; it can use the same anonymous ID.
-- Report button for wrong words or pictures; it would write to a `reports` collection through a function.
-- "Delete my data": with the server it also needs to delete the user's limit documents.
+- Consent step for sending the job to OpenAI (App Review 5.1.2). It could share a screen with the analytics consent. The proposed design is in `AppStoreReadiness.md` §1.4 (a sentence and an "I agree" checkbox on the setup screen).
+- Paywall with RevenueCat; it can use the same anonymous ID. Sandbox only, with no live products in your own App Store Connect account (checklist §4.3).
+- Report button for wrong words or pictures; it would write to a `reports` collection through a function. App Review may expect it for AI content (`AppStoreReadiness.md` §2.1).
+- "Delete my data": with the server it also needs to delete the user's limit documents. It's built but commented out today (`SettingsView.swift:68`, `AppManager.swift`).
+- Privacy policy, terms and support pages on Firebase Hosting in `scrumblegame` (`AppStoreReadiness.md` §1.3). This needs the Firebase CLI from Phase 0.
+- Scheduled Firestore backups for **production** once real users are in the bank (none for dev).
+- The OpenAI key still lives in `RequestModel.swift` on your Mac only, not in git. Always add files to a commit by name until Phase 5 removes the key from the app.
