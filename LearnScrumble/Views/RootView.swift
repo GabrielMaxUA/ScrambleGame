@@ -15,6 +15,8 @@ import SwiftData
 //     Closing it ("Let's go!" or Skip) over the welcome screen starts the game; after Start the game is already
 //     loading behind it; from Settings it returns to Settings.
 //   Applies the user's native language (locale + left/right direction) to every screen below it.
+//   OpenAI consent: anyone without it (set up before the consent step existed) gets ConsentSheet before
+//     their next game or review (withConsent). "I agree" runs what they tapped; "Not now" keeps them here.
 
 struct RootView: View {
     let manager: AppManager                                           // owns phase and starts every session
@@ -25,6 +27,9 @@ struct RootView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false   // true after the first "Let's go"
     @AppStorage(OnboardingService.seenKey) private var hasSeenTutorial = false        // true once "How to play" was finished or skipped
     @State private var showTutorial = false                           // the "How to play" tutorial is on screen
+    @AppStorage(AIConsent.key) private var consentDate: Double = 0    // when the user agreed to OpenAI; 0 = not yet
+    @State private var showConsent = false                            // ConsentSheet is on screen
+    @State private var afterConsent: (() -> Void)?                    // what to start once they agree
     @Query(filter: #Predicate<SwiftDataWordModel> { $0.incorrect > 0 })
     private var missed: [SwiftDataWordModel]                          // every word missed at least once (any language), kept live by SwiftData
     var direction: Bool {                                             // true = native language reads left-to-right
@@ -54,8 +59,8 @@ struct RootView: View {
                 targetLanguage: manager.requestModel.selectedLanguage.rawValue,
                 hasAccess: manager.hasAccess,
                 canPlay: manager.canPlay,
-                onContinue: { Task { await manager.startGame() } },
-                onReview: { Task { await manager.startStruggleReview() } },
+                onContinue: { withConsent { Task { await manager.startGame() } } },
+                onReview: { withConsent { Task { await manager.startStruggleReview() } } },
                 onShowPaywall: { print("💳 paywall — not built yet") },
                 onSettings: { manager.openSettings() })
             case .generating:                                    // words/images loading
@@ -110,13 +115,25 @@ struct RootView: View {
             OnboardingView(manager: manager) {                   // "Let's go!" or Skip
               withAnimation { showTutorial = false }
               if case .welcomeBack = manager.phase, manager.canPlay {   // opened over the welcome screen (at launch): go straight into the game
-                Task { await manager.startGame() }
+                withConsent { Task { await manager.startGame() } }
               }                                                  // after Start the game is already loading behind it; from Settings: back to Settings
             }
             .transition(.opacity)
             .zIndex(5)
           }
         }//zs
+        .sheet(isPresented: $showConsent, onDismiss: { afterConsent = nil }) {   // one-time OpenAI consent for older users
+          ConsentSheet(
+            onAgree: {
+              let action = afterConsent
+              showConsent = false
+              action?()                                          // start the game/review they tapped
+            },
+            onNotNow: { showConsent = false })
+          .environment(\.locale, manager.locale)                 // same language and direction as the screen behind it
+          .environment(\.layoutDirection, manager.layoutDirection)
+          .presentationDetents([.medium, .large])
+        }
         .environment(\.locale, manager.locale)                   // whole app in the user's native language
         .environment(\.layoutDirection, manager.layoutDirection) // right-to-left for Arabic, Hebrew…
         .task {                                                  // once at launch
@@ -157,8 +174,20 @@ struct RootView: View {
       hasAccess: manager.hasAccess,
       onShowPaywall: { print("💳 paywall — not built yet") },
       onOpenSettings: { manager.openSettings() },
-      onReviewStruggle: { Task { await manager.startStruggleReview() }},
+      onReviewStruggle: { withConsent { Task { await manager.startStruggleReview() } } },
       buttons: buttons)
         .padding(.horizontal)
     }
+
+  // MARK: - withConsent(_:)
+  // Runs `action` right away if the user already agreed to OpenAI (AIConsent.key).
+  // Otherwise remembers it and shows ConsentSheet; "I agree" runs it, "Not now" drops it.
+  private func withConsent(_ action: @escaping () -> Void) {
+    if consentDate > 0 {
+      action()
+    } else {
+      afterConsent = action
+      showConsent = true
+    }
+  }
 }

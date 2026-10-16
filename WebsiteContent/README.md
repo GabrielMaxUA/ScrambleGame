@@ -27,6 +27,7 @@ Shared: `css/style.css` (dark look matching the app), `js/main.js` (phone menu, 
 3. **Replace the App Store button** on `index.html` with Apple's official badge and the real App Store link.
 4. **Update the app's links** once the site has a domain:
    - `LearnScrumble/Views/EntryView.swift` → `privacyURL`
+   - `LearnScrumble/Views/ConsentSheet.swift` → `privacyURL`
    - `LearnScrumble/Views/SettingsView.swift` → `privacyURL`, `termsURL`, `supportEmail`
 
 ## Preview and publish
@@ -40,30 +41,35 @@ Shared: `css/style.css` (dark look matching the app), `js/main.js` (phone menu, 
 
 | Data | Where it goes |
 |---|---|
-| Languages, profession, speech speed, voice per language, reminder on/off + time, setup/tutorial flags | iPhone only (UserDefaults) |
+| Languages, profession, speech speed, voice per language, reminder on/off + time, setup/tutorial flags, OpenAI agreement date, usage-statistics choice | iPhone only (UserDefaults) |
 | Answers per word: English name, language, right/wrong counts, last answered | iPhone only (SwiftData) |
 | Daily free-word counter: day, count, latest date seen | iPhone only (Keychain — survives deleting the app) |
 | Daily reminders | Scheduled locally by iOS, no server |
-| Profession, both languages, already-practised word names, picture descriptions | OpenAI API (directly from the phone today) |
+| Profession, both languages, already-practised word names, picture descriptions | OpenAI API (directly from the phone today), only after the user ticks "I agree" (setup screen, or a one-time sheet for older installs) |
+| Crash reports: stack trace, device model, iOS/app version, random installation ID | Firebase Crashlytics, always on |
+| Usage events, device model, iOS/app version, approximate country, random app-instance ID (no IDFA) | Google Analytics for Firebase, **only if** "Share usage statistics" is on (off by default; `FIREBASE_ANALYTICS_COLLECTION_ENABLED = NO` in `LearnScrumble-Info.plist`) |
 | New words (English name + 2 translations + picture link), new pictures | Google Firebase (Firestore + Storage), shared library, no user ID |
 | Time check | `HEAD https://www.apple.com` |
 | Purchases | Apple App Store (StoreKit) |
 
-**Update the policy before shipping** any of these (all planned in `LearnScrumble/AppFlowIdeas.md`): Crashlytics/Analytics, Cloud Functions (OpenAI calls through our server), anonymous sign-in/App Check, RevenueCat, business access codes, a Report button.
+**Update the policy before shipping** any of these (all planned in `LearnScrumble/AppFlowIdeas.md`): Cloud Functions (OpenAI calls through our server), anonymous sign-in/App Check, RevenueCat, business access codes, a Report button. *(Crashlytics, optional Analytics and the OpenAI consent were added to the policy on 15 October 2026.)*
 
 ## App Store privacy questions (suggestion)
 
 Apple asks what data the app "collects" (sends off the device and keeps longer than needed to answer the request). Based on the table above, a reasonable starting point — confirm with whoever signs off the release:
 
 - **Tracking:** No.
-- **Data linked to the user:** None (no account, no identifiers).
+- **Data linked to the user:** None (no account; Firebase's random IDs aren't tied to a person).
 - **Data not linked to the user** (the same as `LearnScrumble/PrivacyInfo.xcprivacy`):
   - *User Content → Other User Content*: the profession text sent to OpenAI — purpose: App Functionality.
   - *Usage Data → Other Usage Data*: the names of words already practised, sent to OpenAI so they aren't repeated — purpose: App Functionality.
+  - *Diagnostics → Crash Data*: Crashlytics crash reports — purpose: App Functionality.
+  - *Identifiers → Device ID*: Firebase's random installation / app-instance ID (not the advertising ID) — purposes: App Functionality, Analytics.
+  - *Usage Data → Product Interaction*: Analytics events, only with the user's consent — purpose: Analytics.
 - On-device data (settings, progress, Keychain counter) is not "collected" because it never leaves the device.
 - Purchases are handled by Apple and aren't declared by the app.
 
-Revisit these answers whenever the table changes (for example, Crashlytics adds Diagnostics → Crash Data).
+Revisit these answers whenever the table changes (for example, anonymous sign-in or server-side limits may make some data "linked").
 
 ## Screenshots
 

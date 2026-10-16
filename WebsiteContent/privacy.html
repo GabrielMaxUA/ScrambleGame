@@ -46,7 +46,7 @@
       <p class="muted">Effective date: <span class="fill">[DD Month YYYY]</span></p>
 
       <div class="note good">
-        <strong>In short:</strong> LearnScrumble has no account and doesn't ask for your name, email or phone number. Your settings and progress stay on your iPhone. To create new words and pictures, the app sends your job, your two languages and the words you've already practised to OpenAI, and shares new words and pictures in a common word library on Google Firebase — without anything that identifies you. We don't show ads, don't track you across apps and don't sell data.
+        <strong>In short:</strong> LearnScrumble has no account and doesn't ask for your name, email or phone number. Your settings and progress stay on your iPhone. To create new words and pictures, the app sends your job, your two languages and the words you've already practised to OpenAI — <strong>only after you agree to it in the app</strong> — and shares new words and pictures in a common word library on Google Firebase, without anything that identifies you. If the app crashes, a crash report is sent so we can fix the problem. Usage statistics are sent only if you switch them on. We don't show ads, don't track you across apps and don't sell data.
       </div>
 
       <h2>Contents</h2>
@@ -102,6 +102,7 @@
       <h2 id="sent">3. Data sent to other services</h2>
 
       <h3>OpenAI — creating words and pictures</h3>
+      <p><strong>We ask first.</strong> Before any request is sent, the app asks you to agree: on the setup screen ("I agree"), or once in a separate question if you set up the app before this question existed. Without your agreement the app can't create words, so no game starts and nothing is sent. The same explanation stays visible in <strong>Settings → Legal and support</strong>.</p>
       <p>When the app needs new words, it sends a request to OpenAI, L.L.C. (United States) with:</p>
       <ul>
         <li>your job (as chosen or typed by you);</li>
@@ -120,6 +121,24 @@
       </ul>
       <p>Nothing that identifies you, and not your job, is stored with these words. Google receives your IP address and technical information (such as the app and SDK version and device type) needed to deliver the service. Data location: <span class="fill">[Firebase project region, e.g. europe-west]</span>.</p>
 
+      <h3>Firebase Crashlytics — crash reports</h3>
+      <p>If the app crashes, it sends a crash report to Firebase Crashlytics (Google) the next time you open it. The report contains:</p>
+      <ul>
+        <li>where in the app's code the crash happened and the error message;</li>
+        <li>the iPhone model, iOS version, app version, free memory and disk space, and whether the app was in the foreground;</li>
+        <li>a random installation ID created by Firebase, so repeated crashes on the same iPhone are counted once. It isn't linked to your name, your Apple ID or any other identifier.</li>
+      </ul>
+      <p>Crash reports don't contain your job, your words or your answers. We use them only to find and fix bugs. Crashlytics keeps them for <span class="fill">[90 days — check the current Firebase retention]</span>.</p>
+
+      <h3>Google Analytics for Firebase — usage statistics (only if you switch it on)</h3>
+      <p>"Share usage statistics to help improve the app" is <strong>off</strong> until you turn it on, on the setup screen or in <strong>Settings → Legal and support</strong>. You can turn it off again at any time. Only while it's on, the app sends Google Analytics for Firebase:</p>
+      <ul>
+        <li>which parts of the app are used, for example "setup finished", "round finished" or "review started";</li>
+        <li>the iPhone model, iOS version, app version, app language and approximate country (from the IP address);</li>
+        <li>a random app-instance ID created by Firebase, so visits from the same iPhone can be counted. The app doesn't use the advertising identifier (IDFA).</li>
+      </ul>
+      <p>The statistics are about how the app is used, not about who you are. They don't include your job, your words or your answers. Analytics keeps them for <span class="fill">[the retention period set in Google Analytics, e.g. 2 months]</span>.</p>
+
       <h3>Apple</h3>
       <ul>
         <li><strong>Time check:</strong> before a game starts, the app asks <code>apple.com</code> for the current time (only the time, no page content), so the daily free words are counted correctly. Apple receives your IP address.</li>
@@ -132,7 +151,7 @@
         <li>No account, name, email address or phone number.</li>
         <li>No location, contacts, photos, camera or microphone.</li>
         <li>No advertising, no advertising identifier, no tracking across other apps or websites.</li>
-        <li>No analytics or crash reporting at the moment. <span class="fill">[Update this if analytics are added.]</span></li>
+        <li>No usage statistics unless you switch them on (see <a href="#sent">section 3</a>).</li>
         <li>We don't sell or rent data to anyone.</li>
       </ul>
 
@@ -142,6 +161,8 @@
         <li><strong>To keep the free limit fair and the service working</strong> — the daily counter and the time check (legitimate interests, Art. 6(1)(f) GDPR).</li>
         <li><strong>To build the shared word library</strong> so words and pictures are reused for all learners (legitimate interests, Art. 6(1)(f) GDPR). It contains no personal data.</li>
         <li><strong>Reminders</strong> only if you allow notifications (consent, Art. 6(1)(a) GDPR) — you can switch them off at any time in the app or in iOS Settings.</li>
+        <li><strong>Crash reports</strong> to keep the app working and fix bugs (legitimate interests, Art. 6(1)(f) GDPR).</li>
+        <li><strong>Usage statistics</strong> only if you switch them on (consent, Art. 6(1)(a) GDPR) — you can switch them off at any time in Settings.</li>
       </ul>
 
       <h2 id="retention">6. How long data is kept</h2>
@@ -149,6 +170,7 @@
         <li><strong>On your iPhone:</strong> until you reset your progress or delete the app. The daily free-word counter stays in the Keychain until the iPhone is erased.</li>
         <li><strong>Shared word library:</strong> for as long as the service runs; it contains no personal data.</li>
         <li><strong>OpenAI:</strong> according to OpenAI's API data policy (see above).</li>
+        <li><strong>Crash reports and usage statistics:</strong> for the periods given in <a href="#sent">section 3</a>.</li>
         <li><strong>Emails to support:</strong> for as long as needed to answer you, then <span class="fill">[e.g. deleted after 12 months]</span>.</li>
       </ul>
 
@@ -163,7 +185,7 @@
       <p>LearnScrumble is made for adults learning the language of their workplace. It is not directed at children under <span class="fill">[16]</span>.</p>
 
       <h2 id="changes">10. Changes to this policy</h2>
-      <p>If we change what the app collects — for example by adding crash reporting — we'll update this page and the effective date before the change reaches the app.</p>
+      <p>If we change what the app collects — for example by sending OpenAI requests through our own server instead of directly from the app — we'll update this page and the effective date before the change reaches the app.</p>
 
       <h2 id="contact">11. Contact</h2>
       <p>Questions about privacy: <a href="mailto:privacy@example.com"><span class="fill">privacy@example.com</span></a>, or by post to <span class="fill">[postal address]</span>.</p>

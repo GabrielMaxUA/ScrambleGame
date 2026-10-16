@@ -17,7 +17,8 @@ import AVFoundation
 //     turned on but never asked -> the iOS permission popup; said Don't Allow -> a note + "Open Settings" (iOS)
 //   Progress: "Reset progress" -> PersistenceController.resetProgress for the current target language
 //   Subscription: Apple's manage-subscriptions sheet, restore purchases (StoreKit AppStore.sync)
-//   Legal and support: "How to play" (onHowToPlay -> RootView shows the tutorial again), privacy, terms, support email links
+//   Legal and support: "How to play" (onHowToPlay -> RootView shows the tutorial again), privacy, terms, support email links,
+//     the "Share usage statistics" toggle (AnalyticsConsent) and what goes to OpenAI (AIConsent)
 //   "Done" (only when the setup is usable) -> onDone -> AppManager.closeSettings() -> WelcomeBackView.
 
 struct SettingsView: View {
@@ -33,6 +34,7 @@ struct SettingsView: View {
   @AppStorage("speechRate") private var speechRate = 0.45          // 0.5 = the system's normal speaking speed
   @AppStorage(DailyReminder.enabledKey) private var reminderEnabled = true                        // reminder toggle, on by default
   @AppStorage(DailyReminder.timeKey) private var reminderMinutes = DailyReminder.defaultMinutes   // reminder time, minutes after midnight
+  @AppStorage(AnalyticsConsent.key) private var shareStatistics = false                           // optional analytics consent, same key as EntryView
   @Environment(\.scenePhase) private var scenePhase                // back from iOS Settings -> re-check the notification permission
   @Environment(\.openURL) private var openURL                      // opens the app's page in iOS Settings
   
@@ -338,6 +340,16 @@ struct SettingsView: View {
         linkRow("Terms of Use", icon: "doc.plaintext", url: termsURL)
         divider
         linkRow("Contact support", icon: "envelope", url: URL(string: "mailto:\(supportEmail)")!)
+        divider
+        Toggle("Share usage statistics to help improve the app", isOn: $shareStatistics)   // Firebase Analytics on/off
+          .foregroundStyle(.white)
+          .onChange(of: shareStatistics) { _, on in AnalyticsConsent.apply(on) }
+        divider
+        Text(AIConsent.message)                                   // what goes to OpenAI, agreed to on setup (AIConsent)
+          .font(.footnote)
+          .foregroundStyle(.white.opacity(0.6))
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .fixedSize(horizontal: false, vertical: true)
       }
     }
   }

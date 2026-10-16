@@ -10,9 +10,14 @@
       * Other Usage Data:   the English names of words already practised, sent to OpenAI so they aren't repeated.
     Settings, progress (SwiftData) and the daily free-word counter (Keychain) never leave the device -> not "collected".
     New words / pictures written to the shared Firebase library contain no user data.
+      * Crash Data:          Firebase Crashlytics crash reports, sent on the next launch after a crash - App Functionality.
+      * Device ID:           Firebase's random installation / app-instance ID (not the advertising ID) - App Functionality
+                             (Crashlytics) and Analytics (only with the user's consent).
+      * Product Interaction: Firebase Analytics events, only while "Share usage statistics" is on (off by default) - Analytics.
+    Firebase's own SDK manifests declare the same; listing them here keeps the app's report complete.
   - Required-reason API: UserDefaults (@AppStorage / UserDefaults.standard), reason CA92.1 = only this app reads/writes it.
 
-  Keep in sync with WebsiteContent/privacy.html. Update before adding Crashlytics, Analytics, sign-in or RevenueCat.
+  Keep in sync with WebsiteContent/privacy.html. Update before adding sign-in, App Check or RevenueCat.
 -->
 <plist version="1.0">
 <dict>
@@ -44,6 +49,43 @@
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeCrashData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeDeviceID</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+				<string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeProductInteraction</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
 			</array>
 		</dict>
 	</array>

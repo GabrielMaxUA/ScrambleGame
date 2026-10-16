@@ -64,7 +64,7 @@ Work in this order. The sizes are rough estimates.
 2. ✅ **Languages.** "I speak" and "I'm learning", using the existing pickers.
 3. ✅ **Job.** A short list of common jobs to tap, plus the existing free-text field. This also tells us which jobs people actually pick. *(`ProfessionPicker`: an occupation menu plus "Not listed?" free text)*
 4. ✅ **Daily reminder.** Ask for a time, then ask for notification permission on this screen with a one-line reason. Not at launch. *(A "Daily reminder" card on the setup screen: a time picker (9:00 by default) with the reason under it, "We'll remind you once a day, only if you haven't played yet." Permission is asked once, on the Start button. The reminder goes out at that time on days the user hasn't played yet, booked 7 days ahead and renewed each time the app opens (`DailyReminder.swift`))*
-5. ❓ **need discussion** **Consent.** Say plainly that the job text is sent to OpenAI to create words and pictures, and get an explicit "OK", with a link to the real privacy policy. Apple's App Review rule 5.1.2(i) requires this; the current disclaimer isn't enough. *(Only the AI disclaimer so far; the wording depends on live AI vs packs and on the real privacy policy)*
+5. ✅ **Consent.** Say plainly that the job text is sent to OpenAI to create words and pictures, and get an explicit "OK", with a link to the real privacy policy. Apple's App Review rule 5.1.2(i) requires this; the current disclaimer isn't enough. *(Done 15 October: an "I agree" checkbox on the setup screen, a one-time sheet for existing users, and the sentence in Settings; see `AppStoreReadiness.md` §1.4. The privacy link still points to the placeholder until the website is live. If we switch to packs, the wording changes)*
 6. ✅ **Straight into the first round.** Aim for the first correct word within about a minute of opening the app.
 7. ✅ **How to play.** *(Added 14 October, not in the original list: an interactive tutorial right after the setup screen, while the first words load. It runs the real game screen with one practice word, "cat" in the language being learned, and a tapping pointer with a tooltip on every task: spell, send a wrong letter back, ↻, the hint, the speaker, the settings gear. It ends on the real "Correct!" screen with the daily free words and "Let's go!". Everything is in the user's language. Shown once, replayable from Settings)*
 
@@ -213,7 +213,7 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 2. ❓ **Get the OpenAI key off the phone.** The plan is to move AI calls and Firestore reads and writes into Firebase Cloud Functions, with the daily limit enforced on the server. *(§2, §4.4)*
 3. ❓ **Lock down Firebase:** anonymous sign-in, read-only rules for the shared word bank, App Check. *(§4.4)*
 4. ❓ **Real privacy policy, terms of use and support email.** All are placeholders today, in `EntryView` and `SettingsView`. The paywall links depend on them too. *(§3 #1, §4.2, §4.3, §4.4)*
-5. ❓ **Consent step:** a plain explanation that the job text goes to OpenAI, with an explicit "OK". *(§2, §4.1 #5)*
+5. ✅ **Consent step:** a plain explanation that the job text goes to OpenAI, with an explicit "OK". *(§2, §4.1 #5)* *(Done 15 October)*
 6. ❓ **Delete my data.** It's built but commented out in `SettingsView.swift:68` and `AppManager.swift`. *(§4.2)*
 7. ❓ **Plans and prices:** monthly and annual, with a free trial. *(§4.3)*
 8. ❓ **Design pass:** does the shared glass style count as the "one consistent design pass"? *(§7)*

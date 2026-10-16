@@ -11,6 +11,7 @@ import FirebaseCore
 // UIKit's app-launch hook, plugged into SwiftUI by LearnScrumbleApp (@UIApplicationDelegateAdaptor).
 //   App starts -> didFinishLaunching -> FirebaseApp.configure()
 //   -> Firestore (FirebaseWordStore) and Storage (FirebaseImageStore) are ready to use.
+//   -> AnalyticsConsent.apply(saved choice): Analytics only collects if the user agreed (off by default).
 
 final class AppDelegate: NSObject, UIApplicationDelegate {
   // MARK: - didFinishLaunchingWithOptions
@@ -23,6 +24,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     if FirebaseApp.app() == nil {
       FirebaseApp.configure()
     }
+    AnalyticsConsent.apply(UserDefaults.standard.bool(forKey: AnalyticsConsent.key))
     return true
   }
 }

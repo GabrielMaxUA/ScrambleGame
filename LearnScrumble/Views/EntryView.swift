@@ -6,7 +6,8 @@ import SwiftUI
 //   Pickers write straight into RequestModel (nativeLanguage, selectedLanguage, proffession)
 //   Reminder card: the time is saved straight to UserDefaults (DailyReminder.timeKey), with the reason shown under it
 //   -> onChange copies each into UserDefaults (@AppStorage) so the next launch restores them
-//   -> "Start Learning" (only when profession is filled and the two languages differ)
+//   "Your data" card: what goes to OpenAI + an "I agree" checkbox, saved straight to UserDefaults (AIConsent.key)
+//   -> "Start Learning" (only when profession is filled, the two languages differ and "I agree" is ticked)
 //   -> onSubmit -> RootView: hasCompletedOnboarding = true, notification permission
 //      (DailyReminder books the reminders at the time picked here), AppManager.startGame().
 //   A raccoon runs onto the button when the form is ready and runs off when it isn't.
@@ -16,6 +17,8 @@ struct EntryView: View {
   @AppStorage("pickedLanguage") private var pickedLanguage = "en-US"         // saved copy of requestModel.selectedLanguage
   @AppStorage("pickedProffession") private var pickedProfession = ""         // saved copy of requestModel.proffession
   @AppStorage(DailyReminder.timeKey) private var reminderMinutes = DailyReminder.defaultMinutes   // reminder time, minutes after midnight (9:00 by default)
+  @AppStorage(AIConsent.key) private var consentDate: Double = 0             // when "I agree" was ticked; 0 = not agreed
+  @AppStorage(AnalyticsConsent.key) private var shareStatistics = false      // optional analytics consent, off by default
   @Bindable var requestModel: RequestModel                                   // the pickers write into it directly
   let onSubmit: () async -> Void                                             // RootView: mark onboarding done + start the game
   private let nativePick: LocalizedStringKey = "I speak"                     // card titles / warning, translated by the catalog
@@ -25,6 +28,7 @@ struct EntryView: View {
   private let reminderPick: LocalizedStringKey = "Daily reminder"
   private let reminderTimeLabel: LocalizedStringKey = "Remind me at"
   private let reminderReason: LocalizedStringKey = "We'll remind you once a day, only if you haven't played yet."
+  private let consentPick: LocalizedStringKey = "Your data"
   @FocusState private var professionFocused: Bool                 // passed into ProfessionPicker so the raccoon and the button can react to typing
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var raccoonX: CGFloat = -600                          // raccoon's horizontal position relative to the button center
@@ -40,8 +44,9 @@ struct EntryView: View {
   private var sameLanguage: Bool {                                     // native == target: not allowed
     requestModel.nativeLanguage == requestModel.selectedLanguage
   }
-  private var canStart: Bool {                                         // form complete and not already loading
-    !trimmedProfession.isEmpty && !sameLanguage && !requestModel.isLoading
+  private var agreed: Bool { consentDate > 0 }                         // "I agree" is ticked
+  private var canStart: Bool {                                         // form complete, agreed, and not already loading
+    !trimmedProfession.isEmpty && !sameLanguage && agreed && !requestModel.isLoading
   }
   private var raccoonOffscreen: CGFloat { buttonWidth / 2 + 140 }  // far enough that the whole raccoon (and its arm) is past the screen edge
   
@@ -75,6 +80,49 @@ struct EntryView: View {
                 .font(.footnote)
                 .foregroundStyle(.white.opacity(0.6))
             }
+          }
+
+          FieldCard(title: consentPick, icon: "hand.raised") {  // what goes to OpenAI + "I agree" (App Review 5.1.2)
+            VStack(alignment: .leading, spacing: 12) {
+              Text(AIConsent.message)
+                .font(.footnote)
+                .foregroundStyle(.white.opacity(0.8))
+                .fixedSize(horizontal: false, vertical: true)
+              Button {                                          // tick saves the date, untick clears it
+                consentDate = agreed ? 0 : Date().timeIntervalSince1970
+              } label: {
+                Label {
+                  Text("I agree")
+                } icon: {
+                  Image(systemName: agreed ? "checkmark.square.fill" : "square")
+                }
+                .font(.body)
+                .foregroundStyle(.white)
+              }
+              .accessibilityAddTraits(agreed ? .isSelected : [])
+
+              Button {                                          // optional: Firebase Analytics on/off
+                shareStatistics.toggle()
+                AnalyticsConsent.apply(shareStatistics)
+              } label: {
+                Label {
+                  VStack(alignment: .leading, spacing: 2) {
+                    Text("Share usage statistics to help improve the app")
+                      .font(.body)
+                      .foregroundStyle(.white)
+                    Text("Optional. You can change this anytime in Settings.")
+                      .font(.footnote)
+                      .foregroundStyle(.white.opacity(0.6))
+                  }
+                  .multilineTextAlignment(.leading)
+                } icon: {
+                  Image(systemName: shareStatistics ? "checkmark.square.fill" : "square")
+                    .foregroundStyle(.white)
+                }
+              }
+              .accessibilityAddTraits(shareStatistics ? .isSelected : [])
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
           }
         }
       }
