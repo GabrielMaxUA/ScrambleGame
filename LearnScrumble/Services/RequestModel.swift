@@ -42,6 +42,7 @@ class RequestModel {
     var questions: [QuestionModel] = []                            // the current session's question list, populated by generate()
     var isLoading = false                                          // true while generate() is running
     private(set) var lastError: GenerationError?                   // set when any entry point fails, so AppManager can pick the right screen (offline vs error)
+    private var lastJobInEnglish: String?                          // GPT's English name for the profession from the last word list ("invalid" for junk) -> ProfessionStore
     var errorMessage: String? { lastError.map { "\($0)" } }        // for logs only — the screens show lastError.message
     var progress: Double = 0                                       // 0...1 loading bar for LoadingView: 20% after the word list, the rest per finished image
     private let apiKey = "" // load from a plist/keychain — never hardcode, never paste in chat
@@ -89,6 +90,7 @@ class RequestModel {
     func generate() async {
         isLoading = true
         lastError = nil
+        lastJobInEnglish = nil
         progress = 0
         questions = []
         defer { isLoading = false }
@@ -105,8 +107,9 @@ class RequestModel {
             progress = 0.2
             let built = try await buildQuestions(from: words)
             guard !built.isEmpty else { throw GenerationError.noWordsAvailable }
-            Log.info("Generated \(built.count) questions: \(built.map { $0.word.targetWord })", .words)
+            Log.info("Generated \(built.count) questions", .words, private: "\(built.map { $0.word.targetWord })")
             self.questions = built
+            ProfessionStore.recordIfNew(profession: proffession, jobInEnglish: lastJobInEnglish)
         } catch is CancellationError {
             Log.info("generate() cancelled", .words)
         } catch {
@@ -170,7 +173,7 @@ class RequestModel {
         let words: [WordModel] = toolNames.compactMap { toolName in
             guard let doc = existing[toolName],
                   let targetWord = doc.translation[targetLanguage.rawValue] else {
-                Log.info("⚠️ generateStruggleReview — '\(toolName)' missing its \(targetLanguage.rawValue) translation, skipping", .words)
+                Log.info("⚠️ generateStruggleReview — a word is missing its \(targetLanguage.rawValue) translation, skipping", .words, private: "'\(toolName)'")
                 return nil
             }
             let originWord = doc.translation[originLanguage.rawValue] ?? targetWord
@@ -221,7 +224,7 @@ class RequestModel {
     // 4. Keeps only questions that actually have an image. Every word failed -> that IS an error: batchFailure explains why.
     private func buildQuestions(from words: [WordModel], progressBase: Double = 0.2) async throws -> [QuestionModel] {
         guard !words.isEmpty else { return [] }
-        Log.info("🏗️ buildQuestions — starting for \(words.count) words: \(words.map { $0.toolName })", .words)
+        Log.info("🏗️ buildQuestions — starting for \(words.count) words", .words, private: "\(words.map { $0.toolName })")
         let existing = await FirebaseWordStore.fetchExisting(toolNames: words.map { $0.toolName })
         Log.debug("🔥 buildQuestions — Firebase already has \(existing.count)/\(words.count) cached", .words)
         let originLanguage = self.nativeLanguage
@@ -254,7 +257,7 @@ class RequestModel {
                         } catch is CancellationError {
                             throw CancellationError()
                         } catch {
-                            Log.error("⚠️ buildQuestions — skipping '\(word.toolName)': \(error)", .words)
+                            Log.error("⚠️ buildQuestions — skipping a word", .words, private: "'\(word.toolName)': \(error)")
                             return (globalIndex, nil, GenerationError.from(error))
                         }
                     }
@@ -319,18 +322,18 @@ class RequestModel {
             } catch is CancellationError {
                 throw CancellationError()
             } catch {
-                Log.error("Cached image unusable for \(word.toolName), regenerating: \(error)", .words)
+                Log.error("Cached image unusable, regenerating", .words, private: "\(word.toolName): \(error)")
             }
         }
 
-        Log.info("🎨 resolveImage — generating a new image for '\(word.toolName)'", .words)
+        Log.info("🎨 resolveImage — generating a new image", .words, private: "'\(word.toolName)'")
         let pngData = try await generateImage(for: word.toolName, description: word.imagePrompt)
         var imageURL = ""
         do {
             imageURL = try await FirebaseImageStore.uploadWebP(pngData, toolName: word.toolName)
-            Log.info("☁️ resolveImage — uploaded new image for '\(word.toolName)'", .words)
+            Log.info("☁️ resolveImage — uploaded new image", .words, private: "'\(word.toolName)'")
         } catch {
-            Log.error("WebP upload failed for \(word.toolName): \(error)", .words)
+            Log.error("WebP upload failed", .words, private: "\(word.toolName): \(error)")
         }
         await FirebaseWordStore.saveIfNeeded(
             toolName: word.toolName, originLanguage: originLanguage, originWord: word.originWord,
@@ -396,7 +399,8 @@ class RequestModel {
     //    canonical key, natural words in both languages, an unambiguous image description, JSON array only.
     // 2. POST to the chat API (gpt-4.1) through send().
     // 3. Decodes the reply envelope -> the message text -> strips ```json fences (GPT sometimes adds them despite the prompt)
-    //    -> decodes [WordModel]. Anything unreadable -> .badResponse.
+    //    -> decodes {"job", "words"} (or a plain [WordModel] array, as older replies looked). Anything unreadable -> .badResponse.
+    //    "job" = the profession's English name, or "invalid" if it isn't a real job -> lastJobInEnglish -> ProfessionStore.
     private func generateWordList(profession: String,
                                   originLanguage: Languages,
                                   targetLanguage: Languages,
@@ -419,17 +423,21 @@ class RequestModel {
       - "imagePrompt" must be a short, UNAMBIGUOUS visual description of the SPECIFIC \(profession)-context object, disambiguated from any other common meaning of the word. For example, for "level" write "a carpenter's spirit level tool with a bubble vial, NOT a level in a video game"; for "pipe" write "a plumbing/construction pipe, a hollow cylindrical tube, NOT a smoking pipe". Always name the disambiguation explicitly when the word has another common meaning.
       - Do not include explanations, descriptions, categories, or definitions in toolName/originWord/targetWord.
       - Do not repeat items.
-      - Respond ONLY with a JSON array.
+      - "job" must be the profession "\(profession)" as a short, common English job name in lowercase and singular (for example "cook" or "forklift operator"), whatever language it was written in. If it isn't a real job or profession (for example a person's name, random text, or something offensive), write "invalid".
+      - Respond ONLY with a JSON object.
       - No markdown fences or additional text.
       Return exactly this shape:
-        [
-          {
-            "toolName": "hammer",
-            "originWord": "<word in \(originLanguage.rawValue)>",
-            "targetWord": "<word in \(targetLanguage.rawValue)>",
-            "imagePrompt": "a claw hammer with a wooden handle and a steel head with a curved claw"
-          }
-        ]
+        {
+          "job": "carpenter",
+          "words": [
+            {
+              "toolName": "hammer",
+              "originWord": "<word in \(originLanguage.rawValue)>",
+              "targetWord": "<word in \(targetLanguage.rawValue)>",
+              "imagePrompt": "a claw hammer with a wooden handle and a steel head with a curved claw"
+            }
+          ]
+        }
     """
 
         var request = URLRequest(url: Self.chatURL)
@@ -452,8 +460,15 @@ class RequestModel {
                 .replacingOccurrences(of: "```json", with: "")
                 .replacingOccurrences(of: "```", with: "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            let decoded = try JSONDecoder().decode([WordModel].self, from: Data(cleaned.utf8))
-            Log.info("🌐 generateWordList — GPT returned \(decoded.count) words: \(decoded.map { $0.toolName })", .words)
+            struct Reply: Decodable { let job: String?; let words: [WordModel] }   // {"job": "cook", "words": [...]}
+            let decoded: [WordModel]
+            if let reply = try? JSONDecoder().decode(Reply.self, from: Data(cleaned.utf8)) {
+                decoded = reply.words
+                if let job = reply.job { lastJobInEnglish = job }
+            } else {
+                decoded = try JSONDecoder().decode([WordModel].self, from: Data(cleaned.utf8))   // GPT sent only the array
+            }
+            Log.info("🌐 generateWordList — GPT returned \(decoded.count) words", .words, private: "\(decoded.map { $0.toolName })")
             return decoded
         } catch {
             Log.error("generateWordList decode failed: \(error)", .words)
@@ -569,11 +584,11 @@ class RequestModel {
                 try await Task.sleep(nanoseconds: UInt64(attempt) * 2_000_000_000)
             case 400..<500:
                 let body = String(data: data, encoding: .utf8) ?? "no body"
-                Log.error("🚨 send — status=\(status), service unavailable (our side), body=\(body)", .words)
+                Log.error("🚨 send — status=\(status), service unavailable (our side)", .words, private: "body=\(body)")
                 throw GenerationError.serviceUnavailable
             default:
                 let body = String(data: data, encoding: .utf8) ?? "no body"
-                Log.error("Bad response: status=\(status), body=\(body)", .words)
+                Log.error("Bad response: status=\(status)", .words, private: "body=\(body)")
                 throw GenerationError.badResponse
             }
         }

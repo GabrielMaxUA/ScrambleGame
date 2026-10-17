@@ -97,7 +97,10 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 - ✅ *(partly)* **Me:** analytics events: `onboarding_completed`, `tutorial_completed`, `tutorial_skipped`, `round_completed`, `daily_limit_reached`, `paywall_shown`, `trial_started`, `review_started`, `reminder_enabled`, `generation_failed` (error type only). The checklist requires at least onboarding finished, round finished, paywall shown and trial started (§4.4). `paywall_shown` and `trial_started` only start firing once the paywall exists (checklist §4.3). *(16 October: `Services/Track.swift`, one function per event. All are wired except `paywall_shown` and `trial_started`, which wait for the paywall. Parameters are languages, counts and error names only, never the profession. Sent only with the user's consent)*
   - Where they fire: `onboarding_completed` (+ origin, target) on the first Start Learning; `tutorial_completed` / `tutorial_skipped` when the tutorial closes; `round_completed` (mode game/review) at every checkpoint; `daily_limit_reached` when a round ends on the free limit; `review_started` (word count); `reminder_enabled` (source onboarding/settings) only when iOS allows notifications; `generation_failed` (error, step) next to the Crashlytics non-fatal.
 - ✅ **Me:** analytics consent switch in onboarding and Settings, connected to Firebase's consent settings; off until the user agrees (EU). *(15 October: an optional "Share usage statistics" checkbox in the setup screen's "Your data" card and a toggle in Settings → Legal and support, both calling `AnalyticsConsent.apply`; AppDelegate applies the saved choice at every launch)*
-- ⬜ **Both:** check the events arrive in the dev project (DebugView).
+- ✅ **Both:** check the events arrive in the dev project (DebugView). *(16 October: with statistics off nothing arrives; once switched on, `first_open`, `session_start` and `user_engagement` show in DebugView within seconds, and the app's own events fire at their moments. How to test: `README.md` → Testing tricks)*
+- ✅ **Both:** see a non-fatal arrive decoded. *(16 October: an offline test shows as `GenerationError (1) offline` in Crashlytics → Non-fatals, with Keys and Logs)*
+- ✅ **Me:** keep word names out of crash and error reports. *(16 October: every `Log.info` / `Log.error` line that named words, struggle words or OpenAI error bodies now puts them in the `private:` detail, so they show in Xcode but never in Crashlytics breadcrumbs. Reports carry steps, counts, languages and error types only, as `privacy.html` says)*
+- ✅ **Me:** count the jobs people learn for, ahead of the server (pulled forward from Phase 4/9). *(16 October: `Services/ProfessionStore.swift`. The existing OpenAI word request also returns `job`, the profession's English name, or "invalid". When a game's first batch works, the job is counted once per install and job in Firestore `professions/{english name}`: `typed` (Not listed?) or `picked` (menu), `firstSeen`, `lastSeen`, `status` (`"in menu"` for jobs already in the menu, `"new"` for jobs missing from it; set `"added"` or `"rejected"` by hand after review). Review list: Firestore console → `professions` → Query → filter `status == "new"`, order by `typed` descending. No user ID, never the typed text. Plus the Analytics event `profession_selected` (menu name or "custom"). Tested on dev: menu "Cook" created `professions/cook` with picked = 1, and a second game with the same job didn't count again. The typed path works too: Ukrainian "Кухар" added typed +1 to the same `cook` document, and "Різноробочий" created `general laborer`. Privacy policy, manifest and README updated)*
 - ✅ *(partly)* **Me:** before any build with Crashlytics or Analytics goes to TestFlight, update `PrivacyInfo.xcprivacy`, `privacy.html` and the App Store privacy answers together (`AppStoreReadiness.md` §1.1 says to keep them in sync). Don't wait for Phase 10. *(15 October: the manifest, `privacy.html`, `support.html` and the suggested App Store answers in `WebsiteContent/README.md` are updated. Still to do: **You** enter the answers in App Store Connect once the app exists there)*
 
 ### Phase 2: billing and safety limits
@@ -115,7 +118,7 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 ### Phase 4: Cloud Functions (on dev first)
 
 - ⬜ **You:** put the OpenAI key into Secret Manager with one CLI command (I give you the command; the key never goes into the repo or the chat).
-- ⬜ **Me:** `getWords`: job + languages + seen words in, 5 words out; English job name, bank first, OpenAI for the rest; saves typed jobs to `professions`.
+- ⬜ **Me:** `getWords`: job + languages + seen words in, 5 words out; English job name, bank first, OpenAI for the rest; saves typed jobs to `professions`. *(16 October: the job counting already runs in the app for now, see the Phase 1 note on `ProfessionStore`; `getWords` takes over the same write, same document format)*
 - ⬜ **Me:** a meaning-aware bank key, for example "pipe (plumbing)" instead of just "pipe", so the same English name with another meaning in another job doesn't share translations and a picture (`AppFlowIdeas.md` §2). Easiest to decide before the server bank fills up.
 - ⬜ **Me:** `getPicture`: one word in, picture link out; generates, converts to WebP, uploads and saves only if missing.
 - ⬜ **Me:** `getReviewWords`: struggle words in, translations + pictures out.
@@ -134,7 +137,7 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 
 ### Phase 6: lock down Firebase
 
-- ⬜ **Me:** Firestore rules: signed-in users can **read** the word library; nobody can write. Per-user limit documents are written only by the server. `professions` can't be read or written by the app.
+- ⬜ **Me:** Firestore rules: signed-in users can **read** the word library; nobody can write. Per-user limit documents are written only by the server. `professions` can't be read or written by the app. *(Until `getWords` exists, the app itself writes `professions` (`ProfessionStore`); block it only when the server has taken over that write)*
 - ⬜ **Me:** Storage rules: read-only for signed-in users.
 - ⬜ **Both:** confirm with the rules test tool that a phone can no longer write.
 
@@ -153,7 +156,7 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 
 ### Phase 9: the profession list in practice
 
-- ⬜ **Me:** a simple way for you to see the `professions` list sorted by count (Firestore console view to start; a small admin page later if useful).
+- ⬜ **Me:** a simple way for you to see the `professions` list sorted by count (Firestore console view to start; a small admin page later if useful). *(16 October: works now: Firebase console → Firestore → `professions`, sort by `typed` or `picked`)*
 - ⬜ **Me:** background job `prepareProfession`: when a job is added to the menu, build its 100-word bank (first 10 fast, the rest after), plus 50 more on demand (AppFlowIdeas §1). Run it once for **every profession already in the picker** too (AppFlowIdeas §1, "Pre-generate the listed professions"). This replaces filling the bank by playing.
 - ⬜ **Both:** decide the rule for adding a job (for example "typed 10+ times and looks right").
 
@@ -163,7 +166,7 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 - ✅ *(partly)* **Me:** `privacy.html`: OpenAI now called from our server; anonymous ID; crash reports; analytics with consent; *(15 October: crash reports and analytics with consent are in; the server parts come with Phases 3–8)* typed jobs stored in English without a user ID; server region `europe-west1`.
 - ✅ *(partly)* **Me:** `WebsiteContent/README.md` privacy table and App Store answers updated. *(15 October: updated for Crashlytics and Analytics; the server parts come later)*
 - ⬜ **You:** update the App Store Connect privacy answers to match. Today they say "not linked to the user"; with an anonymous ID and server-side limits, check again whether that still holds.
-- ⬜ **Me:** move the internal docs (`checklist.md`, `AppFlowIdeas.md`, `AppStoreReadiness.md`, this file) out of `LearnScrumble/`. That folder is synced to the app, so they ship inside it and anyone can read them (`AppStoreReadiness.md` §3).
+- ✅ **Me:** move the internal docs (`checklist.md`, `AppFlowIdeas.md`, `AppStoreReadiness.md`, this file) out of `LearnScrumble/`. That folder is synced to the app, so they shipped inside it and anyone could read them (`AppStoreReadiness.md` §3). *(16 October: now in `Docs/` at the repository root: still in the repo for Konstantin, never in the app)*
 - ⬜ **Me:** update `checklist.md` and `AppStoreReadiness.md` (key off the phone, Firebase lock-down, crash reports and analytics → done).
 
 ---

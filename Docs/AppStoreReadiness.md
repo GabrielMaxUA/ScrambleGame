@@ -75,11 +75,11 @@ New pictures take 10–30 seconds and need the internet, so explain that up fron
 
 - ✅ **Launch screen** shortened from 5 to 2 seconds (`RootView`). Apple discourages long forced splash screens.
 - ✅ **Sounds follow the silent switch** — the audio session is now `.ambient` (`SoundManager`), still mixed with the user's music. Fixed together with the earlier main-thread audio warnings.
-- ⬜ **to do** **Export compliance:** add `ITSAppUsesNonExemptEncryption = NO` to the target's Info settings (the app only uses standard HTTPS), so App Store Connect stops asking for every build.
+- ✅ **Export compliance:** add `ITSAppUsesNonExemptEncryption = NO` to the target's Info settings (the app only uses standard HTTPS), so App Store Connect stops asking for every build. *(16 October: in `LearnScrumble-Info.plist`, confirmed in the built app's Info.plist)*
 - ⬜ **to do** **App privacy answers** (App Store Connect → App Privacy): no tracking; data not linked to the user: Other User Content and Other Usage Data (App Functionality), plus Crash Data, Device ID and Product Interaction since 15 October (see 1.1) — the same as the privacy manifest. See `WebsiteContent/README.md`.
 - ⬜ **to do** **Age rating questionnaire:** answer the questions about AI-generated content and user-created content honestly.
 - ⬜ **to do** **Store listing:** name, subtitle, description, keywords, category (Education), copyright, and screenshots in the required iPhone sizes (the `WebsiteContent/images/how-to-play/` captures are a starting point, but App Store screenshots need the full device resolution).
-- ⬜ **to do** **Internal notes ship inside the app:** `checklist.md`, `AppFlowIdeas.md` and this file sit in the `LearnScrumble/` folder, which is synced to the app target, so they're copied into the app and anyone can read them from the downloaded app (business plans, prices, feedback). Move them to a folder outside the app target, e.g. `Docs/` at the repository root.
+- ✅ **Internal notes ship inside the app:** `checklist.md`, `AppFlowIdeas.md` and this file sit in the `LearnScrumble/` folder, which is synced to the app target, so they're copied into the app and anyone can read them from the downloaded app (business plans, prices, feedback). Move them to a folder outside the app target, e.g. `Docs/` at the repository root. *(16 October: moved to `Docs/` at the repository root, so they stay in the repo but never ship in the app; the built app has no `.md` files)*
 - ⬜ **to do** **TestFlight round** on a real iPhone before submitting: first launch, tutorial, a full round, daily limit, reminder, offline screen, Settings.
 
 ---
@@ -103,6 +103,6 @@ New pictures take 10–30 seconds and need the internet, so explain that up fron
 2. ✅ Consent step on the setup screen (1.4) *(15 October)*
 3. ⬜ Publish the website and update the app's links (1.3)
 4. ❓ Paywall with RevenueCat, or 1.0 without premium (1.2)
-5. ⬜ Export compliance key, App Store Connect answers, store listing (3)
+5. ⬜ ~~Export compliance key~~ *(done 16 October)*, App Store Connect answers, store listing (3)
 6. ⬜ Reviewer notes (2.3) and a TestFlight round
 7. ⬜ Cloud Functions and the Report button (2.1, 2.2) — strongly recommended before launch, needed soon after at the latest

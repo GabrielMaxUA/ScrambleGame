@@ -30,7 +30,7 @@ The game itself is in good shape. **The app around it is not finished yet.**
 
 Since mid-September, about half of the new Swift code (52% of 3,469 added lines) went into screens, components and animations. Very little went into what a release needs:
 - ❓ **need discussion** server-side AI calls: none; *(planned as Firebase Cloud Functions, but depends on the packs decision in §5)*
-- ✅ *(partly)* analytics and crash reporting: none; *(15–16 October: Crashlytics, opt-in Analytics, logs with crash breadcrumbs and non-fatal errors are in and tested; the analytics events are next)*
+- ✅ analytics and crash reporting: none; *(15–16 October: Crashlytics, opt-in Analytics, logs with crash breadcrumbs, non-fatal errors and the analytics events are in and tested. `paywall_shown` and `trial_started` come with the paywall)*
 - ✅ *(partly)* consent and privacy: an AI disclaimer and a placeholder privacy link so far; *(15 October: the OpenAI consent step and the usage-statistics opt-in are done; the privacy link stays a placeholder until the website is live)*
 - ⬜ **to do** a paywall or seat access: none. *(The single `hasAccess` check is ready for it)*
 
@@ -108,7 +108,7 @@ Work in this order. The sizes are rough estimates.
 | ❓ **need discussion** Get the OpenAI key off the phone (a server function), or remove OpenAI from the app entirely if we switch to pre-created packs (§5) | Any key inside an app can be extracted. Let's settle the packs question (§8) first, so you don't build a server you won't need *(Plan: move AI calls and Firestore reads and writes into Firebase Cloud Functions, and enforce the daily limit there too)* |
 | ❓ **need discussion** Firebase: sign-in, read-only rules for the shared word bank, App Check | Today any phone can overwrite words and pictures that every user sees *(Deferred to the Cloud Functions move; anonymous sign-in is the likely path, since there's no user model)* |
 | ❓ **need discussion** A real privacy policy and terms of use | Required by App Review, by the paywall and by the consent step |
-| ⬜ **to do** Crash reporting and basic analytics: onboarding finished, round finished, paywall shown, trial started | Without them we can't tell whether onboarding or the paywall works *(Started 15 October: Crashlytics and Analytics are linked, with the dSYM upload, and Debug builds report to a separate `scrumblegame-dev` project. A test crash arrived decoded in dev Crashlytics. The consent switch (15 October) and logs with crash breadcrumbs and non-fatal errors (16 October) are done; the events are next. See `ServerMigrationPlan.md` Phase 1)* |
+| ✅ Crash reporting and basic analytics: onboarding finished, round finished, paywall shown, trial started | Without them we can't tell whether onboarding or the paywall works *(Started 15 October: Crashlytics and Analytics are linked, with the dSYM upload, and Debug builds report to a separate `scrumblegame-dev` project. A test crash arrived decoded in dev Crashlytics. The consent switch (15 October), logs with crash breadcrumbs, non-fatal errors and the events (16 October) are done and tested; `paywall_shown` and `trial_started` wait for the paywall. See `ServerMigrationPlan.md` Phase 1)* |
 | ✅ App icon; a realistic minimum iOS (26.0 is a settings change, older needs fallbacks for the glass effects); iPhone locked to portrait | Install base, store listing and the landscape layout problem *(Icon set; minimum iOS 18.0 with glass fallbacks in `ButtonModifier.swift`; portrait only)* |
 
 ## 5. ❓ **need discussion** The question behind the content: pre-created packs instead of live AI
@@ -170,7 +170,7 @@ Everything in §4 carries over either way: onboarding, settings and the paywall 
 |---|---|
 | ❓ **need discussion** This week | We talk this through, including your answers to §8 |
 | ✅ *(partly)* Next 2 weeks | §3 fixes, then onboarding (§4.1) and settings (§4.2) *(7 of 8 §3 fixes done; Settings mostly done; onboarding's reminder (14 October) and consent (15 October) steps are done too)* |
-| ✅ *(partly)* Following 1–2 weeks | The paywall in sandbox (§4.3), plus crash reporting and analytics *(crash reporting, consent, logs and non-fatal errors done 15–16 October; the analytics events and the paywall are still to do)* |
+| ✅ *(partly)* Following 1–2 weeks | The paywall in sandbox (§4.3), plus crash reporting and analytics *(crash reporting, analytics with consent, logs, non-fatal errors and events done 15–16 October; the paywall is still to do)* |
 | ❓ **need discussion** Once the packs question is settled | The §4.4 security work, in whichever form we choose |
 | ❓ **need discussion** Every week | A short update from you: what shipped, what's blocked. You get feedback on each build |
 
@@ -205,7 +205,7 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 ### ⬜ Remaining: to do
 
 1. ⬜ **Paywall.** RevenueCat on StoreKit; the paywall screen after the first completed round, showing price, period, what's included and the auto-renewal terms; Restore Purchases on the paywall too; a local StoreKit or sandbox setup with no live products. *(§2, §4.3, §7)*
-2. ⬜ **Crash reporting and analytics**, with the events: onboarding finished, round finished, paywall shown, trial started. *(§2, §4.4)* *(Started 15 October: the libraries, crash upload and dev/prod split are done, and a test crash arrived in dev Crashlytics; the events and consent are next)*
+2. ✅ **Crash reporting and analytics**, with the events: onboarding finished, round finished, paywall shown, trial started. *(§2, §4.4)* *(Done 15–16 October: Crashlytics with breadcrumbs and non-fatal errors, opt-in Analytics with its events, tested in a separate dev project. `paywall_shown` and `trial_started` are wired when the paywall is built)*
 
 ### ❓ Remaining: need discussion
 
@@ -282,3 +282,20 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 - ✅ Rarely supported languages removed: Bhojpuri, Bodo, Dogri, Konkani, Maithili, Manipuri, Sanskrit.
 - ✅ Closing the tutorial over the welcome screen goes straight into the game.
 - ✅ Clearer score cards: "This round" and "All time" (instead of "This set" and "Overall"), with "Share of words you answered correctly" under them, and "No answers yet" instead of "—".
+
+**Firebase, consent and privacy (15–16 October)** *(§2, §4.1 #5, §4.4)*
+- ✅ Separate Firebase projects: Debug builds use `scrumblegame-dev`, App Store builds use `scrumblegame`, so testing never touches the real word bank. Details in `ServerMigrationPlan.md` Phase 0.
+- ✅ Crashlytics (crashes, non-fatal errors, breadcrumbs) and opt-in Analytics with its events, tested in the dev project.
+- ✅ OpenAI consent ("I agree" on the setup screen, a one-time sheet for existing users) and an optional "Share usage statistics" switch; Analytics is off until the user agrees.
+- ✅ Word names and the typed job never reach crash reports or statistics (only steps, counts, languages and error types).
+- ✅ Privacy manifest, `privacy.html` and `support.html` updated to match the app; suggested App Store privacy answers in `WebsiteContent/README.md`.
+- ✅ The planning docs no longer ship inside the app: they moved to `Docs/` at the repository root.
+- ✅ Export compliance key (`ITSAppUsesNonExemptEncryption = NO`), so uploads aren't held for the encryption question.
+- ✅ Cost limits: Google Cloud budget alerts (€10 production, €5 dev), an OpenAI monthly limit and auto recharge off.
+
+**Also done on 16 October (not in the original list)**
+- ✅ The speaker plays the word even when the phone is on silent (the session switches to `.playback` while the word is spoken); taps, alerts and the other sounds still follow the silent switch.
+- ✅ Debug builds only: Settings → Debug → "Reset free words", so testers get 20 fresh words without Terminal. Not in App Store builds.
+- ✅ Job counting for the menu: typed and picked jobs are counted in English in Firestore `professions` (no user ID, never the typed text), plus the Analytics event `profession_selected`. Jobs already in the menu are marked "in menu", jobs missing from it "new", so the review list is one filter in the console. Tested with a menu pick and typed Ukrainian jobs. See `ServerMigrationPlan.md` Phase 1 and `AppFlowIdeas.md` §8.
+- ✅ The job field now autocorrects as you type (fewer typos in typed jobs).
+- ✅ A developer `README.md` at the repository root: first setup on a new Mac, dev vs production, testing tricks (logs, DebugView, test crashes, dSYMs).

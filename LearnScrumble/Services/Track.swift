@@ -19,6 +19,7 @@ import FirebaseAnalytics
 //   AppManager        -> roundCompleted, dailyLimitReached, reviewStarted
 //   SettingsView      -> reminderEnabled(.settings) when the toggle is turned on and allowed
 //   RequestModel      -> generationFailed (next to the Crashlytics non-fatal in reportFailure)
+//   ProfessionStore   -> professionSelected: the menu job's English name, or "custom" when typed (never the typed text)
 //   Later, with the paywall (checklist §4.3): paywall_shown, trial_started.
 //
 // Privacy: parameters are languages, counts and error names only. Never the typed profession or any user text.
@@ -31,6 +32,10 @@ enum Track {
 
   static func onboardingCompleted(origin: Languages, target: Languages) {
     send("onboarding_completed", ["origin": origin.rawValue, "target": target.rawValue])
+  }
+
+  static func professionSelected(job: String) {                    // menu name like "Electrician", or "custom"
+    send("profession_selected", ["job": job])
   }
 
   static func tutorialFinished(skipped: Bool) {

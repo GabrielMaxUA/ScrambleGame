@@ -7,6 +7,8 @@
   - No tracking, no tracking domains.
   - Collected data = what leaves the device (Apple's definition), all for App Functionality, none linked to the user:
       * Other User Content: the profession the user picks or types, sent to OpenAI to choose the words.
+                            Also Analytics: its English name is counted in Firestore "professions" (no user ID, no typed text)
+                            to improve the job menu (ProfessionStore).
       * Other Usage Data:   the English names of words already practised, sent to OpenAI so they aren't repeated.
     Settings, progress (SwiftData) and the daily free-word counter (Keychain) never leave the device -> not "collected".
     New words / pictures written to the shared Firebase library contain no user data.
@@ -37,6 +39,7 @@
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+				<string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
 			</array>
 		</dict>
 		<dict>

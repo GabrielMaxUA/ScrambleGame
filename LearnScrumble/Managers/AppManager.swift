@@ -178,7 +178,7 @@ final class AppManager {
       return
     }
     
-    Log.info("🎯 startStruggleReview — reviewing \(toolNames.count) struggle words: \(toolNames)", .app)
+    Log.info("🎯 startStruggleReview — reviewing \(toolNames.count) struggle words", .app, private: "\(toolNames)")
     let reviewQuestions = await requestModel.generateStruggleReview(toolNames: toolNames)
       guard !reviewQuestions.isEmpty else {
         Log.error("🎯 startStruggleReview — resolution produced 0 questions", .app)

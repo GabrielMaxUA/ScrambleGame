@@ -77,6 +77,9 @@ struct SettingsView: View {
         subscriptionSection
         legalSection
         //deleteSection
+        #if DEBUG
+        debugSection                                               // testing tools, never in App Store builds
+        #endif
         
         Text(verbatim: "LearnScrumble \(appVersion)")              // verbatim: not looked up for translation
           .font(.footnote)
@@ -377,6 +380,33 @@ struct SettingsView: View {
   
   // MARK: - row(_:icon:tint:action:)
   // A tappable settings row (icon + title + chevron) that runs `action`.
+  #if DEBUG
+  // MARK: - debugSection
+  // Debug builds only: testing tools. Text(verbatim:) keeps these English labels out of the translation catalog.
+  //   "Reset free words" -> FreeAllowance.resetForTesting(): 20 fresh words today (shows how many are used now)
+  private var debugSection: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      Label {
+        Text(verbatim: "Debug (not in App Store builds)")
+      } icon: {
+        Image(systemName: "ladybug")
+      }
+      .font(.headline)
+      .foregroundStyle(.orange)
+
+      Button {
+        FreeAllowance.shared.resetForTesting()
+      } label: {
+        Text(verbatim: "Reset free words (\(FreeAllowance.shared.wordsUsedToday)/\(FreeAllowance.dailyWordLimit) used today)")
+          .foregroundStyle(.white)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(14)
+          .background(.orange.opacity(0.15), in: .rect(cornerRadius: 16))
+      }
+    }
+  }
+  #endif
+
   private func row(_ title: LocalizedStringKey, icon: String, tint: Color = .white, action: @escaping () -> Void) -> some View {
     Button(action: action) {
       rowLabel(title, icon: icon, tint: tint)

@@ -65,7 +65,7 @@ enum FirebaseWordStore {
           image: imageURL
         )
         try docRef.setData(from: newWord)
-        Log.info("🆕 saveIfNeeded — '\(toolName)' did not exist, created new doc with [\(originLanguage.rawValue), \(targetLanguage.rawValue)]", .firebase)
+        Log.info("🆕 saveIfNeeded — new word, created doc with [\(originLanguage.rawValue), \(targetLanguage.rawValue)]", .firebase, private: "'\(toolName)'")
         return
       }
       let hasOrigin = existing.translation[originLanguage.rawValue] != nil
@@ -80,10 +80,10 @@ enum FirebaseWordStore {
       if !hasTarget { existing.translation[targetLanguage.rawValue] = targetWord }
       if !hasImage && !imageURL.isEmpty { existing.image = imageURL }
       try docRef.setData(from: existing, merge: true)
-      Log.info("➕ saveIfNeeded — '\(toolName)' existed, filled missing slots (origin=\(!hasOrigin), target=\(!hasTarget), image=\(!hasImage && !imageURL.isEmpty))", .firebase)
+      Log.info("➕ saveIfNeeded — word existed, filled missing slots (origin=\(!hasOrigin), target=\(!hasTarget), image=\(!hasImage && !imageURL.isEmpty))", .firebase, private: "'\(toolName)'")
       
     } catch {
-      Log.error("FirebaseWordStore error for \(toolName): \(error)", .firebase)
+      Log.error("FirebaseWordStore save error", .firebase, private: "\(toolName): \(error)")
     }
   }
   

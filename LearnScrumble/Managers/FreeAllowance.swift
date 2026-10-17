@@ -18,6 +18,7 @@ import Observation
 //   LearnScrumbleApp (app becomes active) -> refresh(): a new day resets the count to 0
 //   DailyReminder reads wordsUsedToday to skip today's 9am reminder once the user has played
 //   MenuAlert reads dailyWordLimit for the "free words are done" text
+//   Debug builds only: SettingsView's "Reset free words" -> resetForTesting(): today's count back to 0
 @Observable
 final class FreeAllowance {
   static let shared = FreeAllowance()                              // one counter for the whole app
@@ -80,6 +81,20 @@ final class FreeAllowance {
     Self.save(stored)
     wordsUsedToday = stored.count
   }
+
+  #if DEBUG
+  // MARK: - resetForTesting
+  // Debug builds only (Settings -> Debug -> Reset free words), so testers get 20 fresh words without Terminal.
+  // Today's count -> 0, saved to the Keychain. The day and the latest date seen are kept, so the date
+  // protection still works. Doesn't exist in Release (App Store / TestFlight) builds.
+  func resetForTesting() {
+    var stored = currentStored()
+    stored.count = 0
+    Self.save(stored)
+    wordsUsedToday = 0
+    Log.info("🧪 FreeAllowance — reset to 0 (debug build)", .allowance)
+  }
+  #endif
   
   // MARK: - Time
   

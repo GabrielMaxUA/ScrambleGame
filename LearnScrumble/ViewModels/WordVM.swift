@@ -385,7 +385,7 @@ class WordVM {
     hasRequestedMore = true
     isLoadingMore = true
     let existingToolNames = questions.map { $0.word.toolName }
-    Log.info("📡 requestMoreNow — fetching more, excluding \(existingToolNames.count) toolNames: \(existingToolNames)", .game)
+    Log.info("📡 requestMoreNow — fetching more, excluding \(existingToolNames.count) toolNames", .game, private: "\(existingToolNames)")
 
     Task { @MainActor in
       let newQuestions = await fetchMore(existingToolNames)

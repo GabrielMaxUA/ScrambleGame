@@ -16,13 +16,18 @@ import SwiftUI
 // activating the audio session can block for a moment (iOS warns about it), which made taps feel sticky.
 //   init -> the audio session is set up once (ambient: silent when the phone's silent switch is on, mixed with the user's music)
 //   play -> returns immediately; on the queue: reuse that sound's player (rewound) or load it once, then play.
+// It also owns the switch for spoken words (SpeechManager), because the app has one audio session and one category at a time:
+//   speechStarting -> .playback (plays even on silent, lowers the user's music), then the word is spoken
+//   speechEnded    -> when no word is being spoken any more: back to .ambient, the user's music comes back up
+//   A tap sound made while a word is spoken is heard on silent too: only for that second or two.
 
 nonisolated final class SoundManager: @unchecked Sendable {        // @unchecked: `players` is only ever touched on `queue`
   static let shared = SoundManager()                               // one shared player for the whole app
   
   private let queue = DispatchQueue(label: "LearnScrumble.SoundManager", qos: .userInitiated)   // every audio call runs here, in order
   private var players: [String: AVAudioPlayer] = [:]              // one loaded player per sound, reused (a released player goes silent)
-  
+  private var wordsSpeaking = 0                                    // words started and not finished yet (from any SpeechManager); only touched on `queue`
+
   // MARK: - init
   // Private: only `shared` exists. Sets the audio session up once, on the background queue:
   // ambient — game sounds follow the silent switch (muted phone = no sounds) and mix with the user's music —
@@ -68,6 +73,45 @@ nonisolated final class SoundManager: @unchecked Sendable {        // @unchecked
         }
       }
       player.play()
+    }
+  }
+
+  // MARK: - speechStarting(then:)
+  // SpeechManager calls this when the user taps the speaker. On the queue:
+  // 1. Count the word.
+  // 2. Session -> .playback, spoken-audio mode, ducking the user's music: the word plays even when the phone is on silent.
+  // 3. Back on the main thread, `speak` reads the word (after the switch, so it isn't muted).
+  func speechStarting(then speak: @escaping @MainActor @Sendable () -> Void) {
+    queue.async { [self] in
+      wordsSpeaking += 1
+      do {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
+        try session.setActive(true)
+      } catch {
+        Log.error("❌ Speech audio session error: \(error.localizedDescription)", .sound)
+      }
+      DispatchQueue.main.async { speak() }
+    }
+  }
+
+  // MARK: - speechEnded
+  // SpeechManager calls this when a word finished or was cut off by the next one. On the queue:
+  // 1. One word fewer. Another word still speaking (quick double tap) -> stay on .playback.
+  // 2. None left: deactivate so the user's music comes back to full volume (may fail while a tap sound is
+  //    still playing; that's fine), then back to .ambient for the game's sounds.
+  func speechEnded() {
+    queue.async { [self] in
+      wordsSpeaking = max(0, wordsSpeaking - 1)
+      guard wordsSpeaking == 0 else { return }
+      let session = AVAudioSession.sharedInstance()
+      try? session.setActive(false, options: .notifyOthersOnDeactivation)
+      do {
+        try session.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+        try session.setActive(true)
+      } catch {
+        Log.error("❌ Audio session error: \(error.localizedDescription)", .sound)
+      }
     }
   }
 }

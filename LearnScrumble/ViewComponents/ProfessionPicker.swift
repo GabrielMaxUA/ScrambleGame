@@ -50,7 +50,7 @@ struct ProfessionPicker: View {
         .foregroundStyle(.white)
         .tint(.white)
         .textInputAutocapitalization(.words)
-        .autocorrectionDisabled()
+        .autocorrectionDisabled(false)
         .submitLabel(.done)
         .focused(isFocused)
         .onSubmit { isFocused.wrappedValue = false }        // Done key closes the keyboard

@@ -12,7 +12,7 @@
 
 - ⬜ **to do** **Pre-generate the listed professions.** A Firebase function generates 100 words for each profession in the picker.
 - ⬜ **to do** **Generate more on demand.** When a profession's words run out, the server generates about 50 more and saves them to the bank.
-- ⬜ **to do** **Typed professions ("Not listed?").** Before generating, the server asks AI to map the text to one English job name or to an existing profession ("cook", "chef", "cooks", "kucharz", "cok" → "Cook"). It checks the bank for words already shared with other professions, generates the rest in the background (the first 10 quickly so the user can play right away) and saves them.
+- ⬜ **to do** **Typed professions ("Not listed?").** Before generating, the server asks AI to map the text to one English job name or to an existing profession ("cook", "chef", "cooks", "kucharz", "cok" → "Cook"). It checks the bank for words already shared with other professions, generates the rest in the background (the first 10 quickly so the user can play right away) and saves them. *(16 October, first part: typed and picked jobs are already counted in English in Firestore `professions` with no user ID (`ProfessionStore`), so the analyst list exists. Matching to existing professions and generating banks still waits for the server)*
 - ⬜ **to do** **New professions are reviewed first.** A typed profession only joins everyone's picker after the analyst team approves it. The user who typed it gets their words straight away.
 - ⬜ **to do** **Translations made when needed.** Pictures and English words are made once; a language's translations are only generated when someone with that language first asks.
 
@@ -102,12 +102,14 @@
 
 ## 8. Review queue for the analyst team
 
-- ⬜ **to do** **One queue in Firebase** for new professions and word reports, each with a status: waiting, approved or rejected.
-- ⬜ **to do** **Work in the Firebase console at first,** then a small admin page later.
+- ✅ *(partly)* **One queue in Firebase** for new professions and word reports, each with a status: waiting, approved or rejected. *(16 October, professions part: Firestore `professions`, one document per job in English with `typed` / `picked` counts, `firstSeen`, `lastSeen` and a `status`: "in menu" for menu jobs, "new" for jobs missing from the menu, then "added" or "rejected" by hand. No user ID, never the typed text. Tested: menu "Cook" and Ukrainian "Кухар" land in the same `cook` document; "Різноробочий" became `general laborer`. Word reports come with the Report button, §2)*
+- ✅ *(started)* **Work in the Firebase console at first,** then a small admin page later. *(Review list today: Firestore console → `professions` → Query → filter `status == "new"`, order by `typed` descending)*
+- ⬜ **to do** **Use the menu's names for typed jobs.** Give OpenAI the menu's English job names with the rule "if the job matches one of these, use that exact name", so the same job doesn't split into `laborer`, `general laborer` and `general worker`. Rare synonyms are merged by hand during review.
+- ⬜ **to do** **A small admin page** once the list is long (hundreds of jobs): a sorted table of job, typed, picked and last seen, with Add / Reject / Merge buttons, behind a login for us and Konstantin. On Firebase Hosting, next to the website (`ServerMigrationPlan.md` Phase 9).
 
 ## 9. Firebase work, done together step by step
 
-- ✅ *(partly)* **Step 1: Crashlytics and Analytics.** Small and low-risk, and they start collecting data straight away: crashes, plus the events "onboarding finished", "round finished", "paywall shown" and "trial started". *(`checklist.md` §4.4)* *(15 October: both libraries are added and crash reports work, tested in a separate dev project `scrumblegame-dev`. The analytics consent switch (15 October) and logs, crash breadcrumbs and non-fatal errors (16 October) are done too; only the events are left. Details in `ServerMigrationPlan.md` Phase 1)*
+- ✅ **Step 1: Crashlytics and Analytics.** Small and low-risk, and they start collecting data straight away: crashes, plus the events "onboarding finished", "round finished", "paywall shown" and "trial started". *(`checklist.md` §4.4)* *(15 October: both libraries are added and crash reports work, tested in a separate dev project `scrumblegame-dev`. The analytics consent switch (15 October), logs, crash breadcrumbs, non-fatal errors and the events (16 October) are done and tested in DebugView and Crashlytics. Only `paywall_shown` and `trial_started` wait for the paywall. Details in `ServerMigrationPlan.md` Phase 1)*
 - ⬜ **to do** **Step 2: Cloud Functions.**
   - the OpenAI key moves to the server, with all generation;
   - Firestore rules: the app only reads, the functions write;
@@ -120,13 +122,13 @@
 
 ### ⬜ To do
 
-1. ⬜ **Firebase step 1:** Crashlytics and Analytics, together. *(§9)* *(Crash reports, consent, logs and non-fatal errors done 15–16 October; the events are next)*
+1. ✅ **Firebase step 1:** Crashlytics and Analytics, together. *(§9)* *(Done 15–16 October; `paywall_shown` and `trial_started` come with the paywall)*
 2. ⬜ **Firebase step 2:** Cloud Functions with the OpenAI key, the hybrid word bank and locked-down rules, after the Blaze plan. *(§1, §9)*
 3. ⬜ **Word quality:** Report button, a status per word, a meaning-aware bank key. *(§2)*
 4. ⬜ **Safety disclaimer** in the app and terms; no safety commands or instructions. *(§3)*
 5. ⬜ **Offline review for paying users,** plus history on upgrade. *(§4)*
 6. ⬜ **Paywall learning** with a local StoreKit configuration file. *(§6)*
-7. ⬜ **Review queue** for professions and reports. *(§8)*
+7. ✅ *(partly)* **Review queue** for professions and reports. *(§8)* *(Professions counted and reviewable in the console since 16 October; menu-name rule, admin page and word reports still to do)*
 8. ⬜ **Business product:** website packs, access codes with limits, usage counters, no-resale clause. *(§7)*
 
 ### ❓ Need discussion
