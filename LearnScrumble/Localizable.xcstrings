@@ -330,331 +330,331 @@
         }
       }
     },
-    "To create your words and pictures, your job and your two languages are sent to OpenAI." : {
+    "To create your words and pictures, your job, your two languages and the words you've already practised are sent to OpenAI." : {
       "comment" : "Consent text (App Review 5.1.2): shown on the setup screen, in the one-time consent sheet and in Settings.",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "لإنشاء كلماتك وصورك، يتم إرسال مهنتك ولغتيك إلى OpenAI."
+            "value" : "لإنشاء كلماتك وصورك، يتم إرسال مهنتك ولغتيك والكلمات التي تدرّبت عليها من قبل إلى OpenAI."
           }
         },
         "bg" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "За да създадем думите и картинките ти, професията ти и двата ти езика се изпращат до OpenAI."
+            "value" : "За да създадем думите и картинките ти, професията ти, двата ти езика и думите, които вече си упражнявал, се изпращат до OpenAI."
           }
         },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "আপনার শব্দ ও ছবি তৈরি করতে আপনার পেশা ও আপনার দুটি ভাষা OpenAI-তে পাঠানো হয়।"
+            "value" : "আপনার শব্দ ও ছবি তৈরি করতে আপনার পেশা, আপনার দুটি ভাষা এবং আপনি আগে যেসব শব্দ অনুশীলন করেছেন সেগুলো OpenAI-তে পাঠানো হয়।"
           }
         },
         "ca" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Per crear les teves paraules i imatges, la teva feina i les teves dues llengües s'envien a OpenAI."
+            "value" : "Per crear les teves paraules i imatges, la teva feina, les teves dues llengües i les paraules que ja has practicat s'envien a OpenAI."
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abychom vytvořili tvoje slova a obrázky, tvoje profese a tvoje dva jazyky se odesílají do OpenAI."
+            "value" : "Abychom vytvořili tvoje slova a obrázky, tvoje profese, tvoje dva jazyky a slova, která už jsi procvičil, se odesílají do OpenAI."
           }
         },
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "For at lave dine ord og billeder sendes dit job og dine to sprog til OpenAI."
+            "value" : "For at lave dine ord og billeder sendes dit job, dine to sprog og de ord, du allerede har øvet, til OpenAI."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Damit wir deine Wörter und Bilder erstellen können, werden dein Beruf und deine beiden Sprachen an OpenAI gesendet."
+            "value" : "Damit wir deine Wörter und Bilder erstellen können, werden dein Beruf, deine beiden Sprachen und die Wörter, die du schon geübt hast, an OpenAI gesendet."
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Για να δημιουργηθούν οι λέξεις και οι εικόνες σου, το επάγγελμά σου και οι δύο γλώσσες σου στέλνονται στην OpenAI."
+            "value" : "Για να δημιουργηθούν οι λέξεις και οι εικόνες σου, το επάγγελμά σου, οι δύο γλώσσες σου και οι λέξεις που έχεις ήδη εξασκήσει στέλνονται στην OpenAI."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "To create your words and pictures, your job and your two languages are sent to OpenAI."
+            "value" : "To create your words and pictures, your job, your two languages and the words you've already practised are sent to OpenAI."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Para crear tus palabras e imágenes, tu profesión y tus dos idiomas se envían a OpenAI."
+            "value" : "Para crear tus palabras e imágenes, tu profesión, tus dos idiomas y las palabras que ya has practicado se envían a OpenAI."
           }
         },
         "eu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zure hitzak eta irudiak sortzeko, zure lanbidea eta zure bi hizkuntzak OpenAIri bidaltzen zaizkio."
+            "value" : "Zure hitzak eta irudiak sortzeko, zure lanbidea, zure bi hizkuntzak eta dagoeneko landu dituzun hitzak OpenAIri bidaltzen zaizkio."
           }
         },
         "fa" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "برای ساختن واژه‌ها و تصاویر شما، شغل و دو زبان شما به OpenAI فرستاده می‌شود."
+            "value" : "برای ساختن واژه‌ها و تصاویر شما، شغل شما، دو زبان شما و واژه‌هایی که قبلاً تمرین کرده‌اید به OpenAI فرستاده می‌شوند."
           }
         },
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jotta voimme luoda sanasi ja kuvasi, ammattisi ja kaksi kieltäsi lähetetään OpenAI:lle."
+            "value" : "Jotta voimme luoda sanasi ja kuvasi, ammattisi, kaksi kieltäsi ja jo harjoittelemasi sanat lähetetään OpenAI:lle."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pour créer tes mots et tes images, ton métier et tes deux langues sont envoyés à OpenAI."
+            "value" : "Pour créer tes mots et tes images, ton métier, tes deux langues et les mots que tu as déjà pratiqués sont envoyés à OpenAI."
           }
         },
         "gl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Para crear as túas palabras e imaxes, o teu traballo e as túas dúas linguas envíanse a OpenAI."
+            "value" : "Para crear as túas palabras e imaxes, o teu traballo, as túas dúas linguas e as palabras que xa practicaches envíanse a OpenAI."
           }
         },
         "gu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "તમારા શબ્દો અને ચિત્રો બનાવવા માટે, તમારો વ્યવસાય અને તમારી બે ભાષાઓ OpenAI ને મોકલવામાં આવે છે."
+            "value" : "તમારા શબ્દો અને ચિત્રો બનાવવા માટે, તમારો વ્યવસાય, તમારી બે ભાષાઓ અને તમે અગાઉ અભ્યાસ કરેલા શબ્દો OpenAI ને મોકલવામાં આવે છે."
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "כדי ליצור את המילים והתמונות שלך, המקצוע שלך ושתי השפות שלך נשלחים ל-OpenAI."
+            "value" : "כדי ליצור את המילים והתמונות שלך, המקצוע שלך, שתי השפות שלך והמילים שכבר תרגלת נשלחים ל-OpenAI."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "आपके शब्द और चित्र बनाने के लिए, आपका पेशा और आपकी दोनों भाषाएँ OpenAI को भेजी जाती हैं।"
+            "value" : "आपके शब्द और चित्र बनाने के लिए, आपका पेशा, आपकी दोनों भाषाएँ और वे शब्द जिनका आप पहले अभ्यास कर चुके हैं, OpenAI को भेजे जाते हैं।"
           }
         },
         "hr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kako bismo izradili tvoje riječi i slike, tvoje zanimanje i tvoja dva jezika šalju se OpenAI-ju."
+            "value" : "Kako bismo izradili tvoje riječi i slike, tvoje zanimanje, tvoja dva jezika i riječi koje si već vježbao šalju se OpenAI-ju."
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A szavaid és képeid elkészítéséhez a foglalkozásodat és a két nyelvedet elküldjük az OpenAI-nak."
+            "value" : "A szavaid és képeid elkészítéséhez a foglalkozásodat, a két nyelvedet és a már gyakorolt szavaidat elküldjük az OpenAI-nak."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Untuk membuat kata dan gambarmu, pekerjaanmu dan dua bahasamu dikirim ke OpenAI."
+            "value" : "Untuk membuat kata dan gambarmu, pekerjaanmu, dua bahasamu, dan kata-kata yang sudah kamu latih dikirim ke OpenAI."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Per creare le tue parole e immagini, il tuo lavoro e le tue due lingue vengono inviati a OpenAI."
+            "value" : "Per creare le tue parole e immagini, il tuo lavoro, le tue due lingue e le parole che hai già praticato vengono inviati a OpenAI."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "単語と画像を作成するため、あなたの職業と2つの言語がOpenAIに送信されます。"
+            "value" : "単語と画像を作成するため、あなたの職業、2つの言語、これまでに練習した単語がOpenAIに送信されます。"
           }
         },
         "kk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сөздерің мен суреттеріңді жасау үшін кәсібің мен екі тілің OpenAI-ға жіберіледі."
+            "value" : "Сөздерің мен суреттеріңді жасау үшін кәсібің, екі тілің және бұрын жаттыққан сөздерің OpenAI-ға жіберіледі."
           }
         },
         "kn" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ನಿಮ್ಮ ಪದಗಳು ಮತ್ತು ಚಿತ್ರಗಳನ್ನು ರಚಿಸಲು, ನಿಮ್ಮ ವೃತ್ತಿ ಮತ್ತು ನಿಮ್ಮ ಎರಡು ಭಾಷೆಗಳನ್ನು OpenAI ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ."
+            "value" : "ನಿಮ್ಮ ಪದಗಳು ಮತ್ತು ಚಿತ್ರಗಳನ್ನು ರಚಿಸಲು, ನಿಮ್ಮ ವೃತ್ತಿ, ನಿಮ್ಮ ಎರಡು ಭಾಷೆಗಳು ಮತ್ತು ನೀವು ಈಗಾಗಲೇ ಅಭ್ಯಾಸ ಮಾಡಿದ ಪದಗಳನ್ನು OpenAI ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "단어와 그림을 만들기 위해 직업과 두 언어가 OpenAI로 전송돼요."
+            "value" : "단어와 그림을 만들기 위해 직업, 두 언어, 이미 연습한 단어가 OpenAI로 전송돼요."
           }
         },
         "lt" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kad sukurtume tavo žodžius ir paveikslėlius, tavo profesija ir dvi kalbos siunčiamos į OpenAI."
+            "value" : "Kad sukurtume tavo žodžius ir paveikslėlius, tavo profesija, dvi kalbos ir jau praktikuoti žodžiai siunčiami į OpenAI."
           }
         },
         "ml" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "നിങ്ങളുടെ വാക്കുകളും ചിത്രങ്ങളും സൃഷ്ടിക്കാൻ, നിങ്ങളുടെ തൊഴിലും രണ്ട് ഭാഷകളും OpenAI-ലേക്ക് അയയ്ക്കുന്നു."
+            "value" : "നിങ്ങളുടെ വാക്കുകളും ചിത്രങ്ങളും സൃഷ്ടിക്കാൻ, നിങ്ങളുടെ തൊഴിലും രണ്ട് ഭാഷകളും നിങ്ങൾ ഇതിനകം പരിശീലിച്ച വാക്കുകളും OpenAI-ലേക്ക് അയയ്ക്കുന്നു."
           }
         },
         "mr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "तुमचे शब्द आणि चित्रे तयार करण्यासाठी तुमचा व्यवसाय आणि तुमच्या दोन भाषा OpenAI ला पाठवल्या जातात."
+            "value" : "तुमचे शब्द आणि चित्रे तयार करण्यासाठी तुमचा व्यवसाय, तुमच्या दोन भाषा आणि तुम्ही आधीच सराव केलेले शब्द OpenAI ला पाठवले जातात."
           }
         },
         "ms" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Untuk mencipta perkataan dan gambar anda, pekerjaan anda dan dua bahasa anda dihantar kepada OpenAI."
+            "value" : "Untuk mencipta perkataan dan gambar anda, pekerjaan anda, dua bahasa anda dan perkataan yang telah anda latih dihantar kepada OpenAI."
           }
         },
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "For å lage ordene og bildene dine sendes yrket ditt og de to språkene dine til OpenAI."
+            "value" : "For å lage ordene og bildene dine sendes yrket ditt, de to språkene dine og ordene du allerede har øvd på, til OpenAI."
           }
         },
         "ne" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "तपाईंका शब्द र चित्रहरू बनाउन, तपाईंको पेशा र तपाईंका दुई भाषाहरू OpenAI मा पठाइन्छन्।"
+            "value" : "तपाईंका शब्द र चित्रहरू बनाउन, तपाईंको पेशा, तपाईंका दुई भाषाहरू र तपाईंले पहिले नै अभ्यास गरेका शब्दहरू OpenAI मा पठाइन्छन्।"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Om je woorden en afbeeldingen te maken, worden je beroep en je twee talen naar OpenAI gestuurd."
+            "value" : "Om je woorden en afbeeldingen te maken, worden je beroep, je twee talen en de woorden die je al hebt geoefend naar OpenAI gestuurd."
           }
         },
         "or" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ଆପଣଙ୍କ ଶବ୍ଦ ଓ ଚିତ୍ର ତିଆରି କରିବା ପାଇଁ, ଆପଣଙ୍କ ବୃତ୍ତି ଓ ଆପଣଙ୍କ ଦୁଇଟି ଭାଷା OpenAI କୁ ପଠାଯାଏ।"
+            "value" : "ଆପଣଙ୍କ ଶବ୍ଦ ଓ ଚିତ୍ର ତିଆରି କରିବା ପାଇଁ, ଆପଣଙ୍କ ବୃତ୍ତି, ଆପଣଙ୍କ ଦୁଇଟି ଭାଷା ଓ ଆପଣ ପୂର୍ବରୁ ଅଭ୍ୟାସ କରିଥିବା ଶବ୍ଦ OpenAI କୁ ପଠାଯାଏ।"
           }
         },
         "pa" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ਤੁਹਾਡੇ ਸ਼ਬਦ ਅਤੇ ਤਸਵੀਰਾਂ ਬਣਾਉਣ ਲਈ, ਤੁਹਾਡਾ ਕਿੱਤਾ ਅਤੇ ਤੁਹਾਡੀਆਂ ਦੋ ਭਾਸ਼ਾਵਾਂ OpenAI ਨੂੰ ਭੇਜੀਆਂ ਜਾਂਦੀਆਂ ਹਨ।"
+            "value" : "ਤੁਹਾਡੇ ਸ਼ਬਦ ਅਤੇ ਤਸਵੀਰਾਂ ਬਣਾਉਣ ਲਈ, ਤੁਹਾਡਾ ਕਿੱਤਾ, ਤੁਹਾਡੀਆਂ ਦੋ ਭਾਸ਼ਾਵਾਂ ਅਤੇ ਉਹ ਸ਼ਬਦ ਜਿਨ੍ਹਾਂ ਦਾ ਤੁਸੀਂ ਪਹਿਲਾਂ ਅਭਿਆਸ ਕਰ ਚੁੱਕੇ ਹੋ, OpenAI ਨੂੰ ਭੇਜੇ ਜਾਂਦੇ ਹਨ।"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aby stworzyć twoje słowa i obrazki, twój zawód i twoje dwa języki są wysyłane do OpenAI."
+            "value" : "Aby stworzyć twoje słowa i obrazki, twój zawód, twoje dwa języki i słowa, które już ćwiczyłeś, są wysyłane do OpenAI."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Para criar suas palavras e imagens, sua profissão e seus dois idiomas são enviados à OpenAI."
+            "value" : "Para criar suas palavras e imagens, sua profissão, seus dois idiomas e as palavras que você já praticou são enviados à OpenAI."
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Para criar as suas palavras e imagens, a sua profissão e os seus dois idiomas são enviados para a OpenAI."
+            "value" : "Para criar as suas palavras e imagens, a sua profissão, os seus dois idiomas e as palavras que já praticou são enviados para a OpenAI."
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ca să creăm cuvintele și imaginile tale, meseria ta și cele două limbi ale tale sunt trimise către OpenAI."
+            "value" : "Ca să creăm cuvintele și imaginile tale, meseria ta, cele două limbi ale tale și cuvintele pe care le-ai exersat deja sunt trimise către OpenAI."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Чтобы создать твои слова и картинки, твоя профессия и два твоих языка отправляются в OpenAI."
+            "value" : "Чтобы создать твои слова и картинки, твоя профессия, два твоих языка и слова, которые ты уже тренировал, отправляются в OpenAI."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aby sme vytvorili tvoje slová a obrázky, tvoja profesia a tvoje dva jazyky sa odosielajú do OpenAI."
+            "value" : "Aby sme vytvorili tvoje slová a obrázky, tvoja profesia, tvoje dva jazyky a slová, ktoré si už precvičil, sa odosielajú do OpenAI."
           }
         },
         "sl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Da ustvarimo tvoje besede in slike, se tvoj poklic in tvoja dva jezika pošljejo OpenAI."
+            "value" : "Da ustvarimo tvoje besede in slike, se tvoj poklic, tvoja dva jezika in besede, ki si jih že vadil, pošljejo OpenAI."
           }
         },
         "sq" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Për të krijuar fjalët dhe figurat e tua, profesioni yt dhe dy gjuhët e tua dërgohen te OpenAI."
+            "value" : "Për të krijuar fjalët dhe figurat e tua, profesioni yt, dy gjuhët e tua dhe fjalët që ke ushtruar tashmë dërgohen te OpenAI."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "För att skapa dina ord och bilder skickas ditt yrke och dina två språk till OpenAI."
+            "value" : "För att skapa dina ord och bilder skickas ditt yrke, dina två språk och orden du redan har övat på till OpenAI."
           }
         },
         "ta" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "உங்கள் சொற்களையும் படங்களையும் உருவாக்க, உங்கள் தொழிலும் உங்கள் இரண்டு மொழிகளும் OpenAI-க்கு அனுப்பப்படுகின்றன."
+            "value" : "உங்கள் சொற்களையும் படங்களையும் உருவாக்க, உங்கள் தொழிலும், உங்கள் இரண்டு மொழிகளும், நீங்கள் ஏற்கனவே பயிற்சி செய்த சொற்களும் OpenAI-க்கு அனுப்பப்படுகின்றன."
           }
         },
         "te" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "మీ పదాలు మరియు చిత్రాలను సృష్టించడానికి, మీ వృత్తి మరియు మీ రెండు భాషలు OpenAIకి పంపబడతాయి."
+            "value" : "మీ పదాలు మరియు చిత్రాలను సృష్టించడానికి, మీ వృత్తి, మీ రెండు భాషలు మరియు మీరు ఇప్పటికే సాధన చేసిన పదాలు OpenAIకి పంపబడతాయి."
           }
         },
         "th" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "เพื่อสร้างคำศัพท์และรูปภาพของคุณ อาชีพและสองภาษาของคุณจะถูกส่งไปยัง OpenAI"
+            "value" : "เพื่อสร้างคำศัพท์และรูปภาพของคุณ อาชีพ สองภาษาของคุณ และคำที่คุณฝึกไปแล้วจะถูกส่งไปยัง OpenAI"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kelimelerini ve resimlerini oluşturmak için mesleğin ve iki dilin OpenAI'ye gönderilir."
+            "value" : "Kelimelerini ve resimlerini oluşturmak için mesleğin, iki dilin ve daha önce çalıştığın kelimeler OpenAI'ye gönderilir."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Щоб створити твої слова й картинки, твоя професія та дві твої мови надсилаються в OpenAI."
+            "value" : "Щоб створити твої слова й картинки, твоя професія, дві твої мови та слова, які ти вже тренував, надсилаються в OpenAI."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Để tạo từ vựng và hình ảnh của bạn, nghề nghiệp và hai ngôn ngữ của bạn sẽ được gửi đến OpenAI."
+            "value" : "Để tạo từ vựng và hình ảnh của bạn, nghề nghiệp, hai ngôn ngữ của bạn và những từ bạn đã luyện tập sẽ được gửi đến OpenAI."
           }
         },
         "wuu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "为了生成你的单词和图片，你的职业和两种语言会发送给 OpenAI。"
+            "value" : "为了生成你的单词和图片，你的职业、两种语言以及你已练习过的单词会发送给 OpenAI。"
           }
         },
         "yue" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "為了產生你的單字和圖片，你的職業和兩種語言會傳送給 OpenAI。"
+            "value" : "為了產生你的單字和圖片，你的職業、兩種語言以及你已練習過的單字會傳送給 OpenAI。"
           }
         },
         "zh" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "为了生成你的单词和图片，你的职业和两种语言会发送给 OpenAI。"
+            "value" : "为了生成你的单词和图片，你的职业、两种语言以及你已练习过的单词会发送给 OpenAI。"
           }
         },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "為了產生你的單字和圖片，你的職業和兩種語言會傳送給 OpenAI。"
+            "value" : "為了產生你的單字和圖片，你的職業、兩種語言以及你已練習過的單字會傳送給 OpenAI。"
           }
         }
       }
@@ -2633,9 +2633,7 @@
         }
       }
     },
-    "" : {
-
-    },
+    "" : {},
     "-" : {
       "comment" : "A hyphen used to split a word into multiple lines.",
       "isCommentAutoGenerated" : true

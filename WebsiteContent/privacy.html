@@ -7,8 +7,8 @@
   <meta name="description" content="What LearnScrumble stores on your iPhone, what it sends to OpenAI, Google Firebase and Apple, and your rights.">
   <link rel="icon" type="image/png" href="images/favicon.png">
   <link rel="apple-touch-icon" href="images/app-icon.png">
-  <link rel="stylesheet" href="css/style.css">
-  <script src="js/main.js" defer></script>
+  <link rel="stylesheet" href="css/style.css?v=2">
+  <script src="js/main.js?v=2" defer></script>
 </head>
 <body>
   <!--
@@ -65,7 +65,7 @@
       </ol>
 
       <h2 id="who">1. Who is responsible</h2>
-      <p>The controller of your data for the LearnScrumble app is <span class="fill">[Developer or company name]</span>, <span class="fill">[full postal address]</span>, <span class="fill">[company registration number, if any]</span>. Contact: <a href="mailto:privacy@example.com"><span class="fill">privacy@example.com</span></a>.</p>
+      <p>The controller of your data for the LearnScrumble app is <span class="fill">[Developer or company name]</span>, <span class="fill">[full postal address]</span>, <span class="fill">[company registration number, if any]</span>. Contact: <a href="mailto:support@learnscrumble.com">support@learnscrumble.com</a>.</p>
 
       <h2 id="on-device">2. Data stored on your iPhone</h2>
       <p>This data is created by you while using the app. It stays on your device and is <strong>not sent to us</strong>.</p>
@@ -121,7 +121,7 @@
         <li>adds new words: the English name, the word in your two languages, and a link to the picture;</li>
         <li>uploads new pictures (images of objects, never photos of you).</li>
       </ul>
-      <p>Nothing that identifies you, and not your job, is stored with these words. Google receives your IP address and technical information (such as the app and SDK version and device type) needed to deliver the service. Data location: <span class="fill">[Firebase project region, e.g. europe-west]</span>.</p>
+      <p>Nothing that identifies you, and not your job, is stored with these words. Google receives your IP address and technical information (such as the app and SDK version and device type) needed to deliver the service. Data location: the United States (Cloud Firestore: Google's “nam5” United States multi-region; Cloud Storage: United States multi-region). See section 7 for how transfers outside the EU are protected.</p>
 
       <h3>Google Firebase — the list of jobs people learn for</h3>
       <p>To decide which jobs to add to the menu, we count which jobs are used, in a list on Google Firebase (Cloud Firestore). When you start learning for a job (once per job on your iPhone):</p>
@@ -134,13 +134,13 @@
       <h3>Firebase Crashlytics — crash and error reports</h3>
       <p>The app sends a report to Firebase Crashlytics (Google) the next time you open it if it crashed, or if something went wrong without a crash — for example when new words couldn't be loaded because there was no internet. A report contains:</p>
       <ul>
-        <li>where in the app's code the problem happened, and the type of error (for example "no internet" or "server busy");</li>
+        <li>where in the app's code the problem happened, the type of error (for example "no internet" or "server busy") and a short technical description of it from iOS or the server;</li>
         <li>the language you speak and the language you learn;</li>
         <li>the app's last technical steps before the problem, such as "round finished" or "10 words loaded" — counts and steps only;</li>
         <li>the iPhone model, iOS version, app version, free memory and disk space, and whether the app was in the foreground;</li>
         <li>a random installation ID created by Firebase, so repeated problems on the same iPhone are counted once. It isn't linked to your name, your Apple ID or any other identifier.</li>
       </ul>
-      <p>Reports don't contain your job, the words you practise or your answers. We use them only to find and fix bugs. Crashlytics keeps them for <span class="fill">[90 days — check the current Firebase retention]</span>.</p>
+      <p>Reports don't contain your job, the words you practise or your answers. We use them only to find and fix bugs. Crashlytics keeps them for 90 days, after which Google starts removing them from its systems.</p>
 
       <h3>Google Analytics for Firebase — usage statistics (only if you switch it on)</h3>
       <p>"Share usage statistics to help improve the app" is <strong>off</strong> until you turn it on, on the setup screen or in <strong>Settings → Legal and support</strong>. You can turn it off again at any time. Only while it's on, the app sends Google Analytics for Firebase:</p>
@@ -151,7 +151,7 @@
         <li>the iPhone model, iOS version, app version, app language and approximate country (from the IP address);</li>
         <li>a random app-instance ID created by Firebase, so visits from the same iPhone can be counted. The app doesn't use the advertising identifier (IDFA).</li>
       </ul>
-      <p>The statistics are about how the app is used, not about who you are. They don't include your job, the words you practise or your answers. Analytics keeps them for <span class="fill">[the retention period set in Google Analytics, e.g. 2 months]</span>.</p>
+      <p>The statistics are about how the app is used, not about who you are. They don't include your job, the words you practise or your answers. Analytics keeps them for 2 months.</p>
 
       <h3>Apple</h3>
       <ul>
@@ -186,11 +186,11 @@
         <li><strong>Shared word library:</strong> for as long as the service runs; it contains no personal data.</li>
         <li><strong>OpenAI:</strong> according to OpenAI's API data policy (see above).</li>
         <li><strong>Crash reports and usage statistics:</strong> for the periods given in <a href="#sent">section 3</a>.</li>
-        <li><strong>Emails to support:</strong> for as long as needed to answer you, then <span class="fill">[e.g. deleted after 12 months]</span>.</li>
+        <li><strong>Emails to support:</strong> for as long as needed to answer you, then deleted after 12 months.</li>
       </ul>
 
       <h2 id="transfers">7. International transfers</h2>
-      <p>OpenAI and Google may process data in the United States. These transfers are protected by <span class="fill">[the EU–US Data Privacy Framework and/or Standard Contractual Clauses — confirm with each provider]</span>.</p>
+      <p>OpenAI and Google may process data in the United States. These transfers are protected as follows: <strong>Google</strong> is certified under the EU–U.S. Data Privacy Framework (with its UK Extension and the Swiss–U.S. framework) and also offers the European Commission's Standard Contractual Clauses in its Firebase data processing terms. <strong>OpenAI</strong> relies on the European Commission's Standard Contractual Clauses (with the UK Addendum for UK data) in its Data Processing Addendum.</p>
 
       <h2 id="rights">8. Your rights</h2>
       <p>If you are in the EU/EEA or the UK you have the right to access, correct, delete and restrict processing of your personal data, to object to processing based on legitimate interests, to data portability, and to withdraw consent at any time. Because the app has no account and keeps your data on your iPhone, most of it is already under your control (see <a href="#on-device">section 2</a>). For anything else, contact us.</p>
@@ -203,7 +203,7 @@
       <p>If we change what the app collects — for example by sending OpenAI requests through our own server instead of directly from the app — we'll update this page and the effective date before the change reaches the app.</p>
 
       <h2 id="contact">11. Contact</h2>
-      <p>Questions about privacy: <a href="mailto:privacy@example.com"><span class="fill">privacy@example.com</span></a>, or by post to <span class="fill">[postal address]</span>.</p>
+      <p>Questions about privacy: <a href="mailto:support@learnscrumble.com">support@learnscrumble.com</a>, or by post to <span class="fill">[postal address]</span>.</p>
     </div>
   </main>
 

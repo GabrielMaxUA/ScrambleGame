@@ -2,6 +2,8 @@
 
 Static support website for the app: plain HTML, one stylesheet and one small script. No build step, no framework.
 
+**What's left to do for the website:** see `TODO.md` in this folder.
+
 ## Pages
 
 | File | What it is | Linked from the app |
@@ -9,8 +11,10 @@ Static support website for the app: plain HTML, one stylesheet and one small scr
 | `index.html` | Home: what the app does, App Store button | — |
 | `how-to-play.html` | The "How to play" tutorial step by step, with real screenshots (`images/how-to-play/`) | (could be linked from Settings → How to play later) |
 | `support.html` | Contact + FAQ (reminders, languages, free words, subscriptions, voices, progress, data) | Settings → Contact support (email) |
-| `privacy.html` | Privacy Policy — what the app stores on the iPhone and sends to OpenAI, Firebase and Apple | `EntryView.privacyURL`, `SettingsView.privacyURL` |
-| `terms.html` | Terms of Use ("usage regulations") — service, not-safety-training, AI content, daily limit, subscriptions | `SettingsView.termsURL` (and the paywall later) |
+| `privacy.html` | Privacy Policy — what the app stores on the iPhone and sends to OpenAI, Firebase and Apple | `AppLinks.privacy` (Settings, setup screen, consent sheet) |
+| `terms.html` | Terms of Use ("usage regulations") — service, not-safety-training, AI content, daily limit, subscriptions | `AppLinks.terms` (and the paywall later) |
+
+**After changing `css/style.css` or `js/main.js`:** raise the `?v=` number in the `<link>` and `<script>` lines of every page (e.g. `?v=2` → `?v=3`). Browsers keep those two files for a day, and the new number makes them fetch the new version straight away.
 
 Shared: `css/style.css` (dark look matching the app), `js/main.js` (phone menu, footer year, copy-email button, opens a FAQ answer from a `#link`). Everything still works with JavaScript off.
 
@@ -25,15 +29,48 @@ Shared: `css/style.css` (dark look matching the app), `js/main.js` (phone menu, 
    When everything is filled in, you can delete the `.fill` rule from `css/style.css`.
 2. **Have a lawyer review `privacy.html` and `terms.html`.** They describe the app accurately as of 14 October 2026, but they're drafts, not legal advice.
 3. **Replace the App Store button** on `index.html` with Apple's official badge and the real App Store link.
-4. **Update the app's links** once the site has a domain:
-   - `LearnScrumble/Views/EntryView.swift` → `privacyURL`
-   - `LearnScrumble/Views/ConsentSheet.swift` → `privacyURL`
-   - `LearnScrumble/Views/SettingsView.swift` → `privacyURL`, `termsURL`, `supportEmail`
+4. ✅ **The app's links** point to learnscrumble.com (18 October 2026). They all live in one file, `LearnScrumble/Models/AppLinks.swift` (privacy, terms, support page, support email), used by `SettingsView`, `EntryView` and `ConsentSheet`. If a page address changes, edit only that file.
 
-## Preview and publish
+## Hosting: where the site lives
 
-- **Preview:** open `index.html` in a browser, or run `python3 -m http.server 8000` in this folder and visit http://localhost:8000.
-- **Publish:** any static host works. Since the app already uses Firebase, **Firebase Hosting** is the easiest: `firebase init hosting` (public directory: `WebsiteContent`), then `firebase deploy --only hosting`. GitHub Pages or Netlify also work.
+- **Live at:** https://learnscrumble.com (`www.learnscrumble.com` redirects there). Firebase's own address, https://scrumblegame.web.app, shows the same site.
+- **Host:** Firebase Hosting in the production project `scrumblegame`. Set up 18 October 2026.
+- **Config:** `firebase.json` and `.firebaserc` in the repository root (next to `README.md`). They publish this folder to `scrumblegame`, skip the `.md` files (this README, `TODO.md`) and hidden files, give clean addresses (`/privacy` instead of `/privacy.html`) and set browser caching.
+- **Domain and email:** registered at Namecheap. DNS (Namecheap → Domain List → `learnscrumble.com` → Manage → Advanced DNS) has three host records: A `@` → `199.36.158.100`, TXT `@` → `hosting-site=scrumblegame`, CNAME `www` → `scrumblegame.web.app.`. Mail Settings is **Private Email** (`support@learnscrumble.com`) and must stay as it is: never delete the `v=spf1 …privateemail…` TXT record or change Mail Settings, or email stops working.
+
+**Pushing to git does NOT update the website.** Git keeps the history; the live site only changes when you run the deploy command below.
+
+## Updating the website: step by step
+
+Everything runs on the Mac, in Terminal, from the **repository root** (the folder with `firebase.json`, not this folder).
+
+1. **Edit** the pages in `WebsiteContent/`.
+2. **Changed `css/style.css` or `js/main.js`?** Raise the `?v=` number in the `<link>` and `<script>` lines of every page (e.g. `?v=2` → `?v=3`), otherwise phones keep the old file for up to a day.
+3. **Look at it locally:** open the page in a browser, or run `python3 -m http.server 8000` in this folder and visit http://localhost:8000.
+4. **Go to the repository root:**
+   ```
+   cd ~/Desktop/ScrambleGame
+   ```
+5. **Optional: a private test copy first.** This publishes to a temporary address (valid 7 days) without touching the live site; open it on your phone or send it to Konstantin:
+   ```
+   firebase hosting:channel:deploy preview
+   ```
+6. **Publish to the live site:**
+   ```
+   firebase deploy --only hosting
+   ```
+   Wait for `✔ Deploy complete!`. The site updates within seconds.
+7. **Check it** on https://learnscrumble.com. If a phone still shows the old version, close the tab and open the address again.
+8. **Commit and push** the changed files (by name, as always), so git matches what's live.
+
+**Undo a bad deploy:** Firebase console → `scrumblegame` → Hosting → Release history → pick the previous version → **Rollback**. That's instant; then fix the files and deploy again.
+
+**If the deploy fails:**
+- `command not found: firebase` or an old version: run `node -v` (needs v20 or newer; the Mac's default is Node 22 through nvm) and `firebase --version`. Reinstall with `npm install -g firebase-tools`.
+- Asked to log in: `firebase login`, approve in the browser.
+- "Not in a Firebase app directory": you're in the wrong folder; `cd ~/Desktop/ScrambleGame` and try again.
+
+**Later, optional:** Firebase can deploy automatically from GitHub (a merge to `main` publishes the site, each Pull Request gets a preview link), limited to changes in `WebsiteContent/`. Worth it once several people edit the site.
 
 ## Keep the privacy page in sync with the app
 
@@ -65,6 +102,7 @@ Apple asks what data the app "collects" (sends off the device and keeps longer t
   - *User Content → Other User Content*: the profession text sent to OpenAI — purposes: App Functionality, and Analytics (its English name is counted to improve the job menu).
   - *Usage Data → Other Usage Data*: the names of words already practised, sent to OpenAI so they aren't repeated — purpose: App Functionality.
   - *Diagnostics → Crash Data*: Crashlytics crash reports — purpose: App Functionality.
+  - *Diagnostics → Other Diagnostic Data*: Crashlytics non-fatal error reports (words couldn't be loaded), with the error type, a short technical description, the last steps, free memory and disk space — purpose: App Functionality.
   - *Identifiers → Device ID*: Firebase's random installation / app-instance ID (not the advertising ID) — purposes: App Functionality, Analytics.
   - *Usage Data → Product Interaction*: Analytics events, only with the user's consent — purpose: Analytics.
 - On-device data (settings, progress, Keychain counter) is not "collected" because it never leaves the device.

@@ -50,9 +50,6 @@ struct SettingsView: View {
   @State private var notificationsDenied = false                   // user said Don't Allow in iOS: the toggle can't override it
   @FocusState private var professionFocused: Bool                 // passed into ProfessionPicker
   
-  private let supportEmail = "support@example.com"                 // TODO: real support address
-  private let privacyURL = URL(string: "https://your-site.com/privacy")!   // TODO: real privacy policy (blocked by the kits decision)
-  private let termsURL = URL(string: "https://your-site.com/terms")!       // TODO: real terms of use
   private let maxProfessionLength = 40                             // same limit as EntryView
   
   private var sameLanguage: Bool { requestModel.nativeLanguage == requestModel.selectedLanguage }   // not allowed
@@ -342,11 +339,11 @@ struct SettingsView: View {
       VStack(spacing: 12) {
         row("How to play", icon: "questionmark.circle") { onHowToPlay() }
         divider
-        linkRow("Privacy Policy", icon: "hand.raised", url: privacyURL)
+        linkRow("Privacy Policy", icon: "hand.raised", url: AppLinks.privacy)
         divider
-        linkRow("Terms of Use", icon: "doc.plaintext", url: termsURL)
+        linkRow("Terms of Use", icon: "doc.plaintext", url: AppLinks.terms)
         divider
-        linkRow("Contact support", icon: "envelope", url: URL(string: "mailto:\(supportEmail)")!)
+        linkRow("Contact support", icon: "envelope", url: AppLinks.supportMail)
         divider
         Toggle("Share usage statistics to help improve the app", isOn: $shareStatistics)   // Firebase Analytics on/off
           .foregroundStyle(.white)

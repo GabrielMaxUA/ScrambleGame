@@ -18,7 +18,6 @@ struct ConsentSheet: View {
   @AppStorage(AIConsent.key) private var consentDate: Double = 0    // when the user agreed; 0 = not yet
   let onAgree: () -> Void                                           // RootView: close the sheet, then start what was tapped
   let onNotNow: () -> Void                                          // RootView: just close the sheet
-  private let privacyURL = URL(string: "https://your-site.com/privacy")! // TODO: replace with your real privacy policy URL
 
   var body: some View {
     VStack(spacing: 20) {
@@ -34,7 +33,7 @@ struct ConsentSheet: View {
       Text("Without this, the app can't create your words.")
         .font(.footnote)
         .foregroundStyle(.white.opacity(0.6))
-      Link("Privacy Policy", destination: privacyURL)
+      Link("Privacy Policy", destination: AppLinks.privacy)
         .font(.footnote)
         .underline()
         .foregroundStyle(.white.opacity(0.6))

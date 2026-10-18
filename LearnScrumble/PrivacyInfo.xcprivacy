@@ -13,11 +13,16 @@
     Settings, progress (SwiftData) and the daily free-word counter (Keychain) never leave the device -> not "collected".
     New words / pictures written to the shared Firebase library contain no user data.
       * Crash Data:          Firebase Crashlytics crash reports, sent on the next launch after a crash - App Functionality.
+      * Other Diagnostic Data: Crashlytics non-fatal error reports (when words couldn't be loaded) with the error type,
+                             a short technical description, the last steps (breadcrumbs), free memory and disk space - App Functionality.
       * Device ID:           Firebase's random installation / app-instance ID (not the advertising ID) - App Functionality
                              (Crashlytics) and Analytics (only with the user's consent).
       * Product Interaction: Firebase Analytics events, only while "Share usage statistics" is on (off by default) - Analytics.
     Firebase's own SDK manifests declare the same; listing them here keeps the app's report complete.
   - Required-reason API: UserDefaults (@AppStorage / UserDefaults.standard), reason CA92.1 = only this app reads/writes it.
+  - Required-reason API: system boot time. FreeAllowance measures time passed since the internet-time check with
+    clock_gettime_nsec_np(CLOCK_MONOTONIC) (time since the iPhone started), reason 35F9.1 = measuring elapsed time
+    between events inside the app. Nothing about it leaves the device.
 
   Keep in sync with WebsiteContent/privacy.html. Update before adding sign-in, App Check or RevenueCat.
 -->
@@ -68,6 +73,18 @@
 		</dict>
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeOtherDiagnosticData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeDeviceID</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<false/>
@@ -100,6 +117,14 @@
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
 				<string>CA92.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>35F9.1</string>
 			</array>
 		</dict>
 	</array>

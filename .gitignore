@@ -62,3 +62,7 @@ fastlane/screenshots/**/*.png
 fastlane/test_output
 .DS_Store
 GoogleService-Info.plist
+
+# Firebase CLI (local cache and logs)
+.firebase/
+firebase-debug.log

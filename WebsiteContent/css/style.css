@@ -120,12 +120,25 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
 .site-nav a:hover { color: var(--text); background: var(--surface); text-decoration: none; }
 .site-nav a[aria-current="page"] { color: var(--text); background: var(--surface); }
 
+/* Phone width: the menu drops down OVER the page, so nothing below it moves */
 @media (max-width: 720px) {
   .nav-toggle { display: inline-block; }
-  .site-nav { display: none; width: 100%; padding-bottom: 12px; }
+  .site-header .container { position: relative; }
+  .site-nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding: 8px 20px 16px;
+    background: var(--bg);                 /* solid, so the page text doesn't show through */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
+    max-height: calc(100dvh - 64px);    /* long menu scrolls inside itself */
+    overflow-y: auto;
+  }
   .site-nav.open { display: block; }
   .site-nav ul { flex-direction: column; }
-  .site-header .container { flex-wrap: wrap; }
 }
 
 /* ---------- Page content ---------- */
