@@ -10,6 +10,7 @@ import SwiftUI
 // MARK: - Flow of this file
 // Occupation menu plus a free-text field for "Not listed?". Writes the choice into requestModel.proffession.
 //   EntryView / SettingsView put it inside a FieldCard
+//   -> menu lists the jobs A–Z in the app language (Occupation.sorted), "Not listed?" last
 //   -> user picks a job -> onChange writes its English name to requestModel.proffession
 //   -> "Not listed?" -> a text field appears and writes what the user types instead
 //   -> on appear, the saved profession is turned back into the menu choice.
@@ -19,6 +20,7 @@ struct ProfessionPicker: View {
   @Bindable var requestModel: RequestModel                  // where the chosen profession is stored
   var isFocused: FocusState<Bool>.Binding                   // owned by the screen using the picker, so it can react to typing
   @State private var occupation: Occupation? = nil          // current menu choice; nil = nothing picked yet
+  @Environment(\.locale) private var locale                 // app language (RootView sets it) — the menu is sorted in it
   
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
@@ -26,7 +28,7 @@ struct ProfessionPicker: View {
         Picker("Occupation", selection: $occupation) {
           Text("Select your profession")
             .tag(nil as Occupation?)                        // the "nothing picked" row
-          ForEach(Occupation.allCases) { job in
+          ForEach(Occupation.sorted(for: locale)) { job in   // A–Z in the app language, "Not listed?" last
             Text(job.displayName)                           // translated job name
               .tag(job as Occupation?)
           }
@@ -70,7 +72,8 @@ struct ProfessionPicker: View {
     }
     .onAppear {                                                  // show the saved choice
       let saved = requestModel.proffession
-      if let job = Occupation(rawValue: saved) {                 // a listed job -> select it
+      if let job = Occupation(rawValue: saved) ?? Occupation.renamed[saved] {   // a listed job (or its old name) -> select it;
+                                                                 // onChange then saves the current English name
         occupation = job
       } else if !saved.isEmpty {                                 // typed text -> "Not listed?" with the field showing it
         occupation = .notListed
