@@ -12,7 +12,7 @@ import FirebaseFunctions
 //   generate()                    <- called ONCE by AppManager.startGame(),
 //                                     builds the very first batch of questions
 //   generateMore(excluding:)      <- called by WordVM whenever it needs a new batch
-//   generateStruggleReview(...)   <- called by AppManager for a struggle review
+//   reportPicture(...)            <- called by WordVM when the user reports the current picture (flag on the picture)
 //
 // Internal chain for building ANY batch:
 //   nextBatch(excluding:countJob:) -> getWords (server: word bank first, GPT only for the missing number)
@@ -20,7 +20,6 @@ import FirebaseFunctions
 //                                     stored picture link -> download it
 //                                     no link (new word) or broken -> getPicture (server repairs a stale link,
 //                                     or draws + saves a new picture) -> download
-//   generateStruggleReview         -> getReviewWords (server reads the words' translations + pictures) -> buildQuestions
 //
 // Every call: AnonymousAuth.ensureSignedIn() first (the functions refuse calls without a signed-in user).
 //
@@ -141,43 +140,6 @@ class RequestModel {
         }
     }
 
-    // MARK: - generateStruggleReview(toolNames:)
-    // Review session from KNOWN toolNames — no GPT call (AppManager.startStruggleReview).
-    // 1. No words -> .reviewUnavailable.
-    // 2. getReviewWords: the server reads their docs; words without a translation in the target language
-    //    or without a picture are skipped there. The native word falls back to the target word if missing.
-    // 3. buildQuestions with progress starting at 0 (no word-list step) -> pictures.
-    //    Nothing playable -> .reviewUnavailable. Cancelled -> []. Failure -> [] + lastError.
-    @MainActor
-    func generateStruggleReview(toolNames: [String]) async -> [QuestionModel] {
-        lastError = nil
-        progress = 0
-        guard !toolNames.isEmpty else {
-            lastError = .reviewUnavailable
-            return []
-        }
-        Log.info("🎯 generateStruggleReview — resolving \(toolNames.count) struggle words", .words)
-        do {
-            let reply: WordsReply = try await callFunction("getReviewWords", ReviewRequest(
-                toolNames: Array(toolNames.prefix(100)),                       // the server takes at most 100
-                origin: nativeLanguage.rawValue,
-                target: selectedLanguage.rawValue
-            ), timeout: 30)
-            Log.info("🎯 generateStruggleReview — server found \(reply.words.count)/\(toolNames.count) words", .words)
-            let built = try await buildQuestions(from: reply.words, progressBase: 0)
-            guard !built.isEmpty else { throw GenerationError.reviewUnavailable }
-            Log.info("🎯 generateStruggleReview — built \(built.count) reviewable questions", .words)
-            return built
-        } catch is CancellationError {
-            return []
-        } catch {
-            Log.error("❌ generateStruggleReview failed: \(error)", .words)
-            lastError = GenerationError.from(error)
-            reportFailure(during: "generateStruggleReview", underlying: error)
-            return []
-        }
-    }
-
     // MARK: - Word list (server)
 
     // MARK: - nextBatch(excluding:countJob:)
@@ -250,7 +212,7 @@ class RequestModel {
     }
 
     // MARK: - reportFailure(during:underlying:)
-    // A load failed for the user (the three entry points above): records lastError in Crashlytics as a
+    // A load failed for the user (the two entry points above): records lastError in Crashlytics as a
     // non-fatal issue, with the languages and the original error. Never the profession (user text).
     // Also sends the generation_failed analytics event (error name only).
     @MainActor
@@ -294,13 +256,13 @@ class RequestModel {
             let chunk = Array(words[index..<min(index + maxConcurrent, words.count)])
             let chunkStart = index
 
-            try await withThrowingTaskGroup(of: (Int, Data?, GenerationError?).self) { group in
+            try await withThrowingTaskGroup(of: (Int, (data: Data, link: String)?, GenerationError?).self) { group in
                 for (offset, word) in chunk.enumerated() {
                     let globalIndex = chunkStart + offset
                     group.addTask {
                         do {
-                            let data = try await self.loadImage(for: word)
-                            return (globalIndex, data, nil)
+                            let picture = try await self.loadImage(for: word)
+                            return (globalIndex, picture, nil)
                         } catch is CancellationError {
                             throw CancellationError()
                         } catch {
@@ -309,8 +271,9 @@ class RequestModel {
                         }
                     }
                 }
-                for try await (idx, data, failure) in group {
-                    built[idx].imageData = data
+                for try await (idx, picture, failure) in group {
+                    built[idx].imageData = picture?.data
+                    built[idx].imageURL = picture?.link
                     if let failure { failures.append(failure) }
                     completed += 1
                     let fraction = Double(completed) / Double(words.count)
@@ -327,19 +290,19 @@ class RequestModel {
     }
 
     // MARK: - loadImage(for:)
-    // Picture bytes for one word.
+    // Picture bytes for one word, with the link they came from (kept on the question for reportPicture).
     // 1. The word has a stored picture link -> download it (1 retry). It must really be an image (a 404 page is not one).
     //    Cancelled -> stop; any other problem -> step 2.
     // 2. No link (new word) or the download failed -> getPicture, with broken = true when step 1 failed:
     //    the server repairs a stale link (the file is there but its token changed) or draws a new picture,
     //    saves it as WebP in Storage and on the word -> download that.
-    private func loadImage(for word: ServerWord) async throws -> Data {
+    private func loadImage(for word: ServerWord) async throws -> (data: Data, link: String) {
         var broken = false
         if let link = word.imageURL, !link.isEmpty {
             do {
                 let data = try await download(link)
                 Log.debug("📦 loadImage — stored picture for '\(word.toolName)'", .words)
-                return data
+                return (data, link)
             } catch is CancellationError {
                 throw CancellationError()
             } catch {
@@ -351,7 +314,40 @@ class RequestModel {
         let reply: PictureReply = try await callFunction("getPicture", PictureRequest(
             toolName: word.toolName, imagePrompt: word.imagePrompt, broken: broken
         ), timeout: 180)
-        return try await download(reply.imageURL)
+        return (try await download(reply.imageURL), reply.imageURL)
+    }
+
+    // MARK: - reportPicture(toolName:imageURL:)
+    // The user flagged the current picture as wrong (WordVM.reportPicture). Calls reportPicture on the server
+    // (functions/src/index.ts) with the job, so a new picture is drawn for this job's meaning of the word —
+    // for THIS user only; the developer gets the report by email and decides whether everyone gets it.
+    // 1. No menu job -> nothing to report for (typed jobs are off).
+    // 2. Server outcome "drawn" (a picture for this user) or "replaced" (the shared picture was already fixed)
+    //    -> downloads it -> .newPicture(data, link). Anything else -> .received.
+    // 3. resource-exhausted (the day's reports used up) -> .tooMany; anything else -> .failed.
+    @MainActor
+    func reportPicture(toolName: String, imageURL: String?) async -> ReportResult {
+        guard let job = Occupation.listed(proffession) else { return .failed }
+        do {
+            let reply: ReportReply = try await callFunction("reportPicture", ReportRequest(
+                toolName: toolName, profession: job.rawValue, imageURL: imageURL
+            ), timeout: 180)
+            Log.info("🚩 reportPicture — \(reply.outcome)", .words, private: "'\(toolName)'")
+            guard reply.outcome != "received", !reply.imageURL.isEmpty else { return .received }
+            return .newPicture(try await download(reply.imageURL), reply.imageURL)
+        } catch is TooManyReports {
+            return .tooMany
+        } catch {
+            Log.error("🚩 reportPicture failed: \(error)", .words)
+            return .failed
+        }
+    }
+
+    enum ReportResult {
+        case newPicture(Data, String)   // a picture drawn for this user, or the already-fixed shared one: its bytes and link
+        case received                   // recorded; a person will check it
+        case tooMany                    // the day's reports are used up
+        case failed                     // offline or a server problem
     }
 
     // MARK: - download(_:)
@@ -389,6 +385,7 @@ class RequestModel {
     // MARK: - functionError(_:function:)
     // Server error codes -> GenerationError (the server side of this table is in functions/src/errors.ts):
     //   no connection (a URLError underneath)   -> .offline / .timedOut (GenerationError.from)
+    //   resource-exhausted "tooManyReports"    -> TooManyReports      (reportPicture only)
     //   unavailable, resource-exhausted        -> .serverBusy          (OpenAI busy after the server's retries)
     //   deadline-exceeded                      -> .timedOut
     //   failed-precondition, permission-denied -> .serviceUnavailable  (our side: key, billing, App Check)
@@ -407,6 +404,7 @@ class RequestModel {
             return GenerationError.from(error)
         }
         Log.info("☁️ \(function) — server error \(code.rawValue): \(ns.localizedDescription)", .words)
+        if code == .resourceExhausted, ns.localizedDescription == "tooManyReports" { return TooManyReports() }
         switch code {
         case .cancelled:                             return CancellationError()
         case .unavailable, .resourceExhausted:       return GenerationError.serverBusy
@@ -418,8 +416,10 @@ class RequestModel {
         }
     }
 
+    private struct TooManyReports: Error {}                            // reportPicture: the user's reports for today are used up
+
     // MARK: - Server shapes
-    // Requests and replies of the three functions, field for field as in functions/src/index.ts.
+    // Requests and replies of the functions, field for field as in functions/src/index.ts.
     // nonisolated so they can be encoded/decoded off the main thread (the project default would tie them to it).
     nonisolated private struct WordsRequest: Encodable, Sendable {
         let origin: String, target: String, profession: String
@@ -429,13 +429,21 @@ class RequestModel {
         let count: Int
         let countJob: Bool
     }
-    nonisolated private struct ReviewRequest: Encodable, Sendable { let toolNames: [String]; let origin: String; let target: String }
     nonisolated private struct PictureRequest: Encodable, Sendable {
         let toolName: String
         let imagePrompt: String
         let broken: Bool                                               // the stored link failed -> the server repairs or redraws it
     }
     nonisolated private struct PictureReply: Decodable, Sendable { let imageURL: String }
+    nonisolated private struct ReportRequest: Encodable, Sendable {
+        let toolName: String
+        let profession: String                                         // menu job's English name — the meaning to draw
+        let imageURL: String?                                          // the picture the user saw; nil -> left out
+    }
+    nonisolated private struct ReportReply: Decodable, Sendable {
+        let outcome: String                                            // "drawn" (for this user) | "replaced" (already fixed for everyone)
+        let imageURL: String
+    }
     nonisolated private struct WordsReply: Decodable, Sendable {
         let job: String?                                               // getWords: the bank key used (nil for a typed job GPT called "invalid")
         let words: [ServerWord]

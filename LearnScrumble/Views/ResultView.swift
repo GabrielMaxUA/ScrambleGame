@@ -10,23 +10,25 @@ import SwiftUI
 // MARK: - Flow of this file
 // The checkpoint screen after a round (phase .result(vm)).
 //   WordVM reaches a checkpoint -> AppManager sets .result(vm) -> RootView shows ResultView
-//   Reads WordVM: batchAccuracy (this set), overallAccuracy (all time), hasStruggleWords, isFinished
-//   -> "Learn more words!" / "Play again!": free words left -> onContinue (resume, or a new game after a review);
-//      limit reached -> daily-limit alert right here
-//   -> "Improve previous!": paid -> onRetry -> struggle review; free -> subscription alert
+//   Reads WordVM: batchAccuracy (this round), jobProgress (JobProgressCard: learned, right, wrong), isFinished;
+//   Streak for the 🔥 days in a row.
+//   -> main button: "Keep reviewing" (a review with words left) or "Learn more words!" -> onContinue
+//      (resume, or a new game after a finished review); free words used up -> alert -> "Unlock" -> onShowPaywall
+//   -> "My words": unlocked -> onWordList; otherwise the unlock alert
 //   -> "Exit" -> exitToWelcome
-//   The owl celebrates a strong set (80%+) or when there's nothing left to struggle with.
+//   The owl celebrates a strong round (80%+).
 
 struct ResultView: View {
     let vm: WordVM                                        // the session that just paused — source of all scores
-    let hasAccess: Bool                                   // NEW — paid/unlocked user, passed in from AppManager
-    let canPlay: Bool                                     // paid, or free words left today
+    let job: Occupation?                                  // the current job, for the progress card's header
+    let isReview: Bool                                    // this round was a "My words" review
+    let hasAccess: Bool                                   // the current job is unlocked, passed in from AppManager
+    let canPlay: Bool                                     // unlocked, or free words left
     var onContinue: () -> Void                            // resume this session (or start a new game after a review)
-    var onRetry: () -> Void                               // start a struggle review
-    var onShowPaywall: () -> Void                         // NEW — "See plans" in the alert
+    var onWordList: () -> Void                            // "My words"
+    var onShowPaywall: () -> Void                         // "Unlock" in the alert
     var exitToWelcome: () -> Void                         // back to WelcomeBackView
-    @State private var showSubscriptionAlert = false      // NEW — true while the "Premium feature" alert is showing
-    @State private var alertType: MenuAlert = .subscriptionRequired   // NEW — which alert to show
+    @State private var alertType: MenuAlert = .wordListLocked   // which alert to show
     @State private var showAlert = false                  // is the alert open
     // MARK: - fraction(_:)
     // (correct, total) -> 0...1 share of right answers.
@@ -38,72 +40,57 @@ struct ResultView: View {
     
     var body: some View {
         let setScore = fraction(vm.batchAccuracy())               // this round only
-        let overallScore = fraction(vm.overallAccuracy())         // all-time, this target language
-        let learnedEverything = !vm.hasStruggleWords && overallScore != nil   // only after at least one answered word
-        let owlCelebrates = learnedEverything || (setScore ?? 0) >= 0.8   // big win or a strong set
+        let progress = vm.jobProgress()                           // this job, all time, this target language
+        let keepReviewing = isReview && !vm.isFinished            // a review with words still to come
         
         VStack(spacing: 24) {
-            Spacer(minLength: 40)
+            Spacer(minLength: 24)
             
-            if learnedEverything {                                // headline only for the big win
+            // the owl perches on top of the round's score
+            VStack(spacing: 12) {
                 VStack(spacing: 8) {
-                    Text("Congratulations!")
-                        .font(.largeTitle.bold())
-                        .foregroundStyle(.white)
-                    Text("You have learned everything!")
-                        .font(.title3)
-                        .foregroundStyle(.white.opacity(0.7))
-                }
-                .multilineTextAlignment(.center)
-            }
-            
-            Spacer()
-            
-            // the owl perches on top of the score cards
-            VStack(spacing: 8) {                                    // the score cards + what the numbers mean
-                HStack(spacing: 12) {
                     statTile(title: "This round", score: setScore)
-                    statTile(title: "All time", score: overallScore)
+                        .overlay(alignment: .top) {
+                            LineOwl(isCelebrating: (setScore ?? 0) >= 0.8)
+                                .alignmentGuide(.top) { $0[.bottom] - 4 }  // feet rest on the card
+                        }
+                    Text("Share of words you answered correctly")
+                        .font(.footnote)
+                        .foregroundStyle(.white.opacity(0.6))
+                        .multilineTextAlignment(.center)
                 }
-                .overlay(alignment: .top) {
-                    LineOwl(isCelebrating: owlCelebrates)
-                        .alignmentGuide(.top) { $0[.bottom] - 4 }  // feet rest on the cards
-                }
-                Text("Share of words you answered correctly")
-                    .font(.footnote)
-                    .foregroundStyle(.white.opacity(0.6))
-                    .multilineTextAlignment(.center)
+                JobProgressCard(job: job, progress: progress, streak: Streak.shared.current)
             }
             .padding(.top, 80)                                      // room for the owl
             
             Spacer()
             
             VStack(spacing: 12) {
-                Button {                                              // free words left: continue; limit reached: alert right here, no silent jump to Welcome
+                Button {                                              // can play: continue; free words used up: alert right here, no silent jump to Welcome
                     if canPlay {
                         onContinue()
                     } else {
-                        alertType = .dailyLimitReached
+                        alertType = .freeWordsDone
                         showAlert = true
                     }
                 } label: {
-                    Label(vm.isFinished ? "Play again!" : "Learn more words!", systemImage: canPlay ? "arrow.right" : "lock.fill")
+                    Label(keepReviewing ? "Keep reviewing" : "Learn more words!", systemImage: canPlay ? "arrow.right" : "lock.fill")
                         .font(.headline)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                 }
                 .glassCompat(in: .capsule, interactive: true)
-                if vm.hasStruggleWords {
-                    Button {                                            // NEW — paid users review, free users see the alert
+                if progress.played > 0 {
+                    Button {                                            // unlocked: the list; otherwise: the unlock alert
                         if hasAccess {
-                            onRetry()
+                            onWordList()
                         } else {
-                            alertType = .subscriptionRequired
+                            alertType = .wordListLocked
                             showAlert = true
                         }
                     } label: {
-                        Label("Improve previous!", systemImage: hasAccess ? "arrow.counterclockwise" : "lock.fill")
+                        Label("My words", systemImage: hasAccess ? "list.bullet.rectangle" : "lock.fill")
                             .font(.headline)
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
@@ -125,7 +112,7 @@ struct ResultView: View {
         .padding(.bottom, 8)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black.opacity(0.92))
-        .alert(alertType.title, isPresented: $showAlert) {                    // NEW — one alert for both cases
+        .alert(alertType.title, isPresented: $showAlert) {                    // one alert for both cases
             Button(alertType.confirmTitle) { onShowPaywall() }
             Button("Cancel", role: .cancel) { }
         } message: {
@@ -173,11 +160,12 @@ struct ResultView: View {
 #Preview {
     ResultView(
         vm: WordVM(questions: [], targetLanguage: "uk-UA"),
-        hasAccess: false,// NEW
+        job: .plumber,
+        isReview: false,
+        hasAccess: false,
         canPlay: false,
-        onContinue: {
-        },
-        onRetry: {},
+        onContinue: {},
+        onWordList: {},
         onShowPaywall: {},
         exitToWelcome: {})
 }

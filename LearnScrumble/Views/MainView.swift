@@ -11,7 +11,7 @@ import SwiftUI
 // The game screen: picture, answer slots and the scrambled letter tray.
 //   RootView shows it for phase .playing(vm)
 //   -> reads WordVM: image + hint, guessedWord (slots), scrumbledWord (tiles), guessResult
-//   -> taps go back to WordVM: selectLetter / deselectLetter / resetGuess
+//   -> taps go back to WordVM: selectLetter / deselectLetter / resetGuess; the picture's flag -> reportPicture
 //   -> every slot filled (vm.isComplete) -> vm.checkAnswer() -> guessResult set -> AnswerResultView overlay
 //   -> "next" on that overlay -> vm.nextWord()
 //   No current word yet (next batch still loading) -> LoadingView instead.
@@ -41,7 +41,9 @@ struct MainView: View {
                     LoadingView(progress: manager.requestModel.progress)                                        // next word not ready yet
                 } else {
                     VStack(spacing: 20) {
-                        ImageComponent(image: vm.image, hint: vm.hintWord, onHintToggled: onHintToggled)
+                        ImageComponent(image: vm.image, hint: vm.hintWord, onHintToggled: onHintToggled,
+                                       report: vm.pictureReport,
+                                       onReport: vm.canReport ? { Task { await vm.reportPicture() } } : nil)   // flag: wrong picture
                             .layoutPriority(-1)                          // the image shrinks first on small screens, letters never get cut off
 
                         ResultWordRow(result: vm.resultWord, resetGuess: { vm.resetGuess(); onReset() })

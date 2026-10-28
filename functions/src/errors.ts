@@ -8,6 +8,7 @@
 //   not-found            -> noWordsAvailable    (nothing new for this job + language)
 //   invalid-argument     -> noWordsAvailable    (bad input, or the typed job text was refused by moderation)
 //   unauthenticated      -> unknown             (no anonymous sign-in on the phone)
+//   resource-exhausted   -> tooManyReports      (reportPicture: the user's reports for today are used up)
 // The message is a short machine-readable reason, never user text.
 
 import { HttpsError } from "firebase-functions/v2/https";
@@ -20,3 +21,4 @@ export const noWords = () => new HttpsError("not-found", "noWordsAvailable");
 export const refused = () => new HttpsError("invalid-argument", "refused");
 export const badInput = (what: string) => new HttpsError("invalid-argument", `badInput:${what}`);
 export const notSignedIn = () => new HttpsError("unauthenticated", "notSignedIn");
+export const tooManyReports = () => new HttpsError("resource-exhausted", "tooManyReports");

@@ -1,14 +1,19 @@
 // index.ts — LearnScrumble's Cloud Functions. The app calls these instead of OpenAI, so the OpenAI key
 // (Secret Manager: OPENAI_API_KEY) never ships inside the app, and only the server writes to the shared word bank.
 //
-// The three callable functions (app: Functions.functions().httpsCallable("<name>")):
+// The callable functions (app: Functions.functions().httpsCallable("<name>")):
 //   getWords        -> the next batch of words for a job: word bank first, GPT only for the missing number.
 //                      Replaces RequestModel.nextBatch + generateUniqueWordList + the Firestore writes.
 //   getPicture      -> one word's picture: the stored one, or a new one generated, converted to WebP,
 //                      uploaded and saved. Called per word, so the app's loading ring still moves per picture.
-//   getReviewWords  -> translations + picture links for the user's struggle words (struggle review).
-// And one background function, started from the Firebase console (prepare.ts):
+//   getReviewWords  -> translations + picture links for known words. Not called by the app since 28 Oct 2026
+//                      ("My words" replays the words saved on the phone); kept for older builds.
+//   reportPicture   -> a user says a word's picture is wrong: a new picture is drawn for THAT user only, and the
+//                      report is recorded for the developer (daily email). The bank changes only on approval.
+// Background functions:
 //   prepareProfession -> fills the bank with ~100 English words + pictures per menu job ("prepare" collection).
+//   reviewReport      -> you set a report's status to "approve" / "reject" in the console (reports.ts)
+//   mailReports       -> once a day, an email to support@learnscrumble.com with the new reports (reports.ts)
 //
 // Every call:
 //   - must come from a signed-in user (the app's silent anonymous sign-in, AnonymousAuth.swift)
@@ -25,15 +30,19 @@ import { setGlobalOptions } from "firebase-functions/v2";
 import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import * as openai from "./openai";
-import { fetchBank, fetchWords, saveWord, savePicture, repairPictureLink, countProfession, countUsage, WordDoc } from "./store";
-import { noWords, refused, badInput, notSignedIn } from "./errors";
+import { fetchBank, fetchWords, saveWord, savePicture, repairPictureLink, countProfession, countUsage, WordDoc,
+         countReport, saveReportPicture, recordReport, parsePictureURL, samePicture } from "./store";
+import { noWords, refused, badInput, notSignedIn, tooManyReports } from "./errors";
 export { prepareProfession } from "./prepare";                  // background bank filling (prepare.ts)
+export { reviewReport, mailReports } from "./reports";           // approve/reject a report, the daily report email
 
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 setGlobalOptions({ region: "us-central1", maxInstances: 10 });
 
 const BATCH = 5;                   // words per batch, as in the app
-const DAILY_FREE_WORDS = 10;       // same as FreeAllowance.dailyWordLimit — logged, not enforced yet (see getWords step 7)
+const DAILY_FREE_WORDS = 10;       // logged only (see getWords step 7). The app's 10 free words are once per install now
+                                   // (FreeAllowance.freeWordLimit), checked on the phone together with the job unlock
+const REPORTS_PER_DAY = 10;        // reports one user can send per day — each one draws a picture, so this caps the cost
 const MAX_GPT_ATTEMPTS = 3;        // as RequestModel.maxGenerationAttempts
 
 // MARK: - input checks
@@ -103,7 +112,7 @@ export const getWords = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 120,
   const picked = shuffle(ready).slice(0, count);
   const words: WordOut[] = picked.map((d) => ({
     toolName: d.word, originWord: d.translation[origin], targetWord: d.translation[target],
-    imageURL: d.image, imagePrompt: d.word,
+    imageURL: d.image, imagePrompt: d.imagePrompt ?? d.word,
   }));
   logger.info("getWords: bank", { key: key ?? "none yet", bank: bank.length, ready: ready.length, using: picked.length, origin, target });
 
@@ -121,7 +130,7 @@ export const getWords = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 120,
         const targetWord = d.translation?.[target] ?? t?.[target];
         if (!originWord || !targetWord) continue;                    // GPT skipped it -> step 4 replaces it
         await saveWord(d.word, origin, originWord, target, targetWord, key, d);   // fills only what's missing
-        words.push({ toolName: d.word, originWord, targetWord, imageURL: d.image, imagePrompt: d.word });
+        words.push({ toolName: d.word, originWord, targetWord, imageURL: d.image, imagePrompt: d.imagePrompt ?? d.word });
         translated++;
       }
     } catch (error) {
@@ -239,6 +248,52 @@ export const getReviewWords = onCall({ timeoutSeconds: 30, enforceAppCheck: fals
   });
   logger.info("getReviewWords", { asked: toolNames.length, found: words.length });
   return { words };
+});
+
+// MARK: - reportPicture
+// Input:  { toolName, profession, imageURL? }   Output: { outcome, imageURL }
+//   profession = the menu job the user plays (English name) — the new picture is drawn for that meaning
+//   imageURL   = the picture link the user saw (QuestionModel.imageURL); missing for words saved before it was kept
+// outcome:
+//   "drawn"    -> a new picture was drawn ONLY for this user; imageURL = its link (reports/<id>/…). The phone keeps
+//                 it with the word; the bank picture doesn't change until the developer approves the report.
+//   "replaced" -> the bank picture was already replaced (approved) since the user saw it; imageURL = the current one,
+//                 nothing drawn
+// 1. Checks: signed in, valid input, at most REPORTS_PER_DAY reports per user per day (resource-exhausted).
+// 2. The user saw a bank picture that has changed since -> "replaced". (A picture drawn for an earlier report of
+//    this user is under reports/ and never counts as replaced: reporting it again draws once more.)
+// 3. GPT writes a clear description for the job (describePicture) -> a picture -> Storage reports/<id>/<random>.webp
+//    (saveReportPicture) -> recordReport: counted, the suggestion kept, status "new", into tomorrow's email (reports.ts).
+// Privacy: a report stores the word, the job, the picture links and a one-way code of the anonymous sign-in ID
+// (to count different people) — nothing else about the user.
+export const reportPicture = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 180, memory: "512MiB", enforceAppCheck: false }, async (request) => {
+  const uid = requireUser(request);
+  const { toolName, profession, imageURL } = request.data ?? {};
+  if (!isText(toolName, 60)) throw badInput("toolName");
+  if (!isText(profession, 40)) throw badInput("profession");
+  const seen = isText(imageURL, 2000) ? imageURL : null;
+  const name = toolName.trim().toLowerCase();
+  const job = profession.trim().toLowerCase();
+
+  if (await countReport(uid) > REPORTS_PER_DAY) {
+    logger.info("reportPicture: daily report limit reached");
+    throw tooManyReports();
+  }
+  const doc = (await fetchWords([name])).get(name);
+  if (!doc) throw badInput("unknownWord");
+
+  const sawOwnPicture = seen !== null && (parsePictureURL(seen)?.path.startsWith("reports/") ?? false);
+  if (seen && doc.image && !sawOwnPicture && !samePicture(seen, doc.image)) {
+    logger.info("reportPicture: bank picture already replaced", { word: name });
+    return { outcome: "replaced", imageURL: doc.image };
+  }
+
+  const apiKey = OPENAI_API_KEY.value();
+  const description = await openai.describePicture(apiKey, name, job);
+  const picture = await saveReportPicture(name, await openai.image(apiKey, description));
+  await recordReport(doc, uid, job, { url: picture.url, path: picture.path, imagePrompt: description });
+  logger.info("reportPicture: drew a picture for the reporter", { word: name, job });
+  return { outcome: "drawn", imageURL: picture.url };
 });
 
 // MARK: - shuffle

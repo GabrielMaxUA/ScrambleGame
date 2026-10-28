@@ -19,8 +19,6 @@ enum GenerationError: Error, Equatable {
   case badResponse          // garbled reply (GPT on the server, or a broken picture), worth another try
   case serviceUnavailable   // server's OpenAI key, billing or App Check problem (failed-precondition): OUR problem, retry won't help
   case noWordsAvailable     // bank and GPT have nothing new for this profession + language (or the job text was refused)
-  case reviewUnavailable    // struggle words exist but their translations couldn't be found
-  case noStruggleWords      // nothing to review yet
   case unknown
   
   /// What ErrorView offers the user.
@@ -34,7 +32,7 @@ enum GenerationError: Error, Equatable {
     switch self {
     case .offline, .timedOut, .serverBusy, .badResponse, .unknown: .retry
     case .noWordsAvailable:                                       .changeProfession
-    case .serviceUnavailable, .reviewUnavailable, .noStruggleWords: .none
+    case .serviceUnavailable:                                     .none
     }
   }
   
@@ -48,8 +46,6 @@ enum GenerationError: Error, Equatable {
     case .badResponse:        "Something went wrong while preparing your words. Please try again."
     case .serviceUnavailable: "We can't prepare new words right now. We're on it — please check back later."
     case .noWordsAvailable:   "We couldn't find new words for this profession and language right now. Try again later or pick a different profession."
-    case .reviewUnavailable:  "Your review words aren't available right now. Keep practicing new words and check back later."
-    case .noStruggleWords:    "No struggle words yet — keep practicing!"
     case .unknown:            "Something went wrong. Please try again."
     }
   }
@@ -64,8 +60,7 @@ enum GenerationError: Error, Equatable {
     case .badResponse:        4
     case .serviceUnavailable: 5
     case .noWordsAvailable:   6
-    case .reviewUnavailable:  7
-    case .noStruggleWords:    8
+                                      // 7, 8: reviewUnavailable, noStruggleWords — removed 28 Oct 2026 (review is local now), never reuse
     case .unknown:            9
     }
   }

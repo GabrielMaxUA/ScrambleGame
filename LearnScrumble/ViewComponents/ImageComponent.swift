@@ -8,17 +8,23 @@
 import SwiftUI
 
 // MARK: - Flow of this file
-// The square picture card in MainView, with a lightbulb button for the hint.
+// The square picture card in MainView, with a lightbulb button for the hint and a flag to report a wrong picture.
 //   MainView passes WordVM.image (the current word's picture) and WordVM.hintWord (word in the native language)
 //   -> no picture yet: a placeholder icon
 //   -> lightbulb tap -> popover with the hint; it closes by itself when the word changes.
+//   -> flag tap (top-left, only when onReport is set) -> "Report this picture?" -> onReport -> WordVM.reportPicture()
+//      report = WordVM.pictureReport: .sending dims the picture with a spinner; the outcome shows as a note
+//      at the bottom of the card until the word changes. A failed report shows the flag again.
 //   Tutorial (OnboardingView): onHintToggled reports the hint opening/closing; the lightbulb reports its place for the pointer.
 
 struct ImageComponent: View {
     let image: UIImage?                         // current word's picture; nil = not loaded / failed
     let hint: String                            // the word in the user's native language
     var onHintToggled: (Bool) -> Void = { _ in }   // tutorial only: tells OnboardingService the hint opened (true) / closed (false)
+    var report: PictureReport = .idle           // where this word's picture report stands
+    var onReport: (() -> Void)? = nil           // sends the report; nil = no flag (tutorial)
     @State private var showHint = false         // is the hint popover open
+    @State private var confirmReport = false    // the "Report this picture?" alert is open
 
     var body: some View {
         ZStack {
@@ -28,6 +34,7 @@ struct ImageComponent: View {
                     .scaledToFit()
                     .padding(24)
                     .accessibilityLabel("Picture of the word to spell")
+                    .opacity(report == .sending ? 0.3 : 1)
             } else {                                                    // placeholder while there's no picture
                 Image(systemName: "person")
                     .font(.largeTitle)
@@ -45,8 +52,63 @@ struct ImageComponent: View {
         .overlay(alignment: .topTrailing) {                             // lightbulb in the top-right corner
             hintButton.padding(10)
         }
+        .overlay(alignment: .topLeading) {                              // flag in the top-left corner
+            if onReport != nil, report == .idle || report == .failed {
+                reportButton.padding(10)
+            }
+        }
+        .overlay {                                                      // waiting for a new picture
+            if report == .sending {
+                VStack(spacing: 10) {
+                    ProgressView().tint(.white)
+                    Text("Drawing a new picture…")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.white)
+                }
+            }
+        }
+        .overlay(alignment: .bottom) {                                  // what happened with the report
+            if let note = reportNote {
+                Text(note)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(.black.opacity(0.7), in: .capsule)
+                    .padding(10)
+            }
+        }
+        .alert("Report this picture?", isPresented: $confirmReport) {
+            Button("Report") { onReport?() }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("If the picture doesn't show this word, we'll draw a new one for you and check it for everyone.")
+        }
         .onChange(of: hint) { showHint = false }                        // close a leftover popover when the word changes
         .onChange(of: showHint) { _, shown in onHintToggled(shown) }    // tutorial: hint opened / closed
+    }
+
+    private var reportNote: LocalizedStringKey? {                       // the note under the picture for each outcome
+        switch report {
+        case .redrawn:  "Thanks! Here's a new picture. We'll check it for everyone."
+        case .received: "Thanks! We'll check this picture."
+        case .tooMany:  "Thanks! You've sent many reports today. Try again tomorrow."
+        case .failed:   "Couldn't send the report. Please try again."
+        case .idle, .sending: nil
+        }
+    }
+
+    private var reportButton: some View {                               // flag button, asks first
+        Button {
+            confirmReport = true
+        } label: {
+            Image(systemName: "flag.fill")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.white)                                 // same as the lightbulb, so it's easy to spot
+                .frame(width: 44, height: 44)                           // Apple's minimum tap size
+        }
+        .accessibilityLabel("Report a wrong picture")
     }
 
     private var hintButton: some View {                                 // lightbulb button + its hint popover

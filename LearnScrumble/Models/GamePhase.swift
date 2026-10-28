@@ -21,4 +21,5 @@ enum GamePhase{
   case offline                // no internet connection — OfflineView, retries by itself once the connection is back
   case result(WordVM)             // ResultView — checkpoint summary after a round
   case settings                   // SettingsView
+  case wordList                   // MyWordsView — the job's saved words ("My words"), unlocked jobs only
 }

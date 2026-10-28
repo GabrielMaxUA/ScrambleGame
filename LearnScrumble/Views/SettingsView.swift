@@ -16,14 +16,14 @@ import AVFoundation
 //   Daily reminder: on/off toggle + time (same saved values as EntryView's card) -> DailyReminder.reschedule()
 //     turned on but never asked -> the iOS permission popup; said Don't Allow -> a note + "Open Settings" (iOS)
 //   Progress: "Reset progress" -> PersistenceController.resetProgress for the current target language
-//   Subscription: Apple's manage-subscriptions sheet, restore purchases (StoreKit AppStore.sync)
+//   Purchases: restore the unlocked professions (Purchases.restore)
 //   Legal and support: "How to play" (onHowToPlay -> RootView shows the tutorial again), privacy, terms, support email links,
 //     the "Share usage statistics" toggle (AnalyticsConsent) and what goes to OpenAI (AIConsent)
 //   "Done" (only when the setup is usable) -> onDone -> AppManager.closeSettings() -> WelcomeBackView.
 
 struct SettingsView: View {
   @Bindable var requestModel: RequestModel                         // languages and profession are edited right in it
-  let hasAccess: Bool                                              // paid/unlocked: languages and profession can be changed
+  let hasAccess: Bool                                              // at least one profession unlocked: the voice picker opens
   var onShowPaywall: () -> Void                                    // "See plans" in the locked alert
   var onDone: () -> Void                                           // back to the welcome-back screen
   var onHowToPlay: () -> Void = {}                                 // RootView: show the "How to play" tutorial again
@@ -41,7 +41,6 @@ struct SettingsView: View {
   @State private var showLockedAlert = false                       // "Premium feature" alert (learning block lock, currently unused)
   @State private var showResetAlert = false                        // "Reset progress?" confirmation
   @State private var showDeleteAlert = false                       // delete-all-data alert (section commented out)
-  @State private var showManageSubscriptions = false               // Apple's subscription sheet
   @State private var showRestoreAlert = false                      // result of "Restore purchases"
   @State private var restoreMessage: LocalizedStringKey = ""       // text of that result alert
   @State private var selectedVoiceID = ""                       // "" = Default
@@ -97,7 +96,6 @@ struct SettingsView: View {
       }
       pickedProfession = requestModel.proffession
     }
-    .manageSubscriptionsSheet(isPresented: $showManageSubscriptions)   // Apple's own subscription screen
     .alert(MenuAlert.settingsLocked.title, isPresented: $showLockedAlert) {   // premium lock -> plans
       Button(MenuAlert.settingsLocked.confirmTitle) { onShowPaywall() }
       Button("Cancel", role: .cancel) { }
@@ -110,7 +108,7 @@ struct SettingsView: View {
       }
       Button("Cancel", role: .cancel) { }
     } message: {
-      Text("All your answers in the language you are learning will be deleted. This can't be undone.")
+      Text("All your answers and saved words in the language you are learning will be deleted. This can't be undone.")
     }
     .alert(restoreMessage, isPresented: $showRestoreAlert) {
       Button("OK") { }
@@ -324,13 +322,9 @@ struct SettingsView: View {
     }
   }
   
-  private var subscriptionSection: some View {                     // manage + restore
-    FieldCard(title: "Subscription", icon: "star") {
-      VStack(spacing: 12) {
-        row("Manage subscription", icon: "creditcard") { showManageSubscriptions = true }
-        divider
-        row("Restore purchases", icon: "arrow.clockwise") { restorePurchases() }
-      }
+  private var subscriptionSection: some View {                     // restore the one-time unlocks (no subscription to manage)
+    FieldCard(title: "Purchases", icon: "star") {
+      row("Restore purchases", icon: "arrow.clockwise") { restorePurchases() }
     }
   }
   
@@ -381,7 +375,9 @@ struct SettingsView: View {
   #if DEBUG
   // MARK: - debugSection
   // Debug builds only: testing tools. Text(verbatim:) keeps these English labels out of the translation catalog.
-  //   "Reset free words" -> FreeAllowance.resetForTesting(): 20 fresh words today (shows how many are used now)
+  //   "Reset free words" -> FreeAllowance.resetForTesting(): the 10 free words again (shows how many are used now)
+  //   "Unlock every profession" -> Purchases.debugUnlockAll: the paid version (unlimited words, My words, voices)
+  //   without buying anything
   private var debugSection: some View {
     VStack(alignment: .leading, spacing: 10) {
       Label {
@@ -399,12 +395,19 @@ struct SettingsView: View {
       Button {
         FreeAllowance.shared.resetForTesting()
       } label: {
-        Text(verbatim: "Reset free words (\(FreeAllowance.shared.wordsUsedToday)/\(FreeAllowance.dailyWordLimit) used today)")
+        Text(verbatim: "Reset free words (\(FreeAllowance.shared.wordsUsed)/\(FreeAllowance.freeWordLimit) used)")
           .foregroundStyle(.white)
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(14)
           .background(.orange.opacity(0.15), in: .rect(cornerRadius: 16))
       }
+      Toggle(isOn: Bindable(Purchases.shared).debugUnlockAll) {
+        Text(verbatim: "Unlock every profession (paid version)")
+          .foregroundStyle(.white)
+      }
+      .tint(.orange)
+      .padding(14)
+      .background(.orange.opacity(0.15), in: .rect(cornerRadius: 16))
     }
   }
   #endif
@@ -447,12 +450,12 @@ struct SettingsView: View {
   // MARK: - Actions
   
   // MARK: - restorePurchases
-  // StoreKit for now; RevenueCat's restore replaces this later.
-  // AppStore.sync() asks Apple for the user's purchases -> success or failure message -> shows the result alert.
+  // Purchases.restore(): AppStore.sync() asks Apple for the user's purchases and re-reads the unlocked jobs
+  // -> success or failure message -> shows the result alert.
   private func restorePurchases() {
     Task {
       do {
-        try await AppStore.sync()
+        try await Purchases.shared.restore()
         restoreMessage = "Your purchases have been restored."
       } catch {
         restoreMessage = "Couldn't restore purchases. Please try again."

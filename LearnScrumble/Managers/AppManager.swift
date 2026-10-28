@@ -12,11 +12,10 @@ import SwiftUI
 //                              rest), checkpointMode defaults to
 //                              .everyN(10), fetchMore is wired so WordVM can
 //                              ask for more words indefinitely
-//   startStruggleReview()  <- review mode: pulls a FIXED list of struggling
-//                              toolNames from SwiftData, resolves them via
-//                              the server (getReviewWords, no GPT), checkpointMode
-//                              is .endOfSession (one checkpoint, at the very end),
-//                              fetchMore is nil (no more content ever comes)
+//   startReview()          <- "My words" review: every saved word of the job,
+//                              weakest first, straight from SwiftData (words and
+//                              pictures are on the phone — no server call), in
+//                              rounds of 10, fetchMore is nil (the list is fixed)
 //
 // Both entry points end the same way: build a WordVM, store it (weak) in
 // activeVM, set phase = .playing(vm). From there, WordVM drives everything
@@ -25,15 +24,17 @@ import SwiftUI
 //   onResume     -> phase = .playing(vm) or .generating   (resume, or show a
 //                    brief loading state if the next batch isn't ready yet)
 //
-// Free allowance: every answered word -> FreeAllowance.recordAnsweredWord() + DailyReminder.cancelToday();
-// canPlay / canContinue / canFetchMore stop free users at the daily limit.
+// Access: the first 10 words are free (FreeAllowance, once for the whole app). After that the current job has to be
+// unlocked (Purchases, $9.99 once per job): hasAccess. "My words" (openWordList / startReview) needs hasAccess too.
+// Every answered game word -> FreeAllowance.recordAnsweredWord() + DailyReminder.cancelToday();
+// canPlay / canContinue / canFetchMore stop free users at the limit.
 // Failures -> showFailure() -> OfflineView or ErrorView; retry() starts the last session kind again.
 
 @Observable
 final class AppManager {
   private enum SessionKind { case game, review }                   // which kind of session retry() should start again
-  private var lastSession: SessionKind = .game                     // set by startGame / startStruggleReview
-  private var isStarting = false                                   // true while startGame()/startStruggleReview() runs — blocks a second load (auto-retry + tap)
+  private var lastSession: SessionKind = .game                     // set by startGame / startReview
+  private var isStarting = false                                   // true while startGame() runs — blocks a second load (auto-retry + tap)
   var phase: GamePhase = .onboarding                               // drives what RootView renders — the single UI state machine for the app
   let requestModel: RequestModel                                   // shared generation/data layer, same instance across the whole app lifetime
   private weak var activeVM: WordVM?                                // weak on purpose — `phase`'s associated value is the real owner, this is just a way for callbacks to reach it
@@ -42,8 +43,10 @@ final class AppManager {
   var layoutDirection: LayoutDirection {                           // right-to-left for Arabic, Hebrew, Farsi…
     nativeLanguage.isRtL ? .rightToLeft : .leftToRight
   }
-  var hasAccess = false   // paid or unlocked. For now always false; RevenueCat will set it later
-  var canPlay: Bool { hasAccess || !FreeAllowance.shared.isLimitReached }   // paid, or free words left today
+  var currentJob: Occupation? { Occupation.listed(requestModel.proffession) }   // the picked menu job (nil: none, or an old typed one)
+  var hasAccess: Bool { currentJob.map(Purchases.shared.isUnlocked) ?? false }  // the current job is unlocked
+  var canPlay: Bool { hasAccess || !FreeAllowance.shared.isLimitReached }   // unlocked, or free words left
+  var isReviewSession: Bool { lastSession == .review }             // the running/last session is a "My words" review
   
   // MARK: - init
   // Keeps the shared RequestModel (created once in LearnScrumbleApp). phase starts at .onboarding;
@@ -57,27 +60,28 @@ final class AppManager {
   // Normal play — builds a fresh, ever-growing word session from the server (word bank + GPT).
   // 1. Already loading? ignore the call (an auto-retry and a tap can't start two loads). Marks the session kind as .game.
   // 2. Progress to 0 and phase = .generating -> LoadingView while the first batch is built.
-  // 3. FreeAllowance.syncClock(): internet time before checking the allowance.
-  //    Can't play (free limit reached) -> back to WelcomeBackView — a safety net, the buttons should already prevent this.
+  // 3. Can't play (free words used, job not unlocked) -> back to WelcomeBackView — a safety net, the buttons should already prevent this.
   // 4. requestModel.generate(): SwiftData exclusion (seen words) -> getWords (bank first, GPT for the rest)
   //    -> pictures (stored, or new from getPicture) -> requestModel.questions.
   //    Nothing usable came back -> showFailure() picks OfflineView or ErrorView, depending on the cause.
   // 5. Builds the WordVM for this session and wires its callbacks:
   //    - questions: the freshly generated batch
   //    - targetLanguage: locks this session's SwiftData scoping to the current target language
+  //    - profession / originLanguage: saved with every new word for "My words"
   //    - fetchMore: how WordVM asks for more words once it's running low -> requestModel.generateMore
   //      (no checkpointMode passed, so it defaults to .everyN(10))
   //    - onCheckpoint: fired by WordVM every 10th word -> phase = .result(vm) (ResultView).
   //      activeVM being nil here would mean the session was already torn down — bail safely
   //    - onResume: fired by WordVM when leaving a checkpoint.
-  //      Limit reached (NEW) -> don't go back to the answered word, exit to welcome.
+  //      Free words used up -> don't go back to the answered word, exit to welcome.
   //      Next batch not ready yet (pendingAdvance) -> reset a finished progress bar to 0 and show LoadingView briefly;
   //      otherwise straight back to play
   //    - onFetchFailed: fetching more words failed mid-session -> drop the session and show the failure screen
   //    - onWordAnswered: every answered word counts -> FreeAllowance +1, and DailyReminder.cancelToday()
   //      (played today: delete today's booked 9am reminder, see DailyReminder.swift)
-  //    - canContinue: checked after every word -> paid, or free words left
-  //    - canFetchMore: no downloads the user can't play -> paid, or used + still unplayed words stay under the daily limit
+  //    - canContinue: checked after every word -> unlocked, or free words left
+  //    - canFetchMore: no downloads the user can't play -> unlocked, or used + still unplayed words stay under the free limit
+  //    - onReportPicture: the flag on the picture -> reportPicture (also in the review)
   // 6. Keeps a weak reference (activeVM) so the callbacks above can reach this vm later,
   //    then phase = .playing(vm) hands control to MainView.
   @MainActor
@@ -89,7 +93,6 @@ final class AppManager {
     Log.info("🎮 startGame — starting", .app)
       requestModel.progress = 0
     phase = .generating
-    await FreeAllowance.shared.syncClock()
     guard canPlay else {
       phase = .welcomeBack
       return
@@ -106,6 +109,8 @@ final class AppManager {
     let vm = WordVM(
       questions: requestModel.questions,
       targetLanguage: requestModel.selectedLanguage.rawValue,
+      profession: currentJob?.rawValue ?? requestModel.proffession,
+      originLanguage: requestModel.nativeLanguage.rawValue,
       fetchMore: { [requestModel] exclude in
         await requestModel.generateMore(excluding: exclude)
       },
@@ -113,13 +118,13 @@ final class AppManager {
         guard let self, let vm = self.activeVM else { return }
         Log.info("🏁 startGame.onCheckpoint — showing ResultView", .app)
         Track.roundCompleted(mode: .game)
-        if !self.canPlay { Track.dailyLimitReached() }             // the round ended because today's free words are used up
+        if !self.canPlay { Track.freeLimitReached() }              // the round ended because the free words are used up
         self.phase = .result(vm)
       },
       onResume: { [weak self] in
         guard let self, let vm = self.activeVM else { return }
         guard self.canPlay else {
-          Log.info("⛔️ startGame.onResume — daily free limit reached, back to welcome", .app)
+          Log.info("⛔️ startGame.onResume — free words used up, back to welcome", .app)
           self.exitToWelcome()
           return
         }
@@ -142,75 +147,80 @@ final class AppManager {
       canContinue: { [weak self] in self?.canPlay ?? false },
       canFetchMore: { [weak self] unplayed in
         guard let self else { return false }
-        return self.hasAccess || FreeAllowance.shared.wordsUsedToday + unplayed < FreeAllowance.dailyWordLimit
-      }
+        return self.hasAccess || FreeAllowance.shared.wordsUsed + unplayed < FreeAllowance.freeWordLimit
+      },
+      onReportPicture: reportPicture
     )
     activeVM = vm
     phase = .playing(vm)
   }
   
-  // MARK: - startStruggleReview
-  // Review mode — fixed pool of previously-struggled words, no new generation.
-  // 1. Already loading? ignore. Marks the session kind as .review, phase = .generating (LoadingView).
-  // 2. Pulls the current struggle list for this language from SwiftData — the weakest 10.
-  //    Nothing to review right now -> ErrorView with .noStruggleWords.
-  // 3. requestModel.generateStruggleReview(): resolves these known toolNames via the server (getReviewWords, no GPT).
-  //    Nothing came back -> showFailure(), falling back to .reviewUnavailable.
-  // 4. Builds the WordVM:
-  //    - questions: the fixed set of words to review this session
-  //    - checkpointMode .endOfSession: one checkpoint only, after the last word — no interim pauses
-  //    - fetchMore nil: fixed pool — this is a finite review set, not infinite generation
-  //    - onCheckpoint: fired once, when the last review word is answered -> ResultView
-  //    - onResume: fired if continueFromCheckpoint() is somehow called (isFinished guards against advancing further)
-  //    Review answers don't count against the free allowance (no onWordAnswered).
-  // 5. activeVM = vm, phase = .playing(vm).
+  // MARK: - openWordList
+  // "My words" (WelcomeBackView, ResultView): the job's saved words with their right / wrong counts.
+  // Only for an unlocked job — the buttons show the paywall otherwise. Drops a running session.
+  func openWordList() {
+    guard hasAccess else { return }
+    activeVM = nil
+    phase = .wordList
+  }
+
+  // MARK: - startReview
+  // "Repeat all" on MyWordsView — replays the job's saved words, no server call.
+  // 1. The job's words in this language from SwiftData, weakest first (PersistenceController.jobWords), only those
+  //    with a picture. Nothing to review -> stays on the word list.
+  // 2. Builds the WordVM:
+  //    - questions: those words, built from what's stored on the phone (SwiftDataWordModel.asQuestion)
+  //    - checkpointMode .everyN(10): a ResultView after every 10 words; fetchMore nil: after the last word the
+  //      session is finished (isFinished) and the last ResultView offers new words or "My words"
+  //    - onCheckpoint -> ResultView; onResume -> back to playing, or to the list once the review is finished
+  //    Review answers update the counters and the streak and cancel today's reminder, but don't use free words.
+  // 3. activeVM = vm, phase = .playing(vm).
   @MainActor
-  func startStruggleReview() async {
-    guard !isStarting else { Log.debug("🎯 startStruggleReview — already loading, ignoring", .app); return }
-    isStarting = true
-    defer { isStarting = false }
-    Log.info("🎯 startStruggleReview — starting", .app)
+  func startReview() {
+    guard hasAccess, let job = currentJob else { return }
     lastSession = .review
-    phase = .generating
-      let toolNames = PersistenceController.shared.struggleToolNames(targetLanguage: requestModel.selectedLanguage.rawValue, limit: 10)
-    
-    guard !toolNames.isEmpty else {
-      Log.info("🎯 startStruggleReview — no struggle words found", .app)
-      phase = .failed(.noStruggleWords)
+    let lang = requestModel.selectedLanguage.rawValue
+    let questions = PersistenceController.shared.jobWords(profession: job.rawValue, targetLanguage: lang)
+      .filter(\.hasPicture)
+      .map(\.asQuestion)
+    guard !questions.isEmpty else {
+      Log.info("🎯 startReview — no saved words for this job yet", .app)
+      phase = .wordList
       return
     }
-    
-    Log.info("🎯 startStruggleReview — reviewing \(toolNames.count) struggle words", .app, private: "\(toolNames)")
-    let reviewQuestions = await requestModel.generateStruggleReview(toolNames: toolNames)
-      guard !reviewQuestions.isEmpty else {
-        Log.error("🎯 startStruggleReview — resolution produced 0 questions", .app)
-        await showFailure(fallback: .reviewUnavailable)
-        return
-      }
-    
-    Log.info("🎯 startStruggleReview — built \(reviewQuestions.count) reviewable questions, building WordVM", .app)
-    Track.reviewStarted(words: reviewQuestions.count)
+    Log.info("🎯 startReview — reviewing \(questions.count) saved words", .app)
+    Track.reviewStarted(words: questions.count)
     let vm = WordVM(
-      questions: reviewQuestions,
-      targetLanguage: requestModel.selectedLanguage.rawValue,
-      checkpointMode: .endOfSession,
+      questions: questions,
+      targetLanguage: lang,
+      profession: job.rawValue,
+      originLanguage: requestModel.nativeLanguage.rawValue,
       fetchMore: nil,
       onCheckpoint: { [weak self] in
         guard let self, let vm = self.activeVM else { return }
-        Log.info("🏁 startStruggleReview.onCheckpoint — review complete, showing ResultView", .app)
+        Log.info("🏁 startReview.onCheckpoint — showing ResultView", .app)
         Track.roundCompleted(mode: .review)
         self.phase = .result(vm)
       },
       onResume: { [weak self] in
         guard let self, let vm = self.activeVM else { return }
-        Log.info("▶️ startStruggleReview.onResume — isLoadingMore=\(vm.isLoadingMore)", .app)
-        self.phase = vm.isLoadingMore ? .generating : .playing(vm)
-      }
+        Log.info("▶️ startReview.onResume — isFinished=\(vm.isFinished)", .app)
+        if vm.isFinished { self.openWordList() } else { self.phase = .playing(vm) }
+      },
+      onWordAnswered: { DailyReminder.cancelToday() },
+      onReportPicture: reportPicture
     )
     activeVM = vm
     phase = .playing(vm)
   }
   
+  // MARK: - reportPicture(_:)
+  // The flag on a picture (WordVM.reportPicture): sends the report with the picture the user saw.
+  private func reportPicture(_ question: QuestionModel) async -> RequestModel.ReportResult {
+    Track.pictureReported()
+    return await requestModel.reportPicture(toolName: question.word.toolName, imageURL: question.imageURL)
+  }
+
   // MARK: - showFailure(fallback:)
   // Single place that decides which failure screen to show.
   // Offline wins if RequestModel saw it, OR if the phone has no connection right now —
@@ -278,7 +288,7 @@ final class AppManager {
     case .game:
       await startGame()
     case .review:
-      await startStruggleReview()
+      startReview()
     }
   }
 }

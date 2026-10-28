@@ -31,7 +31,7 @@ import UserNotifications
 //   SettingsView (toggle or time changed) -> reschedule(); authorizationStatus() for the "notifications are off" note
 //   LearnScrumbleApp (app becomes active) -> reschedule()
 //        deletes the booked reminders and books 7 fresh days from today
-//        reads FreeAllowance.shared.wordsUsedToday to skip today if already played
+//        reads Streak.shared.playedToday to skip today if already played
 //   AppManager.startGame -> WordVM.onWordAnswered -> cancelToday()
 //        deletes today's booked reminder after every answered word
 //
@@ -86,7 +86,7 @@ enum DailyReminder {
 
     let calendar = Calendar.current
     let now = Date()
-    let playedToday = FreeAllowance.shared.wordsUsedToday > 0
+    let playedToday = Streak.shared.playedToday
     let hour = minutes / 60
     let minute = minutes % 60
     for offset in 0..<daysAhead {

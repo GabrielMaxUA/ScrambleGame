@@ -6,7 +6,7 @@ import SwiftData
 // MARK: - Flow of this file
 // WordVM owns one play session: the current word, the scrambled letters, and
 // when to pause for a results checkpoint. It's created once by AppManager
-// (startGame() or startStruggleReview()) and handed down through GamePhase
+// (startGame() or startReview()) and handed down through GamePhase
 // to whichever view needs it.
 //
 // Called FROM the view layer:
@@ -15,16 +15,18 @@ import SwiftData
 //   - nextWord()                     <- user taps "continue" after seeing the result
 //   - continueFromCheckpoint()       <- user taps "Play more!" on ResultView
 //   - resetGuess()                   <- user taps "clear/retry" on current word
-//   - hasStruggleWords               <- checked live by ResultView to decide
-//                                        whether to show "Improve previous!"
+//   - reportPicture()                <- user confirms the flag on the picture: the server may draw a new one,
+//                                        which replaces the picture here and in the saved word
 //
 // Called FROM AppManager (via init):
 //   - checkpointMode <- .everyN(10) for normal play (pause every 10th word,
 //                        more content can be fetched via fetchMore), or
-//                        .endOfSession for a fixed review pool (struggle
-//                        review) — pause exactly once, after the last word
+//                        .endOfSession — pause exactly once, after the last word
 //   - fetchMore    <- how WordVM asks RequestModel for more words when running
-//                      low; nil for a fixed pool (e.g. struggle review)
+//                      low; nil for a fixed pool (the "My words" review, the
+//                      tutorial): the last word always ends with a checkpoint
+//   - profession / originLanguage <- saved with each new word, so "My words"
+//                      can list and replay it without the server
 //   - onCheckpoint <- tells AppManager "show ResultView now"
 //   - onResume     <- tells AppManager "return to playing (or show LoadingView
 //                      if the next batch/word isn't ready yet)" — fired from a
@@ -34,7 +36,7 @@ import SwiftData
 //
 // Internal chain when the user finishes a word:
 //   nextWord() -> checkpointMode decides: .everyN hits its Nth word, or
-//                 .endOfSession hits the last word in the pool -> pause +
+//                 .endOfSession or a fixed pool hits its last word -> pause +
 //                 onCheckpoint(); otherwise -> advance()
 //   advance()  -> moves currentIndex forward and fires onResume?(), OR if
 //                 we've run past what's loaded: sets pendingAdvance, kicks
@@ -50,14 +52,13 @@ import SwiftData
 //                 calls advance() again — which fires onResume?() itself
 //
 // SwiftData (progress tracking) is scoped per (word, targetLanguage) pair:
-//   recordGuess()      <- saves correct/incorrect after every answered word
+//   recordGuess()      <- saves correct/incorrect after every answered word, and the whole
+//                          word (job, words, picture) the first time it's answered
 //   batchAccuracy()    <- % correct for the current checkpoint's window —
 //                          the last N words for .everyN, or the whole pool
 //                          for .endOfSession (see currentBatchWindow)
 //   overallAccuracy()  <- % correct across all-time history in this target language
-//   hasStruggleWords   <- true if any concept in this target language currently
-//                          qualifies as isStruggle (SwiftDataWordModel), re-checked
-//                          fresh on every access — never cached
+//   jobProgress()      <- learned / played words of this session's job (ResultView)
 
 @Observable
 class WordVM {
@@ -77,9 +78,13 @@ class WordVM {
   private let onWordAnswered: (() -> Void)?            // AppManager: count this word toward today's free allowance
   private let canContinue: (() -> Bool)?               // AppManager: may the user play another word?
   private let canFetchMore: ((Int) -> Bool)?           // AppManager: may we download more, given how many words are still unplayed?
+  private let onReportPicture: ((QuestionModel) async -> RequestModel.ReportResult)?   // AppManager -> RequestModel.reportPicture; nil = no flag (tutorial)
+  private(set) var pictureReport: PictureReport = .idle          // the current word's report, shown on the picture (ImageComponent)
   private let isPractice: Bool                         // tutorial word (OnboardingService): answers aren't saved to progress
   private let modelContext: ModelContext                         // SwiftData context, shared singleton from PersistenceController
   private let targetLanguage: String                             // Languages.rawValue for this session — scopes all progress queries below
+  let profession: String                                         // the job this session is for (Occupation rawValue) — saved with new words
+  private let originLanguage: String                             // the hint's language — saved with new words
   var overlayShown: Bool = false                                 // controls the correct/incorrect result overlay shown after checkAnswer()
   var isLoadingMore = false                                      // true while requestMoreNow()'s background Task is in flight
   private(set) var pendingAdvance = false                             // true when the user is waiting on advance() but the next batch hasn't landed yet
@@ -111,25 +116,25 @@ class WordVM {
     return parts.joined(separator: " ").lowercased()               // rejoin segments with spaces, normalize case for comparison
   }
   
-  var hasStruggleWords: Bool {                                        // NEW — checked live each time ResultView renders, always fresh off SwiftData
-    !PersistenceController.shared.struggleToolNames(targetLanguage: targetLanguage).isEmpty
-  }
-  
   // MARK: - init
   // Builds the session from the first batch and whatever AppManager wired in:
   //   questions       — initial batch of questions, from RequestModel.generate() (or the review pool)
   //   targetLanguage  — which language this whole session is testing (drives SwiftData scoping)
+  //   profession / originLanguage — saved with every new word (default "" for the tutorial, which saves nothing)
   //   checkpointMode  — NEW, .everyN(10) by default so normal play keeps today's behavior
-  //   fetchMore       — how to fetch more words when running low; nil = fixed-size session (e.g. struggle review)
+  //   fetchMore       — how to fetch more words when running low; nil = fixed-size session ("My words" review, tutorial)
   //   onCheckpoint    — fired every 10th word; AppManager wires this to show ResultView
   //   onResume        — fired when leaving the checkpoint; AppManager wires this to resume play
   //   onFetchFailed / onWordAnswered / canContinue / canFetchMore — see the properties above
+  //   onReportPicture — how a picture report reaches the server; nil hides the flag
   //   isPractice      — true for the "How to play" tutorial: nothing is saved to SwiftData
   // Steps: grab the shared SwiftData context once, up front -> store the starting batch, lock in the language
   // this session tracks progress against, store every injected closure (or nil) -> scramble letters for the
   // very first word immediately -> start a prefetch if the batch is already short.
   init(questions: [QuestionModel],
        targetLanguage: String,
+       profession: String = "",
+       originLanguage: String = "",
        checkpointMode: CheckpointMode = .everyN(10),
        fetchMore: (([String]) async -> [QuestionModel])? = nil,
        onCheckpoint: (() -> Void)? = nil,
@@ -138,11 +143,14 @@ class WordVM {
        onWordAnswered: (() -> Void)? = nil,
        canContinue: (() -> Bool)? = nil,
        canFetchMore: ((Int) -> Bool)? = nil,
+       onReportPicture: ((QuestionModel) async -> RequestModel.ReportResult)? = nil,
        isPractice: Bool = false
   ) {
     self.modelContext = PersistenceController.shared.context
     self.questions = questions
     self.targetLanguage = targetLanguage
+    self.profession = profession
+    self.originLanguage = originLanguage
     self.checkpointMode = checkpointMode
     self.fetchMore = fetchMore
     self.onCheckpoint = onCheckpoint
@@ -151,6 +159,7 @@ class WordVM {
     self.onWordAnswered = onWordAnswered
     self.canContinue = canContinue
     self.canFetchMore = canFetchMore
+    self.onReportPicture = onReportPicture
     self.isPractice = isPractice
     Log.info("🟢 WordVM.init — \(questions.count) starting questions, targetLanguage=\(targetLanguage), fetchMore=\(fetchMore != nil)", .game)
     setupCurrentWord()
@@ -165,6 +174,7 @@ class WordVM {
     return UIImage(data: data)                                     // decode the raw bytes into a displayable image
   }
   var isComplete: Bool { !guessedWord.contains(where: { $0 == nil }) }  // true once every letter slot has been filled in
+  var canReport: Bool { onReportPicture != nil }                   // show the flag on the picture
   
   // MARK: - setupCurrentWord
   // Resets scrambled tiles + empty guess slots for whatever word is now current.
@@ -177,6 +187,7 @@ class WordVM {
   //    after that (very rare, e.g. "ab") -> move the first letter to the end: always a different order.
   // 5. Wrap each shuffled letter into a tappable LetterModel tile (id = its position), all unused.
   func setupCurrentWord() {
+    pictureReport = .idle                                         // a new word starts without a report
     guard let word else {
       guessedWord = []
       scrumbledWord = []
@@ -238,24 +249,28 @@ class WordVM {
   // 2. Compares the guess to the target word, case-insensitive (resultWord is already lowercased, with spaces between words).
   // 3. Records the verdict for the UI (guessResult) and shows the result overlay.
   // 4. recordGuess: saves this attempt to SwiftData, keyed by the canonical concept name
-  //    (skipped for the tutorial's practice word, so it never shows up in stats or struggle review).
-  // 5. onWordAnswered: counts it toward today's free allowance, right or wrong.
+  //    (skipped for the tutorial's practice word, so it never shows up in stats or "My words"),
+  //    and Streak.shared.recordPlay(): today counts as a day played.
+  // 5. onWordAnswered: counts it toward the free words, right or wrong (not wired for the review).
   func checkAnswer() {
     guard isComplete, let word else { return }
     let isCorrect = resultWord == word.targetWord.lowercased()
     guessResult = isCorrect ? .correct : .incorrect
     overlayShown = true
     Log.debug("✅❌ checkAnswer — guessed='\(resultWord)' target='\(word.targetWord)' -> \(isCorrect ? "CORRECT" : "INCORRECT")", .game)
-    if !isPractice { recordGuess(for: word.toolName, result: guessResult!) }
+    if !isPractice {
+      recordGuess(for: questions[currentIndex], result: guessResult!)
+      Streak.shared.recordPlay()
+    }
     onWordAnswered?()
   }
   
   // MARK: - nextWord
   // "Next" on AnswerResultView.
   // 1. Clears the verdict. Free daily limit reached (canContinue false) -> end the round here with a checkpoint.
-  // 2. .everyN: the next word would be the Nth -> checkpoint (ResultView), staying on the current index.
-  //    .endOfSession: that was the last word in the pool -> checkpoint and isFinished
+  // 2. A fixed pool (no fetchMore) or .endOfSession: that was the last word -> checkpoint and isFinished
   //    (this pool is exhausted — there's genuinely nothing after this checkpoint).
+  //    .everyN: the next word would be the Nth -> checkpoint (ResultView), staying on the current index.
   // 3. Otherwise -> advance() to the next word.
   func nextWord() {
     guessResult = nil
@@ -266,6 +281,14 @@ class WordVM {
       return
     }
     let nextIndex = currentIndex + 1
+
+    if fetchMore == nil, nextIndex >= questions.count {            // fixed pool: nothing comes after the last word
+      isAtCheckpoint = true
+      isFinished = true
+      Log.info("🏁 nextWord — last word of a fixed pool (\(questions.count) total), showing end-of-session result", .game)
+      onCheckpoint?()
+      return
+    }
 
     switch checkpointMode {
     case .everyN(let interval):
@@ -318,7 +341,7 @@ class WordVM {
   //   - a fetch is already in flight -> pendingAdvance: advance automatically once it lands
   //   - no fetch in flight but more content is possible -> pendingAdvance + fetch right now
   //     (safety net — the prefetch wasn't triggered in time)
-  //   - no fetchMore at all (fixed-size session, e.g. struggle review) -> isFinished: genuinely nothing left
+  //   - no fetchMore at all (fixed-size session, e.g. the "My words" review) -> isFinished: genuinely nothing left
   //   then (NEW) onResume right away — waiting on a fetch means AppManager shows LoadingView.
   // Otherwise: move to the requested word -> scramble its letters / reset guess slots
   // -> kick off a background prefetch if we're getting close to the end -> hide the previous word's result overlay.
@@ -420,6 +443,46 @@ class WordVM {
     Log.debug("♻️ resetGuess — cleared all answer slots for index \(currentIndex)", .game)
   }
   
+  // MARK: - reportPicture
+  // The user confirmed the flag on the picture (ImageComponent).
+  // 1. No report hook, or a report already running/finished for this word -> nothing.
+  // 2. .sending (the picture shows "Drawing a new picture…") -> onReportPicture -> RequestModel.reportPicture.
+  // 3. A new picture came back (drawn for this user, or the already-fixed shared one) -> replaces this question's
+  //    picture and link, and the saved word's (if the word was already answered): this phone keeps it in "My words"
+  //    and the review, whatever the developer decides for everyone else. -> .redrawn
+  //    Otherwise .received / .tooMany / .failed — ImageComponent shows a short note for each.
+  //    The user moved on meanwhile -> the result is dropped (the next word has its own state).
+  func reportPicture() async {
+    guard let onReportPicture, pictureReport == .idle, questions.indices.contains(currentIndex) else { return }
+    let index = currentIndex
+    let question = questions[index]
+    pictureReport = .sending
+    let result = await onReportPicture(question)
+    guard currentIndex == index else { return }
+    switch result {
+    case .newPicture(let data, let link):
+      questions[index].imageData = data
+      questions[index].imageURL = link
+      updateSavedPicture(for: question.word.toolName, data: data, link: link)
+      pictureReport = .redrawn
+    case .received: pictureReport = .received
+    case .tooMany:  pictureReport = .tooMany
+    case .failed:   pictureReport = .failed
+    }
+  }
+
+  // MARK: - updateSavedPicture(for:data:link:)
+  // The saved word (this language) gets the new picture and link. Not answered yet -> no row: recordGuess saves the
+  // new picture later, because it reads it from the question.
+  private func updateSavedPicture(for toolName: String, data: Data, link: String) {
+    let lang = targetLanguage
+    let descriptor = FetchDescriptor<SwiftDataWordModel>(predicate: #Predicate { $0.concept == toolName && $0.targetLanguage == lang })
+    guard let record = (try? modelContext.fetch(descriptor))?.first else { return }
+    record.imageData = data
+    record.imageURL = link
+    try? modelContext.save()
+  }
+
   // MARK: - SwiftData stats (scoped to this session's target language)
 
     // MARK: - accuracy(for:)
@@ -434,7 +497,7 @@ class WordVM {
       guard questions.indices.contains(currentIndex) else { return [] }
       switch checkpointMode {
       case .everyN(let interval):
-        let start = max(currentIndex - interval + 1, 0)
+        let start = currentIndex / interval * interval              // start of this round — also right for a shorter last round of a fixed pool
         return questions[start...currentIndex]
       case .endOfSession:
         return questions[0...currentIndex]                            // the whole review pool is "this batch"
@@ -462,14 +525,23 @@ class WordVM {
     func overallAccuracy() -> (correct: Int, total: Int) {
       PersistenceController.shared.overallAccuracy(targetLanguage: targetLanguage)
     }
+
+    // MARK: - jobProgress
+    // Learned words and right / wrong answers of this session's job in this language (ResultView's progress card).
+    func jobProgress() -> JobProgress {
+      PersistenceController.shared.jobProgress(profession: profession, targetLanguage: targetLanguage)
+    }
   
     // MARK: - recordGuess(for:result:)
     // Saves one answered word's outcome to SwiftData.
     // 1. Finds this exact (word, language) row — the language is captured first for use inside #Predicate.
     // 2. Reuses the existing row, or creates and inserts a fresh one for this (word, language) pair (NEW: logs which).
-    // 3. Bumps whichever counter matches this attempt, stamps when the word was last practiced.
-    // 4. Saves the change to disk.
-    private func recordGuess(for toolName: String, result: GuessResult) {
+    // 3. A row without the whole word yet (new, or saved before 28 Oct 2026) gets it now: job, both words,
+    //    picture prompt and picture — "My words" and the review then need no server.
+    // 4. Bumps whichever counter matches this attempt, stamps when the word was last practiced.
+    // 5. Saves the change to disk.
+    private func recordGuess(for question: QuestionModel, result: GuessResult) {
+      let toolName = question.word.toolName
       let lang = targetLanguage
       let predicate = #Predicate<SwiftDataWordModel> { $0.concept == toolName && $0.targetLanguage == lang }
       let descriptor = FetchDescriptor<SwiftDataWordModel>(predicate: predicate)
@@ -482,6 +554,16 @@ class WordVM {
       }()
       Log.debug("💾 recordGuess — concept='\(toolName)' lang=\(lang) [\(existing == nil ? "NEW row" : "existing row")], result=\(result)", .game)
 
+      if !record.hasWord, !profession.isEmpty {
+        record.profession = profession
+        record.targetWord = question.word.targetWord
+        record.originWord = question.word.originWord
+        record.originLanguage = originLanguage
+        record.imagePrompt = question.word.imagePrompt
+        record.imageData = question.imageData
+        record.imageURL = question.imageURL ?? ""
+      }
+
       switch result {
       case .correct: record.correct += 1
       case .incorrect: record.incorrect += 1
@@ -491,4 +573,15 @@ class WordVM {
       try? modelContext.save()
       Log.debug("💾 recordGuess — saved. '\(toolName)' now correct=\(record.correct) incorrect=\(record.incorrect) accuracy=\(record.accuracy)", .game)
     }
+}
+
+// MARK: - PictureReport
+// Where the current word's picture report stands (WordVM.reportPicture -> ImageComponent).
+enum PictureReport: Equatable {
+  case idle                 // not reported: the flag shows
+  case sending              // waiting for the server (a new picture can take ~20 s)
+  case redrawn              // a new picture replaced the wrong one on this phone
+  case received             // recorded, a person will check it
+  case tooMany              // today's reports are used up
+  case failed               // couldn't send it (offline, server problem)
 }

@@ -9,24 +9,24 @@ import SwiftUI
 
 // MARK: - Flow of this file
 // The returning user's start screen (phase .welcomeBack).
-//   Reads PersistenceController: overall accuracy (score tile) and struggle words (review button)
-//   -> "Continue learning": free words left (canPlay) -> onContinue -> AppManager.startGame(); limit reached -> daily-limit alert
-//   -> "Improve previous!": paid -> onReview -> startStruggleReview(); free -> subscription alert
+//   Reads PersistenceController.jobProgress (JobProgressCard: learned, right, wrong), Streak (🔥 days in a row)
+//   and overall accuracy (the owl celebrates at 80% or more).
+//   -> "Continue learning": unlocked or free words left (canPlay) -> onContinue -> AppManager.startGame();
+//      free words used up -> alert -> "Unlock" -> onShowPaywall (PaywallView)
+//   -> "My words" (once a word of this job was played): unlocked -> onWordList -> MyWordsView; otherwise the alert
 //   -> gear (top) -> onSettings -> AppManager.openSettings()
-//   -> the alerts' "See plans" -> onShowPaywall (paywall not built yet).
-//   The owl celebrates when the overall score is 80% or more.
 
 struct WelcomeBackView: View {
   let targetLanguage: String                     // language being learned — scopes the stats
-  let hasAccess: Bool                            // paid/unlocked user
-  let canPlay: Bool                              // NEW — paid, or free words left today (AppManager.canPlay)
+  let job: Occupation?                           // the current job — scopes the progress card and "My words"
+  let hasAccess: Bool                            // the current job is unlocked
+  let canPlay: Bool                              // unlocked, or free words left (AppManager.canPlay)
   var onContinue: () -> Void                     // start a game with the saved languages and profession
-  var onReview: () -> Void                       // struggle review (paid)
-  var onShowPaywall: () -> Void                  // "See plans" in the alert
-  var onSettings: () -> Void                     // NEW comment — opens SettingsView (free for everyone)
-  var previewHasStruggle: Bool? = nil            // previews only: force the struggle check on or off
-  @State private var showAlert = false                    // is the daily-limit / subscription alert open
-  @State private var alertType: MenuAlert = .subscriptionRequired   // which of the two alerts
+  var onWordList: () -> Void                     // "My words" (unlocked)
+  var onShowPaywall: () -> Void                  // "Unlock" in the alert
+  var onSettings: () -> Void                     // opens SettingsView (free for everyone)
+  @State private var showAlert = false                    // is the free-words / locked-list alert open
+  @State private var alertType: MenuAlert = .wordListLocked   // which of the two alerts
   
   private var overallScore: Double? {            // nil when nothing has been answered yet, so the tile shows "—"
     let stat = PersistenceController.shared.overallAccuracy(targetLanguage: targetLanguage)
@@ -34,12 +34,13 @@ struct WelcomeBackView: View {
     return Double(stat.correct) / Double(stat.total)
   }
   
-  private var hasStruggleWords: Bool {           // any struggle word in this language -> show "Improve previous!" (previews can force it)
-    previewHasStruggle ?? !PersistenceController.shared.struggleToolNames(targetLanguage: targetLanguage).isEmpty
+  private var progress: JobProgress {           // this job's numbers in this language (zeros when no job is picked)
+    PersistenceController.shared.jobProgress(profession: job?.rawValue ?? "", targetLanguage: targetLanguage)
   }
   
   var body: some View {
     let score = overallScore                     // read once per redraw (it's a SwiftData fetch)
+    let progress = progress
     
     VStack(spacing: 24) {
       Spacer(minLength: 40)
@@ -56,13 +57,13 @@ struct WelcomeBackView: View {
       
       Spacer()
       
-      VStack(spacing: 8) {                             // the score card + what the number means
-        statTile(title: "All time", score: score)
+      VStack(spacing: 8) {                             // the progress card + what "learned" means
+        JobProgressCard(job: job, progress: progress, streak: Streak.shared.current)
           .overlay(alignment: .top) {
             LineOwl(isCelebrating: (score ?? 0) >= 0.8)   // nil (no history) counts as 0: owl sits still
               .alignmentGuide(.top) { $0[.bottom] - 4 }  // feet rest on the card
           }
-        Text("Share of words you answered correctly")
+        Text("A word is learned once you get it right at least twice, and 3 times out of 4.")
           .font(.footnote)
           .foregroundStyle(.white.opacity(0.6))
           .multilineTextAlignment(.center)
@@ -72,15 +73,15 @@ struct WelcomeBackView: View {
       Spacer()
       
       VStack(spacing: 12) {
-        Button {                                       // NEW — free words left: play; limit reached: alert
+        Button {                                       // free words left or unlocked: play; otherwise: alert
           if canPlay {
             onContinue()
           } else {
-            alertType = .dailyLimitReached
+            alertType = .freeWordsDone
             showAlert = true
           }
         } label: {
-          Label("Continue learning", systemImage: canPlay ? "arrow.right" : "lock.fill")   // NEW — lock at the limit
+          Label("Continue learning", systemImage: canPlay ? "arrow.right" : "lock.fill")   // lock once the free words are used
             .font(.headline)
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
@@ -88,11 +89,11 @@ struct WelcomeBackView: View {
         }
         .glassCompat(in: .capsule, interactive: true)
         
-        if hasStruggleWords {
-          Button {                                     // paid: review; free: subscription alert
-            if hasAccess { onReview() } else { alertType = .subscriptionRequired; showAlert = true }
+        if progress.played > 0 {
+          Button {                                     // unlocked: the list; otherwise: the unlock alert
+            if hasAccess { onWordList() } else { alertType = .wordListLocked; showAlert = true }
           } label: {
-            Label("Improve previous!", systemImage: hasAccess ? "arrow.counterclockwise" : "lock.fill")
+            Label("My words", systemImage: hasAccess ? "list.bullet.rectangle" : "lock.fill")
               .font(.headline)
               .foregroundStyle(.white)
               .frame(maxWidth: .infinity)
@@ -119,7 +120,7 @@ struct WelcomeBackView: View {
       .padding(.top, 8)
     }
     .background(Color.black.opacity(0.92))
-    .alert(alertType.title, isPresented: $showAlert) {   // NEW — restored: locked review and daily limit
+    .alert(alertType.title, isPresented: $showAlert) {   // locked list or free words used up
       Button(alertType.confirmTitle) { onShowPaywall() }
       Button("Cancel", role: .cancel) { }
     } message: {
@@ -127,42 +128,10 @@ struct WelcomeBackView: View {
     }
     .alertSound(isPresented: showAlert)
   }
-  
-  // MARK: - statTile(title:score:)
-  // Same tile as ResultView: a title and a big percent, or "No answers yet" when there's no score yet (nil).
-  // VoiceOver reads the tile as one element, e.g. "All time, 80%".
-  private func statTile(title: LocalizedStringKey, score: Double?) -> some View {
-    VStack(spacing: 6) {
-      Text(title)
-        .font(.subheadline.weight(.semibold))
-        .foregroundStyle(.white.opacity(0.7))
-      Group {
-        if let score {
-          Text(score, format: .percent.precision(.fractionLength(0)))
-            .font(.system(size: 40, weight: .semibold, design: .rounded))
-        } else {
-          Text("No answers yet")                         // nothing answered in this language yet
-            .font(.title3.weight(.semibold))
-            .multilineTextAlignment(.center)
-            .frame(minHeight: 48)                        // same height as the big percent, so the card doesn't jump
-        }
-      }
-      .foregroundStyle(.white)
-    }
-    .frame(maxWidth: .infinity)
-    .padding(.vertical, 18)
-    .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
-    .overlay {
-      RoundedRectangle(cornerRadius: 14)
-        .stroke(.white.opacity(0.2), lineWidth: 1)
-    }
-    .accessibilityElement(children: .combine)
-  }
 }
 
 #Preview {
-  WelcomeBackView(targetLanguage: "uk-UA", hasAccess: false,
-                  canPlay: false,                                  // NEW — shows the locked "Continue learning"
-                  onContinue: {}, onReview: {}, onShowPaywall: {}, onSettings: {},
-                  previewHasStruggle: true)
+  WelcomeBackView(targetLanguage: "uk-UA", job: .plumber, hasAccess: false,
+                  canPlay: false,                                  // shows the locked "Continue learning"
+                  onContinue: {}, onWordList: {}, onShowPaywall: {}, onSettings: {})
 }

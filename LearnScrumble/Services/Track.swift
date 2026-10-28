@@ -16,11 +16,11 @@ import FirebaseAnalytics
 // Who calls what:
 //   RootView          -> onboardingCompleted (first "Start Learning"), reminderEnabled(.onboarding) if allowed
 //   OnboardingView    -> tutorialFinished(skipped:) ("Let's go!" or Skip)
-//   AppManager        -> roundCompleted, dailyLimitReached, reviewStarted
+//   AppManager        -> roundCompleted, freeLimitReached, reviewStarted
+//   PaywallView       -> paywallShown; Purchases -> jobUnlocked; AppManager -> pictureReported
 //   SettingsView      -> reminderEnabled(.settings) when the toggle is turned on and allowed
 //   RequestModel      -> generationFailed (next to the Crashlytics non-fatal in reportFailure)
 //   ProfessionStore   -> professionSelected: the menu job's English name, or "custom" when typed (never the typed text)
-//   Later, with the paywall (checklist §4.3): paywall_shown, trial_started.
 //
 // Privacy: parameters are languages, counts and error names only. Never the typed profession or any user text.
 // To watch events arrive: run with -FIRDebugEnabled (Edit Scheme -> Run -> Arguments) and open
@@ -46,8 +46,20 @@ enum Track {
     send("round_completed", ["mode": mode.rawValue])
   }
 
-  static func dailyLimitReached() {
-    send("daily_limit_reached", ["limit": FreeAllowance.dailyWordLimit])
+  static func freeLimitReached() {                                 // the 10 free words are used up
+    send("free_limit_reached", ["limit": FreeAllowance.freeWordLimit])
+  }
+
+  static func pictureReported() {                                  // the flag on a picture was confirmed
+    send("picture_reported")
+  }
+
+  static func paywallShown() {
+    send("paywall_shown")
+  }
+
+  static func jobUnlocked(product: String) {                       // product ID, e.g. "com.MaxGabriel.LearnScrumble.job.cook"
+    send("job_unlocked", ["product": product])
   }
 
   static func reviewStarted(words: Int) {

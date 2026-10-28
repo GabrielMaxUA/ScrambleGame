@@ -40,12 +40,14 @@ One switch decides which Firebase project a build uses: **Build Settings → Use
 
 ## Testing tricks
 
-**Reset the 10 free words a day.** The counter lives in the Keychain, which survives deleting the app.
+**Reset the 10 free words** (10 once for the whole app, then a $9.99 unlock per profession). The counter lives in the Keychain, which survives deleting the app.
 - Easiest: **Settings → Debug → Reset free words** (Debug builds only, `#if DEBUG`; never in App Store builds).
 - Or, for the simulator's whole Keychain, in Terminal:
   ```bash
   xcrun simctl keychain booted reset
   ```
+
+**Test the profession unlocks without App Store Connect.** The scheme uses `StoreKit/LearnScrumble.storekit` (Edit Scheme → Run → Options → StoreKit Configuration): one $9.99 non-consumable per menu job, `com.MaxGabriel.LearnScrumble.job.<case name>`. Purchases in the simulator are fake and only work when the app is started from Xcode (▶︎ Run). To buy again, Xcode → Debug → StoreKit → Manage Transactions → delete. The same product IDs must be created in App Store Connect before release.
 
 **Start as a brand-new user.** Delete the app from the simulator (long-press the icon → Remove App), then Run again. Add the Keychain reset above for fresh free words too.
 

@@ -10,143 +10,63 @@ import Security
 import Observation
 
 // MARK: - Flow of this file
-// Counts words answered per day for free users.
-// Stored in the Keychain (survives deleting the app) and dated with internet time (changing the phone's date doesn't help).
-//   AppManager.startGame -> syncClock(): fetch real time from apple.com -> refresh()
-//   WordVM.onWordAnswered -> recordAnsweredWord(): +1 for today, saved to the Keychain
-//   AppManager.canPlay / canFetchMore read isLimitReached / wordsUsedToday (no downloads the user can't play)
-//   LearnScrumbleApp (app becomes active) -> refresh(): a new day resets the count to 0
-//   DailyReminder reads wordsUsedToday to skip today's 9am reminder once the user has played
-//   MenuAlert reads dailyWordLimit for the "free words are done" text
-//   Debug builds only: SettingsView's "Reset free words" -> resetForTesting(): today's count back to 0
+// Counts the free words: the first 10 answered words, once for the whole app (since 28 Oct 2026; before, 10 a day).
+// They're a taste of the app — after them, a job has to be unlocked (Purchases) to keep playing.
+// Stored in the Keychain, so deleting and reinstalling the app doesn't give the 10 words again.
+//   WordVM.onWordAnswered -> recordAnsweredWord(): +1, saved to the Keychain
+//   AppManager.canPlay / canFetchMore read isLimitReached / wordsUsed (no downloads the user can't play)
+//   MenuAlert / OnboardingView read freeWordLimit for their texts
+//   Debug builds only: SettingsView's "Reset free words" -> resetForTesting(): the count back to 0
 @Observable
 final class FreeAllowance {
   static let shared = FreeAllowance()                              // one counter for the whole app
-  static let dailyWordLimit = 10                                   // 1 round of 10 (was 20 until 27 Oct 2026) — change here only
-                                                                   // and in functions/src/index.ts DAILY_FREE_WORDS
-  
-  private(set) var wordsUsedToday = 0                              // today's answered words; views update when it changes
-  var isLimitReached: Bool { wordsUsedToday >= Self.dailyWordLimit }   // free user is done for today
-  
+  static let freeWordLimit = 10                                    // free words, once — change here only
+                                                                   // (functions/src/index.ts DAILY_FREE_WORDS still counts per day, logging only)
+
+  private(set) var wordsUsed = 0                                   // free words answered so far; views update when it changes
+  var isLimitReached: Bool { wordsUsed >= Self.freeWordLimit }     // the free words are used up
+
   private struct Stored: Codable {                                 // what's saved in the Keychain, as JSON
-    var day: String                                                // e.g. "2026-10-8" — the day the count belongs to
-    var count: Int                                                 // words answered that day
-    var latestDate: Date                                           // latest date ever seen: the day can never go backwards
+    var count: Int                                                 // words answered, ever
   }
-  
-  @ObservationIgnored private var reference: (date: Date, ticks: UInt64)?   // internet time + internal clock reading when it was fetched
-  
+
   // MARK: - init
-  // Private: only `shared` exists. Loads today's count right away (phone's clock until syncClock runs).
+  // Private: only `shared` exists. Loads the count right away.
   private init() { refresh() }
-  
-  // MARK: - Public
-  
-  // MARK: - syncClock
-  // Asks a web server for the real current time. Call before starting a game.
-  // 1. HEAD request to apple.com — only the reply headers are needed, not the page; gives up after 5s.
-  // 2. Reads the "Date" header -> real time; stores it with the phone's internal clock reading at that moment,
-  //    so trustedNow() can count forward from it.
-  // 3. No internet / no header -> keeps using the phone's clock (logged).
-  // 4. refresh() — today's count with the corrected time.
-  func syncClock() async {
-    var request = URLRequest(url: URL(string: "https://www.apple.com")!)
-    request.httpMethod = "HEAD"
-    request.timeoutInterval = 5
-    if let (_, response) = try? await URLSession.shared.data(for: request),
-       let header = (response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Date"),
-       let date = Self.httpDateFormatter.date(from: header) {
-      reference = (date, clock_gettime_nsec_np(CLOCK_MONOTONIC))
-      Log.debug("🕒 FreeAllowance — internet time \(date)", .allowance)
-    } else {
-      Log.info("🕒 FreeAllowance — no internet time, using the phone's clock", .allowance)
-    }
-    refresh()
-  }
-  
+
   // MARK: - recordAnsweredWord
-  // Called once for every answered word (WordVM.onWordAnswered, set up in AppManager.startGame).
-  // Today's stored count (new day = starts at 0) +1 -> saved to the Keychain -> wordsUsedToday updated.
+  // Called once for every answered word in a normal game (WordVM.onWordAnswered, set up in AppManager.startGame).
+  // Stops counting at the limit — the number is only needed up to there.
   func recordAnsweredWord() {
-    var stored = currentStored()
-    stored.count += 1
+    guard !isLimitReached else { return }
+    let stored = Stored(count: wordsUsed + 1)
     Self.save(stored)
-    wordsUsedToday = stored.count
-    Log.debug("🧮 FreeAllowance — \(wordsUsedToday)/\(Self.dailyWordLimit) words today", .allowance)
+    wordsUsed = stored.count
+    Log.debug("🧮 FreeAllowance — \(wordsUsed)/\(Self.freeWordLimit) free words used", .allowance)
   }
-  
+
   // MARK: - refresh
-  // Re-reads the count, starting a new day if midnight has passed, saves it back and publishes it.
+  // Re-reads the count from the Keychain and publishes it.
   func refresh() {
-    let stored = currentStored()
-    Self.save(stored)
-    wordsUsedToday = stored.count
+    wordsUsed = Self.load()?.count ?? 0
   }
 
   #if DEBUG
   // MARK: - resetForTesting
-  // Debug builds only (Settings -> Debug -> Reset free words), so testers get 20 fresh words without Terminal.
-  // Today's count -> 0, saved to the Keychain. The day and the latest date seen are kept, so the date
-  // protection still works. Doesn't exist in Release (App Store / TestFlight) builds.
+  // Debug builds only (Settings -> Debug -> Reset free words), so testers get the 10 words again without Terminal.
+  // Doesn't exist in Release (App Store / TestFlight) builds.
   func resetForTesting() {
-    var stored = currentStored()
-    stored.count = 0
-    Self.save(stored)
-    wordsUsedToday = 0
+    Self.save(Stored(count: 0))
+    wordsUsed = 0
     Log.info("🧪 FreeAllowance — reset to 0 (debug build)", .allowance)
   }
   #endif
-  
-  // MARK: - Time
-  
-  // MARK: - trustedNow
-  // The current time we trust. No internet time yet: the phone's clock.
-  // Otherwise: internet time + how long the internal clock has run since then (nanoseconds -> seconds).
-  // The internal clock isn't affected by changing the date in Settings.
-  private func trustedNow() -> Date {
-    guard let reference else { return Date() }
-    let elapsed = Double(clock_gettime_nsec_np(CLOCK_MONOTONIC) - reference.ticks) / 1_000_000_000
-    return reference.date.addingTimeInterval(elapsed)
-  }
-  
-  // MARK: - dayKey
-  // A date -> "year-month-day" text in the phone's calendar, e.g. "2026-10-8". Two dates on the same day give the same key.
-  private func dayKey(_ date: Date) -> String {
-    let parts = Calendar.current.dateComponents([.year, .month, .day], from: date)
-    return "\(parts.year ?? 0)-\(parts.month ?? 0)-\(parts.day ?? 0)"
-  }
-  
-  // MARK: - currentStored
-  // Today's record, ready to use:
-  // 1. Loads the saved record (none yet -> a fresh one for today).
-  // 2. Uses the later of "now" and the latest date ever seen — if the date was set back, stay on the latest day seen.
-  // 3. That date is on a different day than the record -> new day: fresh allowance (count 0).
-  //    Same day -> just remember the latest date.
-  private func currentStored() -> Stored {
-    let now = trustedNow()
-    var stored = Self.load() ?? Stored(day: dayKey(now), count: 0, latestDate: now)
-    let effective = max(now, stored.latestDate)
-    if dayKey(effective) != stored.day {
-      stored = Stored(day: dayKey(effective), count: 0, latestDate: effective)
-    } else {
-      stored.latestDate = effective
-    }
-    return stored
-  }
-  
-  private static let httpDateFormatter: DateFormatter = {          // web servers send e.g. "Thu, 08 Oct 2026 14:05:00 GMT"
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.timeZone = TimeZone(identifier: "GMT")
-    formatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
-    return formatter
-  }()
-  
+
   // MARK: - Keychain
-  
+
   private static let service = Bundle.main.bundleIdentifier ?? "LearnScrumble"   // Keychain entry is looked up by service + account
-  private static let account = "freeAllowance"
-  
+  private static let account = "freeWordsTotal"                    // new entry: the old per-day "freeAllowance" one isn't read any more
+
   // MARK: - load
   // Reads the one Keychain entry (service + account) and decodes its JSON into Stored.
   // Nothing saved yet or unreadable -> nil.
@@ -163,7 +83,7 @@ final class FreeAllowance {
           let data = item as? Data else { return nil }
     return try? JSONDecoder().decode(Stored.self, from: data)
   }
-  
+
   // MARK: - save
   // Stored -> JSON -> Keychain. Updates the existing entry; if there is none yet (first time),
   // creates it, readable after the phone's first unlock (so it works in the background too).

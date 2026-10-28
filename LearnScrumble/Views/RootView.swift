@@ -1,12 +1,11 @@
 
 import SwiftUI
-import SwiftData
 
 // MARK: - Flow of this file
 // The app's one root screen: switches on AppManager.phase and shows the matching view.
 //   LearnScrumbleApp -> RootView(manager:)
-//   phase -> EntryView / WelcomeBackView / LoadingView / MainView / ErrorView / OfflineView / ResultView / SettingsView
-//   Each view's buttons call back into AppManager (startGame, startStruggleReview, retry, exitToWelcome, openSettings…),
+//   phase -> EntryView / WelcomeBackView / LoadingView / MainView / ErrorView / OfflineView / ResultView / SettingsView / MyWordsView
+//   Each view's buttons call back into AppManager (startGame, openWordList, startReview, retry, exitToWelcome, openSettings…),
 //   which changes phase -> RootView redraws with the new screen.
 //   On top: LaunchScreen for the first 2s, and the top button row (ButtonsTopRow) on onboarding / playing.
 //   "How to play" tutorial (OnboardingView) over everything while showTutorial is true:
@@ -16,27 +15,23 @@ import SwiftData
 //     loading behind it; from Settings it returns to Settings.
 //   Applies the user's native language (locale + left/right direction) to every screen below it.
 //   OpenAI consent: anyone without it (set up before the consent step existed) gets ConsentSheet before
-//     their next game or review (withConsent). "I agree" runs what they tapped; "Not now" keeps them here.
+//     their next game (withConsent). "I agree" runs what they tapped; "Not now" keeps them here.
+//   Every "Unlock" button -> showPaywall -> PaywallView for the current job (a sheet).
 
 struct RootView: View {
     let manager: AppManager                                           // owns phase and starts every session
     @State private var showMenu = false                               // not used right now
     @State private var speechManager = SpeechManager()                // one speech engine shared by the top row
     @State private var launching: Bool = true                         // LaunchScreen visible
-    @AppStorage("pickedLanguage") private var pickedLanguage = "en-US"   // target language code, saved by EntryView/Settings
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false   // true after the first "Let's go"
     @AppStorage(OnboardingService.seenKey) private var hasSeenTutorial = false        // true once "How to play" was finished or skipped
     @State private var showTutorial = false                           // the "How to play" tutorial is on screen
     @AppStorage(AIConsent.key) private var consentDate: Double = 0    // when the user agreed to OpenAI; 0 = not yet
     @State private var showConsent = false                            // ConsentSheet is on screen
     @State private var afterConsent: (() -> Void)?                    // what to start once they agree
-    @Query(filter: #Predicate<SwiftDataWordModel> { $0.incorrect > 0 })
-    private var missed: [SwiftDataWordModel]                          // every word missed at least once (any language), kept live by SwiftData
+    @State private var showPaywall = false                            // PaywallView is on screen
     var direction: Bool {                                             // true = native language reads left-to-right
       manager.layoutDirection == .leftToRight ? true : false
-    }
-    private var hasStruggle: Bool {                                   // any struggle word in the current target language -> show the review button
-        missed.contains { $0.targetLanguage == pickedLanguage && $0.isStruggle }
     }
 
     var body: some View {
@@ -60,11 +55,12 @@ struct RootView: View {
             case .welcomeBack:                                   // NEW — returning user's start screen
               WelcomeBackView(
                 targetLanguage: manager.requestModel.selectedLanguage.rawValue,
+                job: manager.currentJob,
                 hasAccess: manager.hasAccess,
                 canPlay: manager.canPlay,
                 onContinue: { withConsent { Task { await manager.startGame() } } },
-                onReview: { withConsent { Task { await manager.startStruggleReview() } } },
-                onShowPaywall: { Log.info("💳 paywall — not built yet", .app) },
+                onWordList: { manager.openWordList() },
+                onShowPaywall: { showPaywall = true },
                 onSettings: { manager.openSettings() })
             case .generating:                                    // words/images loading
                 LoadingView(progress: manager.requestModel.progress)
@@ -85,26 +81,34 @@ struct RootView: View {
             case .result(let vm):                                // checkpoint summary after a round
                 ResultView(
                     vm: vm,
-                    hasAccess: manager.hasAccess,// NEW
+                    job: manager.currentJob,
+                    isReview: manager.isReviewSession,
+                    hasAccess: manager.hasAccess,
                     canPlay: manager.canPlay,
                     onContinue: {
                         if vm.isFinished {
-                            Task { await manager.startGame() }   // struggle review just finished — start a fresh normal session
+                            withConsent { Task { await manager.startGame() } }   // review finished — start a fresh normal session
                         } else {
                             vm.continueFromCheckpoint()          // normal checkpoint — resume this same session
                         }
                     },
-                    onRetry: { Task { await manager.startStruggleReview() }},
-                    onShowPaywall: { Log.info("💳 paywall — not built yet", .app) },   // NEW
+                    onWordList: { manager.openWordList() },
+                    onShowPaywall: { showPaywall = true },
                     exitToWelcome: { manager.exitToWelcome() })
             case .settings:
               SettingsView(
                 requestModel: manager.requestModel,
-                hasAccess: manager.hasAccess,
-                onShowPaywall: { Log.info("💳 paywall — not built yet", .app) },
+                hasAccess: Purchases.shared.hasAnyUnlock,        // any unlocked job opens the voice picker
+                onShowPaywall: { showPaywall = true },
                 onDone: { manager.closeSettings() },
                 onHowToPlay: { showTutorial = true }             // replay the tutorial over Settings
               )
+            case .wordList:                                      // "My words" — the job's saved words
+              MyWordsView(
+                job: manager.currentJob,
+                targetLanguage: manager.requestModel.selectedLanguage.rawValue,
+                onRepeat: { manager.startReview() },
+                onBack: { manager.exitToWelcome() })
             }
           }
           .accessibilityHidden(showTutorial)                     // VoiceOver reads only the tutorial while it's on top
@@ -137,12 +141,24 @@ struct RootView: View {
           .environment(\.layoutDirection, manager.layoutDirection)
           .presentationDetents([.medium, .large])
         }
+        .sheet(isPresented: $showPaywall) {                      // "Unlock" anywhere -> the current job's unlock screen
+          if let job = manager.currentJob {
+            PaywallView(job: job,
+                        onUnlocked: { showPaywall = false },     // hasAccess is true now: the locked buttons open up
+                        onClose: { showPaywall = false })
+            .environment(\.locale, manager.locale)
+            .environment(\.layoutDirection, manager.layoutDirection)
+          }
+        }
         .environment(\.locale, manager.locale)                   // whole app in the user's native language
         .environment(\.layoutDirection, manager.layoutDirection) // right-to-left for Arabic, Hebrew…
         .task {                                                  // once at launch
           if hasCompletedOnboarding && !manager.requestModel.proffession.isEmpty {
             manager.phase = .welcomeBack                         // NEW — returning user: welcome screen instead of setup
             if !hasSeenTutorial { showTutorial = true }          // set up before, never saw (or closed the app mid-) tutorial
+            // MARK: - "Not listed?" hidden (28 Oct 2026): a saved typed job can't be unlocked -> Settings to pick a menu job
+            // (ProfessionPicker clears the typed text there). Remove when typed jobs come back.
+            if manager.currentJob == nil { manager.phase = .settings }
           }
           try? await Task.sleep(for: .seconds(2))                // keep LaunchScreen up for 2s
           withAnimation(.easeOut(duration: 0.8)) {
@@ -154,10 +170,8 @@ struct RootView: View {
     @ViewBuilder
     private var topRow: some View {                              // which top buttons each phase gets
         switch manager.phase {
-        case .onboarding where hasStruggle:                       // setup screen: only the review button
-            row(word: nil, buttons: .struggle, manager: manager)
         case .playing(let vm) where vm.guessResult == nil:        // in game, hidden while the answer result shows
-            row(word: vm.word?.targetWord, buttons: hasStruggle ? .menu : .settings, manager: manager)
+            row(word: vm.word?.targetWord, buttons: .settings, manager: manager)
         default:
             EmptyView()                                          // includes .welcomeBack: it has its own buttons
         }
@@ -166,18 +180,14 @@ struct RootView: View {
   // MARK: - row(word:buttons:manager:)
   // Builds ButtonsTopRow for the current screen and wires its buttons to AppManager:
   //   word -> speaker button reads it (nil = no speaker); buttons -> which glass buttons show
-  //   gear -> manager.openSettings(); review -> manager.startStruggleReview()
-  //   hasAccess + onShowPaywall (NEW) -> free users get the paywall alert (paywall not built yet, just logs)
+  //   gear -> manager.openSettings(); onShowPaywall -> PaywallView
   private func row(word: String?, buttons: MenuButtonsEnum, manager: AppManager) -> some View {
     ButtonsTopRow(
       speechManager: speechManager,
       requestModel: manager.requestModel,
       word: word,
-      direction: direction,
-      hasAccess: manager.hasAccess,
-      onShowPaywall: { Log.info("💳 paywall — not built yet", .app) },
+      onShowPaywall: { showPaywall = true },
       onOpenSettings: { manager.openSettings() },
-      onReviewStruggle: { withConsent { Task { await manager.startStruggleReview() } } },
       buttons: buttons)
         .padding(.horizontal)
     }

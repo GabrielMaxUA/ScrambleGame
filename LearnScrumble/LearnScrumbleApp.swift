@@ -11,9 +11,10 @@ import SwiftData
 // MARK: - Flow of this file
 // The app's entry point (@main).
 //   Launch -> AppDelegate sets up Firebase
-//          -> init() creates the one RequestModel and the one AppManager for the whole app
+//          -> init() creates the one RequestModel and the one AppManager for the whole app,
+//             and starts Purchases (reads the unlocked jobs, listens for new purchases)
 //          -> body shows RootView(manager:) with the SwiftData container attached
-//   Every time the app comes on screen -> FreeAllowance.refresh() -> DailyReminder.reschedule()
+//   Every time the app comes on screen -> DailyReminder.reschedule()
 
 @main
 struct LearnScrumbleApp: App {
@@ -27,6 +28,7 @@ struct LearnScrumbleApp: App {
   init() {
     let requestModel = RequestModel()
     _manager = State(initialValue: AppManager(requestModel: requestModel))
+    Purchases.shared.start()
   }
   
   var body: some Scene {
@@ -35,14 +37,12 @@ struct LearnScrumbleApp: App {
     }
     .modelContainer(PersistenceController.shared.container)        // SwiftData store for @Query in the views
     // MARK: - Daily reminder renewal
-    // App opened / back from background -> FreeAllowance.refresh() -> DailyReminder.reschedule()
-    //   refresh(): if midnight passed, today's word count resets to 0
-    //   reschedule(): reads that count -> books 9am reminders for the next 7 days (skips today if already played)
+    // App opened / back from background -> DailyReminder.reschedule()
+    //   reschedule(): books 9am reminders for the next 7 days (skips today if already played, Streak.playedToday)
     // This is what keeps the 7-day window moving forward while the user keeps opening the app
     .onChange(of: scenePhase) { _, phase in                          // scenePhase = is the app on screen, in background or closing
       guard phase == .active else { return }                         // only when the app comes on screen
-      FreeAllowance.shared.refresh()                                 // new day since last open: count starts at 0
-      Task { await DailyReminder.reschedule() }                      // re-book the reminders using the fresh count
+      Task { await DailyReminder.reschedule() }                      // re-book the reminders
     }
   }
 }

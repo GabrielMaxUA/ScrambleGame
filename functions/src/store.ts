@@ -2,16 +2,23 @@
 //
 // Same data shapes the app has always used, so existing words and pictures keep working:
 //   words/{id}        id = English toolName with "/" -> "-"
-//     { id, word, translation: { "uk-UA": "...", ... }, image: <download URL or "">, professions: ["cook", ...] }
+//     { id, word, translation: { "uk-UA": "...", ... }, image: <download URL or "">, professions: ["cook", ...],
+//       imagePrompt?: the description the picture was last drawn from (only set by reportPicture so far) }
 //   professions/{name} the job counter (was ProfessionStore in the app)
 //     { name, typed, picked, firstSeen, lastSeen, status: "in menu" | "new" | "added" | "rejected" }
 //   usage/{uid}       words handed out per anonymous user per day — counted, not yet enforced (see index.ts)
-//   Storage: tools/<id>.webp in the project's word-picture bucket
+//   reports/{id}      pictures users reported as wrong (reportPicture), same id as the word
+//     { word, jobs, reports, users, lastReport, bankImage, suggested: { url, path, imagePrompt, job, at },
+//       status: "new" | "approve" | "reject" (set by you) | "approved" | "rejected", notified, approvedAt? }
+//     reports/{id}/reporters/{code}  one per reporting user (one-way hash of the anonymous ID), to count people
+//   reportUsage/{uid} reports sent per anonymous user per day — capped (REPORTS_PER_DAY in index.ts)
+//   Storage: tools/<id>.webp in the project's word-picture bucket; replaced pictures are kept in rejected/,
+//            pictures drawn for a report (only the reporter sees them until approved) in reports/<id>/
 
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, FieldPath } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import sharp from "sharp";
 
 initializeApp();
@@ -23,6 +30,7 @@ export interface WordDoc {
   translation: Record<string, string>;
   image: string;
   professions?: string[];
+  imagePrompt?: string;
 }
 
 // MARK: - docID
@@ -191,4 +199,132 @@ export async function countUsage(uid: string, words: number): Promise<number> {
     tx.set(ref, { day, words: total, updated: FieldValue.serverTimestamp() });
     return total;
   });
+}
+
+// MARK: - countReport
+// Pictures reported today by this anonymous user, +1. Returns today's total (after this report). UTC day.
+// Separate from usage/{uid}: countUsage rewrites that whole document.
+export async function countReport(uid: string): Promise<number> {
+  const ref = db.collection("reportUsage").doc(uid);
+  const day = new Date().toISOString().slice(0, 10);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const total = (snap.exists && snap.get("day") === day ? (snap.get("reports") as number) : 0) + 1;
+    tx.set(ref, { day, reports: total, updated: FieldValue.serverTimestamp() });
+    return total;
+  });
+}
+
+// MARK: - saveReportPicture
+// The picture drawn for a report: only for the user who reported, NOT on the word (the bank picture stays).
+// Stored as reports/<id>/<random>.webp with a download token, so the reporting phone can download it, and so it can
+// be approved later (approveReport copies it over the word's picture).
+export async function saveReportPicture(toolName: string, png: Buffer): Promise<{ url: string; path: string }> {
+  const webp = await sharp(png).webp({ quality: 80 }).toBuffer();
+  const bucket = getStorage().bucket(pictureBucket());
+  const path = `reports/${docID(toolName)}/${randomUUID()}.webp`;
+  const token = randomUUID();
+  await bucket.file(path).save(webp, {
+    contentType: "image/webp",
+    metadata: { metadata: { firebaseStorageDownloadTokens: token } },
+  });
+  return { url: pictureURL(bucket.name, path, token), path };
+}
+
+// MARK: - recordReport
+// One report of a word's picture, in one transaction:
+//   reports/{id}                  word, jobs, reports (+1), users (+1 for a new reporter), lastReport,
+//                                 bankImage (the picture reported), suggested (the new picture: link, Storage path,
+//                                 description, job, time), status "new", notified false (-> the daily email)
+//   reports/{id}/reporters/{code} one doc per reporter: `code` is a one-way hash of the anonymous sign-in ID, only to
+//                                 count different people; nothing else is stored about them
+// A new report reopens an approved or rejected word (status back to "new"): someone still sees a problem.
+export async function recordReport(doc: WordDoc, uid: string, job: string,
+                                   suggested: { url: string; path: string; imagePrompt: string }): Promise<void> {
+  const ref = db.collection("reports").doc(docID(doc.word));
+  const reporter = ref.collection("reporters").doc(createHash("sha256").update(uid).digest("hex").slice(0, 32));
+  await db.runTransaction(async (tx) => {
+    const isNew = !(await tx.get(reporter)).exists;
+    if (isNew) tx.set(reporter, { at: FieldValue.serverTimestamp() });
+    tx.set(ref, {
+      word: doc.word,
+      jobs: FieldValue.arrayUnion(job),
+      reports: FieldValue.increment(1),
+      ...(isNew ? { users: FieldValue.increment(1) } : {}),
+      lastReport: FieldValue.serverTimestamp(),
+      bankImage: doc.image,
+      suggested: { ...suggested, job, at: FieldValue.serverTimestamp() },
+      status: "new",
+      notified: false,
+    }, { merge: true });
+  });
+}
+
+// MARK: - approveReport
+// The developer set status "approve" on reports/{id} (reviewReport trigger, reports.ts):
+// 1. The word's current picture is copied to rejected/ (kept for checking), then the suggested picture is copied over
+//    tools/<id>.webp with a new download token and saved on the word with its description — every user gets it.
+//    Phones holding the old link get a 403 and repair it through getPicture.
+// 2. The report becomes "approved" (approvedAt, approvedImage). Nothing suggested -> "rejected" with a note.
+export async function approveReport(id: string): Promise<void> {
+  const ref = db.collection("reports").doc(id);
+  const report = (await ref.get()).data();
+  const suggestedPath: string | undefined = report?.suggested?.path;
+  const word: string | undefined = report?.word;
+  if (!report || !word || !suggestedPath) {
+    await ref.set({ status: "rejected", note: "nothing to approve" }, { merge: true });
+    return;
+  }
+  const doc = (await fetchWords([word])).get(word);
+  if (doc?.image) await keepRejectedPicture(doc);
+  const bucket = getStorage().bucket(pictureBucket());
+  const path = `tools/${docID(word)}.webp`;
+  const token = randomUUID();
+  await bucket.file(suggestedPath).copy(bucket.file(path));
+  await bucket.file(path).setMetadata({ metadata: { firebaseStorageDownloadTokens: token } });
+  const url = pictureURL(bucket.name, path, token);
+  await db.collection("words").doc(docID(word)).set(
+    { image: url, ...(report.suggested.imagePrompt ? { imagePrompt: report.suggested.imagePrompt } : {}) }, { merge: true });
+  await ref.set({ status: "approved", approvedAt: FieldValue.serverTimestamp(), approvedImage: url, bankImage: url }, { merge: true });
+}
+
+// MARK: - pendingReports / markNotified
+// The daily email (reports.ts): reports not mailed yet, then flagged as mailed.
+export async function pendingReports(): Promise<FirebaseFirestore.QueryDocumentSnapshot[]> {
+  return (await db.collection("reports").where("notified", "==", false).get()).docs;
+}
+export async function markNotified(ids: string[]): Promise<void> {
+  const batch = db.batch();
+  for (const id of ids) batch.update(db.collection("reports").doc(id), { notified: true });
+  await batch.commit();
+}
+
+// MARK: - keepRejectedPicture
+// Copies the word's current picture to rejected/<id>-<time>.webp before it's replaced, so a person can still see
+// what was reported. Returns that path, or null when there's no picture file to keep (not a Storage link, or gone).
+export async function keepRejectedPicture(doc: WordDoc): Promise<string | null> {
+  const place = parsePictureURL(doc.image);
+  if (!place) return null;
+  const file = getStorage().bucket(place.bucket).file(place.path);
+  const [exists] = await file.exists();
+  if (!exists) return null;
+  const path = `rejected/${docID(doc.word)}-${Date.now()}.webp`;
+  await file.copy(getStorage().bucket(place.bucket).file(path));
+  return path;
+}
+
+// MARK: - saveImagePrompt
+// Keeps the description a picture was drawn from on the word, so getWords hands it to the app (and a later redraw
+// of a broken picture uses it instead of the bare word).
+export async function saveImagePrompt(word: string, imagePrompt: string): Promise<void> {
+  await db.collection("words").doc(docID(word)).set({ imagePrompt }, { merge: true });
+}
+
+// MARK: - samePicture
+// Two links to the same picture file? The token may differ (repairPictureLink), so bucket + path are compared.
+export function samePicture(a: string, b: string): boolean {
+  const pa = parsePictureURL(a);
+  const pb = parsePictureURL(b);
+  if (!pa || !pb) return a === b;
+  return pa.bucket === pb.bucket && pa.path === pb.path && (pa.token === pb.token || !pa.token || !pb.token);
 }

@@ -16,7 +16,7 @@ import FirebaseFirestore
 // toolName under the "words" collection. It knew nothing about GPT, SwiftData,
 // or sessions — RequestModel was the only caller.
 //
-//   fetchExisting(toolNames:)  <- RequestModel.buildQuestions (and generateStruggleReview), once per batch:
+//   fetchExisting(toolNames:)  <- RequestModel.buildQuestions once per batch:
 //                                 "which of these words do we already have cached, and with what data?"
 //                                 -> cached image URLs are reused instead of paying for new images
 //   fetchBank(profession:)     <- RequestModel.generate (once per game session): every word already tagged
@@ -38,7 +38,7 @@ enum FirebaseWordStore {
   
   // MARK: - saveIfNeeded
   // Create-or-fill: the single entry point buildQuestions actually uses (through resolveImage).
-  // `profession` = the bank key the word was shown for (nil for struggle review: no tagging).
+  // `profession` = the bank key the word was shown for (nil: no tagging).
   // `knownDoc` = the word's doc if the caller already has it (bank or fetchExisting) -> no extra read.
   // 1. Points at this word's doc — one doc per toolName. Reads it only if the caller didn't pass knownDoc.
   // 2. Case 1 — doc doesn't exist yet: builds a brand-new doc with the two languages we have right now

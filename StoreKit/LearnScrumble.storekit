@@ -1,0 +1,509 @@
+{
+  "appPolicies": {
+    "eula": "",
+    "policies": [
+      {
+        "locale": "en_US",
+        "policyText": "",
+        "policyURL": ""
+      }
+    ]
+  },
+  "identifier": "824FECE3-88C6-4E79-BCA8-A1C460B2D694",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000000",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Warehouse worker, and My words.",
+          "displayName": "Warehouse worker",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.warehouseWorker",
+      "referenceName": "Job: Warehouse worker",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000001",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Forklift operator, and My words.",
+          "displayName": "Forklift operator",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.forkliftOperator",
+      "referenceName": "Job: Forklift operator",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000002",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Truck driver, and My words.",
+          "displayName": "Truck driver",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.truckDriver",
+      "referenceName": "Job: Truck driver",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000003",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Delivery driver, and My words.",
+          "displayName": "Delivery driver",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.deliveryDriver",
+      "referenceName": "Job: Delivery driver",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000004",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Construction worker, and My words.",
+          "displayName": "Construction worker",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.constructionWorker",
+      "referenceName": "Job: Construction worker",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000005",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Carpenter, and My words.",
+          "displayName": "Carpenter",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.carpenter",
+      "referenceName": "Job: Carpenter",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000006",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Electrician, and My words.",
+          "displayName": "Electrician",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.electrician",
+      "referenceName": "Job: Electrician",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000007",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Plumber, and My words.",
+          "displayName": "Plumber",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.plumber",
+      "referenceName": "Job: Plumber",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000008",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Painter, and My words.",
+          "displayName": "Painter",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.painter",
+      "referenceName": "Job: Painter",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000009",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Bricklayer & concrete worker, and My words.",
+          "displayName": "Bricklayer & concrete worker",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.bricklayerConcrete",
+      "referenceName": "Job: Bricklayer & concrete worker",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000010",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Finishing worker (tiles, drywall, plaster), and My words.",
+          "displayName": "Finishing worker (tiles, drywa",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.finishingWorker",
+      "referenceName": "Job: Finishing worker (tiles, drywall, plaster)",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000011",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Metalworker & welder, and My words.",
+          "displayName": "Metalworker & welder",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.metalworkerWelder",
+      "referenceName": "Job: Metalworker & welder",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000012",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Handyman & maintenance worker, and My words.",
+          "displayName": "Handyman & maintenance worker",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.handyman",
+      "referenceName": "Job: Handyman & maintenance worker",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000013",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Roofer, and My words.",
+          "displayName": "Roofer",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.roofer",
+      "referenceName": "Job: Roofer",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000014",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Auto mechanic, and My words.",
+          "displayName": "Auto mechanic",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.autoMechanic",
+      "referenceName": "Job: Auto mechanic",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000015",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Factory worker, and My words.",
+          "displayName": "Factory worker",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.factoryWorker",
+      "referenceName": "Job: Factory worker",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000016",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Machine operator, and My words.",
+          "displayName": "Machine operator",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.machineOperator",
+      "referenceName": "Job: Machine operator",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000017",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for CNC operator & machine setter, and My words.",
+          "displayName": "CNC operator & machine setter",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.cncOperator",
+      "referenceName": "Job: CNC operator & machine setter",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000018",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Food production worker, and My words.",
+          "displayName": "Food production worker",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.foodProductionWorker",
+      "referenceName": "Job: Food production worker",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000019",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Baker, and My words.",
+          "displayName": "Baker",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.baker",
+      "referenceName": "Job: Baker",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000020",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Sewing machine operator & tailor, and My words.",
+          "displayName": "Sewing machine operator & tail",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.sewingMachineOperator",
+      "referenceName": "Job: Sewing machine operator & tailor",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000021",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Cook, and My words.",
+          "displayName": "Cook",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.cook",
+      "referenceName": "Job: Cook",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000022",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Kitchen assistant, and My words.",
+          "displayName": "Kitchen assistant",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.kitchenAssistant",
+      "referenceName": "Job: Kitchen assistant",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000023",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Waiter, and My words.",
+          "displayName": "Waiter",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.waiter",
+      "referenceName": "Job: Waiter",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000024",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Bartender & barista, and My words.",
+          "displayName": "Bartender & barista",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.bartender",
+      "referenceName": "Job: Bartender & barista",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000025",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Hotel housekeeper, and My words.",
+          "displayName": "Hotel housekeeper",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.hotelHousekeeper",
+      "referenceName": "Job: Hotel housekeeper",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000026",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Cleaner, and My words.",
+          "displayName": "Cleaner",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.cleaner",
+      "referenceName": "Job: Cleaner",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000027",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Caregiver, and My words.",
+          "displayName": "Caregiver",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.caregiver",
+      "referenceName": "Job: Caregiver",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000028",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Hairdresser, and My words.",
+          "displayName": "Hairdresser",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.hairdresser",
+      "referenceName": "Job: Hairdresser",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000029",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Shop assistant, and My words.",
+          "displayName": "Shop assistant",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.shopAssistant",
+      "referenceName": "Job: Shop assistant",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000030",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Farm worker, and My words.",
+          "displayName": "Farm worker",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.farmWorker",
+      "referenceName": "Job: Farm worker",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6800000031",
+      "localizations": [
+        {
+          "description": "Unlimited words and pictures for Gardener, and My words.",
+          "displayName": "Gardener",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.MaxGabriel.LearnScrumble.job.gardener",
+      "referenceName": "Job: Gardener",
+      "type": "NonConsumable"
+    }
+  ],
+  "settings": {
+    "_applicationInternalID": "6800000000",
+    "_developerTeamID": "",
+    "_failTransactionsEnabled": false,
+    "_locale": "en_US",
+    "_storefront": "USA",
+    "_storeKitErrors": []
+  },
+  "subscriptionGroups": [],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}

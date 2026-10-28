@@ -5,3 +5,6 @@ node_modules/
 .secret.local
 .env.local
 *.local
+
+# Plans written by the split tool (src/tools/splitSharedWords.ts) — local working files
+plans/

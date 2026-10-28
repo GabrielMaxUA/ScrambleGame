@@ -4,7 +4,7 @@
 
 ## Now: before the site counts as final
 
-- ⬜ **Deploy the latest changes.** From the repository root: `firebase deploy --only hosting` (steps in `README.md`). *(27 October: privacy and support updated for the server, anonymous sign-in and App Check; the how-to-play picture now says 10 free words. Not live until deployed.)*
+- ✅ **Deploy the latest changes.** From the repository root: `firebase deploy --only hosting` (steps in `README.md`). *(28 October: deployed — the 27 October server changes plus the one-time unlocks, My words, the Report flag and no typed jobs.)*
 - ⬜ **`www.learnscrumble.com` → Connected.** Namecheap must show CNAME `www` → `scrumblegame.web.app.`; then Firebase → Hosting → ⋮ next to `www` → Verify. `learnscrumble.com` is already Connected with HTTPS (18 October).
 - ⬜ **Test after `www` connects:** `https://learnscrumble.com` (padlock), `www.learnscrumble.com` (redirects to it), every page and the menu on a phone, and an email to support@learnscrumble.com still arrives.
 - ⬜ **Fill the remaining yellow placeholders** (`grep -n 'class="fill"' *.html`):
@@ -25,7 +25,8 @@ The privacy page now says these are in place, so they have to be:
 
 ## Before App Review
 
-- ⬜ **Paywall.** The terms, support page and home page describe buying, managing and restoring a subscription, and "10 free words a day" (changed from 20 on 27 October). The paywall must exist before review, and if the free limit or what's paid changes, update `terms.html` §4–5, `support.html` ("Daily free words and subscription") and `index.html` ("Free every day") together.
+- ✅ **Paywall.** *(28 October: built as one-time profession unlocks, $9.99, after 10 free words once. `terms.html` §4–5, `support.html` ("Free words and unlocking a profession"), `index.html` ("Try 10 words free") and `how-to-play.html` match it. The 32 products still have to be created in App Store Connect with the IDs from `StoreKit/LearnScrumble.storekit`.)*
+- ⬜ **Retake `images/how-to-play/10-lets-go.jpg`**: the app's note now says "You get 10 free words to try the app." (then raise its `?v=` in `how-to-play.html`).
 - ⬜ **App Store button** (`index.html`): Apple's official "Download on the App Store" badge (Apple Marketing Resources, not a home-made button, not the app icon), linked to the app's App Store page once it exists in App Store Connect.
 - ⬜ **Legal review** of `privacy.html` and `terms.html` by someone qualified (GDPR, EU consumer law). They match the app as of 18 October 2026 but are drafts, not legal advice.
 - ⬜ **App Store Connect privacy answers:** enter them from "App Store privacy questions" in `README.md` (they match `PrivacyInfo.xcprivacy`, including Other Diagnostic Data and, since 27 October, User ID).
@@ -36,10 +37,11 @@ The privacy page now says these are in place, so they have to be:
 | If the app… | Update |
 |---|---|
 | adds **ads** | Privacy (§3 new provider, §4 "no ads/no tracking" goes), terms, support FAQ, `PrivacyInfo.xcprivacy`, App Store answers; probably Apple's tracking (ATT) popup and an EU consent screen. Big change: plan it before the ads SDK goes in. |
-| changes the **free limit** or what a subscription unlocks | `terms.html` §4–5, `support.html`, `index.html`, `how-to-play.html` (last step) |
+| changes the **free words**, the **price** or what an unlock includes | `terms.html` §4–5, `support.html`, `index.html`, `how-to-play.html` (last step) |
+| brings back **typed jobs** ("Not listed?") | `privacy.html` §2–3 (typed job, its English name, moderation — see the comment at the top), `support.html` "My job isn't in the list", `index.html`, `terms.html` §6 |
 | adds a **free trial** | `terms.html` §5 (trial line was removed on 18 October because there's no trial) |
 | ✅ moves **OpenAI calls to the server** / adds **anonymous sign-in** or **App Check** (`Docs/ServerMigrationPlan.md`) | *Done 27 October:* privacy §3–6 and §10, support FAQ, manifest (User ID), App Store answers in `README.md` (confirm "linked" vs "not linked" at sign-off) |
-| starts **enforcing the daily limit on the server** | Privacy §3 (sign-in ID and daily count), terms §4 |
+| starts **enforcing the free words on the server** | Privacy §3 (sign-in ID and daily count), terms §4 |
 | changes the **consent text** (`AIConsent.message`) | `support.html` "Why do I have to agree", privacy §3 "We ask first" |
 | sends **new data** anywhere, or adds an SDK | Privacy §3 + §4, manifest, App Store answers |
 | changes **Settings menu names** or the tutorial | `support.html`, `how-to-play.html` |

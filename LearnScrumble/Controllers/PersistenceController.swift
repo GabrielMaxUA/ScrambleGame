@@ -18,9 +18,9 @@ import Foundation
 //   context                            <- WordVM reads/writes answer records directly through it
 //   seenToolNames(targetLanguage:)     <- RequestModel.generate / generateMore: "which concepts has the user
 //                                         already practiced in this language" — sent to getWords as `exclude`
-//   struggleToolNames(targetLanguage:) <- AppManager.startStruggleReview: the fixed question pool for review mode;
-//                                         WordVM.hasStruggleWords / WelcomeBackView: just checked for emptiness
-//                                         to decide whether to show the review button
+//   jobWords(profession:targetLanguage:) <- MyWordsView's list and AppManager.startReview: every saved word of the job,
+//                                         weakest first
+//   jobProgress(profession:targetLanguage:) <- WelcomeBackView / ResultView: learned words, right and wrong answers
 //   overallAccuracy(targetLanguage:)   <- WordVM.overallAccuracy (ResultView) and WelcomeBackView's stats
 //   resetProgress(targetLanguage:)     <- SettingsView "reset progress" for the current target language
 //   deleteAllProgress()                <- not called right now (AppManager's deleteAllData is commented out)
@@ -54,7 +54,7 @@ final class PersistenceController {
             let all = try context.fetch(descriptor)
             Log.debug("📦 SwiftData word count: \(all.count)", .storage)
             for record in all {
-                Log.debug("  • \(record.concept) [\(record.targetLanguage)] — correct: \(record.correct), incorrect: \(record.incorrect), lastSeen: \(record.lastSeen), struggle: \(record.isStruggle)", .storage)
+                Log.debug("  • \(record.concept) [\(record.targetLanguage)] — correct: \(record.correct), incorrect: \(record.incorrect), lastSeen: \(record.lastSeen), learned: \(record.isLearned), job: \(record.profession)", .storage)
             }
         } catch {
             Log.error("📦 Fetch failed: \(error)", .storage)
@@ -75,23 +75,28 @@ final class PersistenceController {
         return result
     }
     
-    // MARK: - struggleToolNames(targetLanguage:limit:)
-    // Concepts in this target language currently below the isStruggle threshold (see SwiftDataWordModel).
-    // Same language scoping as seenToolNames — a struggle in French doesn't flag the word in Russian.
-    // Order: worst accuracy first; on a tie, the one practiced longest ago.
-    // limit = how many to return (only the weakest N); nil = all.
-    func struggleToolNames(targetLanguage: String, limit: Int? = nil) -> [String] {
+    // MARK: - jobWords(profession:targetLanguage:)
+    // Every word saved for this job in this target language (records with the whole word only, see hasWord).
+    // Order: worst accuracy first; on a tie, the one practiced longest ago — the review starts with what needs it most.
+    func jobWords(profession: String, targetLanguage: String) -> [SwiftDataWordModel] {
         let descriptor = FetchDescriptor<SwiftDataWordModel>(
-            predicate: #Predicate { $0.targetLanguage == targetLanguage }
+            predicate: #Predicate { $0.targetLanguage == targetLanguage && $0.profession == profession && $0.targetWord != "" }
         )
-        let records = (try? context.fetch(descriptor)) ?? []
-        let struggling = records
-            .filter { $0.isStruggle }
+        let records = ((try? context.fetch(descriptor)) ?? [])
             .sorted { ($0.accuracy, $0.lastSeen) < ($1.accuracy, $1.lastSeen) }
-            .map { $0.concept }
-        let result = limit.map { Array(struggling.prefix($0)) } ?? struggling
-        Log.debug("🎯 struggleToolNames — lang=\(targetLanguage), limit=\(limit.map(String.init) ?? "none") -> \(result.count) struggling: \(result)", .storage)
-        return result
+        Log.debug("📚 jobWords — lang=\(targetLanguage) -> \(records.count) words", .storage)
+        return records
+    }
+
+    // MARK: - jobProgress(profession:targetLanguage:)
+    // How far the user is with one job in one language: words learned (isLearned), words played,
+    // and all right / wrong answers. No fixed goal — the job's word bank keeps growing.
+    func jobProgress(profession: String, targetLanguage: String) -> JobProgress {
+        let records = jobWords(profession: profession, targetLanguage: targetLanguage)
+        return JobProgress(learned: records.filter(\.isLearned).count,
+                           played: records.count,
+                           correct: records.reduce(0) { $0 + $1.correct },
+                           incorrect: records.reduce(0) { $0 + $1.incorrect })
     }
     
     // MARK: - overallAccuracy(targetLanguage:)

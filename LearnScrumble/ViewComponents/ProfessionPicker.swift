@@ -8,7 +8,8 @@
 import SwiftUI
 
 // MARK: - Flow of this file
-// Occupation menu plus a free-text field for "Not listed?". Writes the choice into requestModel.proffession.
+// Occupation menu (plus a free-text field for "Not listed?", hidden for now — see the MARK below).
+// Writes the choice into requestModel.proffession.
 //   EntryView / SettingsView put it inside a FieldCard
 //   -> menu lists the jobs A–Z in the app language (Occupation.sorted), "Not listed?" last
 //   -> user picks a job -> onChange writes its English name to requestModel.proffession
@@ -28,7 +29,7 @@ struct ProfessionPicker: View {
         Picker("Occupation", selection: $occupation) {
           Text("Select your profession")
             .tag(nil as Occupation?)                        // the "nothing picked" row
-          ForEach(Occupation.sorted(for: locale)) { job in   // A–Z in the app language, "Not listed?" last
+          ForEach(Occupation.sorted(for: locale)) { job in   // A–Z in the app language
             Text(job.displayName)                           // translated job name
               .tag(job as Occupation?)
           }
@@ -43,20 +44,23 @@ struct ProfessionPicker: View {
         .contentShape(Rectangle())                          // whole row opens the menu
       }
       
-      if occupation == .notListed {                         // free text only for "Not listed?"
-        TextField(
-          "Profession",                                         // spoken by VoiceOver
-          text: $requestModel.proffession,
-          prompt: Text("e.g. Carpenter, Server, Chef").foregroundStyle(.white.opacity(0.5))
-        )
-        .foregroundStyle(.white)
-        .tint(.white)
-        .textInputAutocapitalization(.words)
-        .autocorrectionDisabled(false)
-        .submitLabel(.done)
-        .focused(isFocused)
-        .onSubmit { isFocused.wrappedValue = false }        // Done key closes the keyboard
-      }
+      // MARK: - "Not listed?" text field hidden (28 Oct 2026)
+      // Only menu jobs can be unlocked, so typed jobs are off for now (Occupation.sorted no longer offers .notListed).
+      // Uncomment to bring them back.
+//      if occupation == .notListed {                         // free text only for "Not listed?"
+//        TextField(
+//          "Profession",                                         // spoken by VoiceOver
+//          text: $requestModel.proffession,
+//          prompt: Text("e.g. Carpenter, Server, Chef").foregroundStyle(.white.opacity(0.5))
+//        )
+//        .foregroundStyle(.white)
+//        .tint(.white)
+//        .textInputAutocapitalization(.words)
+//        .autocorrectionDisabled(false)
+//        .submitLabel(.done)
+//        .focused(isFocused)
+//        .onSubmit { isFocused.wrappedValue = false }        // Done key closes the keyboard
+//      }
     }
     .onChange(of: occupation) { _, newValue in              // menu choice -> requestModel.proffession
       switch newValue {
@@ -75,9 +79,15 @@ struct ProfessionPicker: View {
       if let job = Occupation(rawValue: saved) ?? Occupation.renamed[saved] {   // a listed job (or its old name) -> select it;
                                                                  // onChange then saves the current English name
         occupation = job
-      } else if !saved.isEmpty {                                 // typed text -> "Not listed?" with the field showing it
-        occupation = .notListed
       }
+      // MARK: - "Not listed?" hidden: a saved typed job is cleared, so the user has to pick a menu job
+      //   (it can't be unlocked). Remove this `else` and uncomment the lines under it to bring typed jobs back.
+      else if !saved.isEmpty {
+        requestModel.proffession = ""
+      }
+      // } else if !saved.isEmpty {                              // typed text -> "Not listed?" with the field showing it
+      //   occupation = .notListed
+      // }
     }
   }
 }

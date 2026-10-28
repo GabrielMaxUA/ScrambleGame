@@ -39,6 +39,7 @@
         "node_modules",
         ".git",
         "*.local",
+        "plans",
         "firebase-debug.log"
       ],
       "predeploy": [

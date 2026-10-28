@@ -23,6 +23,7 @@ struct QuestionModel: Identifiable, Equatable  {
   let id: String                  // UUID string, made in buildQuestions
   let word: WordModel             // the word to spell and its hint
   var imageData: Data?            // PNG/WebP bytes; nil = no image yet (filtered out before play)
+  var imageURL: String? = nil     // the picture's link in Storage — sent with a report, so the server knows which picture was seen
   
   static let mockQuestions = [    // preview data for MainView
     QuestionModel(id: "1", word: WordModel(toolName: "hammer", originWord: "молоток", targetWord: "hummer", imagePrompt: ""), imageData: nil)

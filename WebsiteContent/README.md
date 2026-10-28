@@ -10,9 +10,9 @@ Static support website for the app: plain HTML, one stylesheet and one small scr
 |---|---|---|
 | `index.html` | Home: what the app does, App Store button | — |
 | `how-to-play.html` | The "How to play" tutorial step by step, with real screenshots (`images/how-to-play/`) | (could be linked from Settings → How to play later) |
-| `support.html` | Contact + FAQ (reminders, languages, free words, subscriptions, voices, progress, data) | Settings → Contact support (email) |
+| `support.html` | Contact + FAQ (reminders, languages, free words, unlocking a profession, My words, wrong pictures, voices, progress, data) | Settings → Contact support (email) |
 | `privacy.html` | Privacy Policy — what the app stores on the iPhone and sends to OpenAI, Firebase and Apple | `AppLinks.privacy` (Settings, setup screen, consent sheet) |
-| `terms.html` | Terms of Use ("usage regulations") — service, not-safety-training, AI content, daily limit, subscriptions | `AppLinks.terms` (and the paywall later) |
+| `terms.html` | Terms of Use ("usage regulations") — service, not-safety-training, AI content, free words, profession unlocks | `AppLinks.terms` |
 
 **After changing `css/style.css` or `js/main.js`:** raise the `?v=` number in the `<link>` and `<script>` lines of every page (e.g. `?v=2` → `?v=3`). Browsers keep those two files for a day, and the new number makes them fetch the new version straight away.
 
@@ -79,21 +79,23 @@ Everything runs on the Mac, in Terminal, from the **repository root** (the folde
 | Data | Where it goes |
 |---|---|
 | Languages, profession, speech speed, voice per language, reminder on/off + time, setup/tutorial flags, OpenAI agreement date, usage-statistics choice | iPhone only (UserDefaults) |
-| Answers per word: English name, language, right/wrong counts, last answered | iPhone only (SwiftData) |
-| Daily free-word counter: day, count, latest date seen | iPhone only (Keychain — survives deleting the app) |
+| Answers per word: English name, language, right/wrong counts, last answered; the word itself (job, both words, picture description, picture, picture link) for My words | iPhone only (SwiftData) |
+| Free-word counter: words used of the 10 free ones (since 28 Oct 2026; was per day) | iPhone only (Keychain — survives deleting the app) |
+| Streak: last day played, days in a row | iPhone only (UserDefaults) |
 | Daily reminders | Scheduled locally by iOS, no server |
-| Profession, both languages, already-practised word names, picture descriptions | Our Cloud Functions (`getWords`, `getPicture`, us-central1), which call the OpenAI API; a typed job also goes through OpenAI moderation first. Only after the user ticks "I agree" (setup screen, or a one-time sheet for older installs). The OpenAI key is on the server only (Secret Manager) |
+| Profession (menu job; typed jobs are off since 28 Oct 2026), both languages, already-practised word names, picture descriptions | Our Cloud Functions (`getWords`, `getPicture`, us-central1), which call the OpenAI API. Only after the user ticks "I agree" (setup screen, or a one-time sheet for older installs). The OpenAI key is on the server only (Secret Manager) |
 | Crash and error reports: where in the code, error type, the two chosen languages, the last app steps (`Log.info` / `Log.error` messages: steps and counts only; words and the profession are `private:` and never sent), device model, iOS/app version, random installation ID | Firebase Crashlytics, always on |
 | Usage events, device model, iOS/app version, approximate country, random app-instance ID (no IDFA) | Google Analytics for Firebase, **only if** "Share usage statistics" is on (off by default; `FIREBASE_ANALYTICS_COLLECTION_ENABLED = NO` in `LearnScrumble-Info.plist`) |
 | New words (English name + 2 translations + picture link + English job names), new pictures | Google Firebase (Firestore + Storage), shared library, no user ID. Written only by the Cloud Functions; the app downloads pictures by their link |
 | Job counts: English job name (menu name, or GPT's English name for a typed job; "invalid" isn't saved), typed/picked counts, first/last seen, review status | Google Firebase (Firestore `professions`), written by `getWords` when the app sends `countJob` (once per job per install, `ProfessionStore`), no user ID, never the typed text |
 | Random anonymous sign-in ID | Firebase Authentication (`AnonymousAuth.swift`), sent with every function call; auto clean-up deletes it 30 days after creation |
-| Today's date + words sent today, per anonymous ID | Firestore `usage/{uid}`, written by `getWords`, overwritten daily (counted, not enforced yet) |
+| Today's date + words sent today, per anonymous ID | Firestore `usage/{uid}`, written by `getWords`, overwritten daily (counted, not enforced) |
+| Picture reports: word's English name, job's English name, the picture link seen | `reportPicture` -> OpenAI (word + job, to describe and draw it again) -> the new picture only to the reporter (Storage `reports/`). Firestore `reports/{word}`: word, jobs, counts, the picture seen, the suggested picture + description, status; `reports/{word}/reporters/{code}`: a one-way hash of the anonymous ID, to count people. Daily email to support@learnscrumble.com (`mailReports`). The bank picture changes only when the developer approves |
+| Today's date + pictures reported today, per anonymous ID | Firestore `reportUsage/{uid}`, written by `reportPicture`, overwritten daily (max 10 a day) |
 | App Check token (App Attest on iPhones, debug token in the simulator) | Firebase App Check, with every Firebase call; no personal data |
-| Time check | `HEAD https://www.apple.com` |
-| Purchases | Apple App Store (StoreKit) |
+| Purchases: one-time profession unlocks (non-consumable, $9.99) | Apple App Store (StoreKit 2, `Purchases.swift`); the app only reads which ones the user owns |
 
-**Update the policy before shipping** any of these (all planned in `Docs/AppFlowIdeas.md`): RevenueCat, business access codes, a Report button, the server enforcing the daily limit. *(Crashlytics, optional Analytics and the OpenAI consent were added to the policy on 15 October 2026; the Cloud Functions, anonymous sign-in, the daily count on the server and App Check on 27 October 2026.)*
+**Update the policy before shipping** any of these (all planned in `Docs/AppFlowIdeas.md`): RevenueCat, business access codes, typed jobs coming back, the server enforcing the free words. *(Crashlytics, optional Analytics and the OpenAI consent were added to the policy on 15 October 2026; the Cloud Functions, anonymous sign-in, the daily count on the server and App Check on 27 October 2026; one-time unlocks, My words, the picture Report flag and the end of the time check and typed jobs on 28 October 2026.)*
 
 ## App Store privacy questions (suggestion)
 
@@ -103,7 +105,7 @@ Apple asks what data the app "collects" (sends off the device and keeps longer t
 - **Data linked to the user:** None (no account; Firebase's random IDs, including the anonymous sign-in ID, aren't tied to a person). ⚠️ Confirm at sign-off: the server keeps a daily word count per anonymous ID, and Apple may see that as "linked". If so, mark User ID and Other Usage Data as linked (still not tracking).
 - **Data not linked to the user** (the same as `LearnScrumble/PrivacyInfo.xcprivacy`):
   - *User Content → Other User Content*: the profession text sent to OpenAI — purposes: App Functionality, and Analytics (its English name is counted to improve the job menu).
-  - *Usage Data → Other Usage Data*: the names of words already practised, sent to our server and OpenAI so they aren't repeated, and the server's daily word count — purpose: App Functionality.
+  - *Usage Data → Other Usage Data*: the names of words already practised, sent to our server and OpenAI so they aren't repeated, the server's daily word and report counts, and picture reports (word + job) — purpose: App Functionality.
   - *Identifiers → User ID*: the random anonymous Firebase sign-in ID — purpose: App Functionality.
   - *Diagnostics → Crash Data*: Crashlytics crash reports — purpose: App Functionality.
   - *Diagnostics → Other Diagnostic Data*: Crashlytics non-fatal error reports (words couldn't be loaded), with the error type, a short technical description, the last steps, free memory and disk space — purpose: App Functionality.
@@ -116,4 +118,4 @@ Revisit these answers whenever the table changes (for example, anonymous sign-in
 
 ## Screenshots
 
-`images/how-to-play/*.jpg` were taken from the app's own tutorial in the iOS Simulator (English UI, learning Polish, iPhone 17), resized to 600 px wide. Retake them when the tutorial or the design changes. *(27 October 2026: `10-lets-go.jpg` edited from "20" to "10 free words"; `how-to-play.html` loads it with `?v=2`.)*
+`images/how-to-play/*.jpg` were taken from the app's own tutorial in the iOS Simulator (English UI, learning Polish, iPhone 17), resized to 600 px wide. Retake them when the tutorial or the design changes. *(27 October 2026: `10-lets-go.jpg` edited from "20" to "10 free words"; `how-to-play.html` loads it with `?v=2`. 28 October 2026: the app's note now reads "You get 10 free words to try the app." — retake it.)*

@@ -43,7 +43,7 @@ struct OnboardingView: View {
       MainView(vm: service.vm, manager: manager, topInset: topInset,
                onHintToggled: service.hintToggled, onReset: service.resetTapped,
                resultButtonTitle: "Let's go!",                                       // the last screen starts the real game
-               resultNote: "You get \(FreeAllowance.dailyWordLimit) free words every day.")   // the real game, practice word
+               resultNote: "You get \(FreeAllowance.freeWordLimit) free words to try the app.")   // the real game, practice word
 
       if service.vm.guessResult == nil {                    // hidden while the right/wrong screen covers everything
         header
