@@ -75,7 +75,9 @@ export async function saveWord(toolName: string, origin: string, originWord: str
   // Field paths, not "translation.uk-UA" strings: language codes contain "-", which dotted paths don't allow.
   const fields: [FieldPath, unknown][] = [];
   if (existing.translation?.[origin] === undefined) fields.push([new FieldPath("translation", origin), originWord]);
-  if (existing.translation?.[target] === undefined) fields.push([new FieldPath("translation", target), targetWord]);
+  if (target !== origin && existing.translation?.[target] === undefined) {   // same language twice -> one field only
+    fields.push([new FieldPath("translation", target), targetWord]);
+  }
   if (profession && !(existing.professions ?? []).includes(profession)) {
     fields.push([new FieldPath("professions"), FieldValue.arrayUnion(profession)]);
   }

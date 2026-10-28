@@ -7,6 +7,8 @@
 //   getPicture      -> one word's picture: the stored one, or a new one generated, converted to WebP,
 //                      uploaded and saved. Called per word, so the app's loading ring still moves per picture.
 //   getReviewWords  -> translations + picture links for the user's struggle words (struggle review).
+// And one background function, started from the Firebase console (prepare.ts):
+//   prepareProfession -> fills the bank with ~100 English words + pictures per menu job ("prepare" collection).
 //
 // Every call:
 //   - must come from a signed-in user (the app's silent anonymous sign-in, AnonymousAuth.swift)
@@ -25,6 +27,7 @@ import * as logger from "firebase-functions/logger";
 import * as openai from "./openai";
 import { fetchBank, fetchWords, saveWord, savePicture, repairPictureLink, countProfession, countUsage, WordDoc } from "./store";
 import { noWords, refused, badInput, notSignedIn } from "./errors";
+export { prepareProfession } from "./prepare";                  // background bank filling (prepare.ts)
 
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 setGlobalOptions({ region: "us-central1", maxInstances: 10 });
@@ -58,13 +61,17 @@ interface WordOut {
 //   professionKey = the bank key the app already knows (menu job, or a typed job named before); null = not named yet
 //   exclude       = words the user has seen (SwiftData) + words already in this session
 //   countJob      = true when the app's once-per-job-per-install check says "count this job" (was ProfessionStore)
-// Output: { job, words: [WordOut], fromBank, generated }
+// Output: { job, words: [WordOut], fromBank, translated, generated }
 //   job = the bank key used (the app remembers it for a typed job, as rememberTypedJobKey did)
 //
 // 1. Checks: signed in, valid input.
 // 2. Typed job seen for the first time -> moderation; refused text -> invalid-argument "refused".
 // 3. Bank: words tagged with the job, not excluded, with a picture and both languages -> up to `count`, at random.
-// 4. Short? GPT for ONLY the missing number (skipping excluded + ready bank words), up to 3 attempts.
+// 3b. Short? Unseen bank words with a picture but without one or both of the player's languages: GPT only
+//     TRANSLATES them (one text request, no new pictures), the translations are saved on the words, and they're
+//     played. This is what makes pre-made words (English name + picture, no translations yet) usable for any language
+//     pair. Translation fails -> logged, step 4 fills the batch instead.
+// 4. Still short? GPT for ONLY the missing number (skipping excluded + bank words already picked), up to 3 attempts.
 //    Nothing at all -> not-found "noWordsAvailable". GPT empty but the bank gave some -> play those.
 // 5. GPT words: existing docs are reused (picture link, missing translations filled, job tag added);
 //    new words are created with image "" (the app then calls getPicture for them).
@@ -100,11 +107,34 @@ export const getWords = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 120,
   }));
   logger.info("getWords: bank", { key: key ?? "none yet", bank: bank.length, ready: ready.length, using: picked.length, origin, target });
 
+  // 3b. Translate bank words that only lack the player's languages
+  let translated = 0;
+  const untranslated = bank.filter((d) => !excluded.has(d.word) && d.image
+    && !(d.translation?.[origin] && d.translation?.[target]));
+  if (picked.length < count && untranslated.length > 0) {
+    const chosen = shuffle(untranslated).slice(0, count - picked.length);
+    try {
+      const result = await openai.translate(apiKey, profession, chosen.map((d) => d.word), [origin, target]);
+      for (const d of chosen) {
+        const t = result.get(d.word);
+        const originWord = d.translation?.[origin] ?? t?.[origin];
+        const targetWord = d.translation?.[target] ?? t?.[target];
+        if (!originWord || !targetWord) continue;                    // GPT skipped it -> step 4 replaces it
+        await saveWord(d.word, origin, originWord, target, targetWord, key, d);   // fills only what's missing
+        words.push({ toolName: d.word, originWord, targetWord, imageURL: d.image, imagePrompt: d.word });
+        translated++;
+      }
+    } catch (error) {
+      logger.warn("getWords: translating bank words failed, asking GPT for new words instead", { error: String(error) });
+    }
+    logger.info("getWords: translated bank words", { asked: chosen.length, translated, origin, target });
+  }
+
   // 4. GPT for the rest
   let generated = 0;
-  const missing = count - picked.length;
+  const missing = count - words.length;
   if (missing > 0) {
-    const skip = new Set([...excluded, ...ready.map((d) => d.word)]);
+    const skip = new Set([...excluded, ...ready.map((d) => d.word), ...words.map((w) => w.toolName)]);
     const collected: openai.GptWord[] = [];
     let job: string | null = null;
     for (let attempt = 1; attempt <= MAX_GPT_ATTEMPTS && collected.length < missing; attempt++) {
@@ -149,7 +179,7 @@ export const getWords = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 120,
   const today = await countUsage(uid, words.length).catch(() => 0);
   if (today > DAILY_FREE_WORDS) logger.info("getWords: user over the free daily words (not enforced yet)", { today });
 
-  return { job: key, words, fromBank: picked.length, generated };
+  return { job: key, words, fromBank: picked.length, translated, generated };
 });
 
 // MARK: - getPicture

@@ -202,7 +202,7 @@ class RequestModel {
             count: batchSize,
             countJob: countJob
         ), timeout: 120)
-        Log.info("🏦 nextBatch — \(reply.words.count) words: \(reply.fromBank ?? 0) from the bank, \(reply.generated ?? 0) new from GPT", .words, private: "profession='\(reply.job ?? "none yet")'")
+        Log.info("🏦 nextBatch — \(reply.words.count) words: \(reply.fromBank ?? 0) from the bank, \(reply.translated ?? 0) translated from the bank, \(reply.generated ?? 0) new from GPT", .words, private: "profession='\(reply.job ?? "none yet")'")
         if isTypedJob {
             lastJobInEnglish = reply.job
             rememberTypedJobKey()
@@ -440,6 +440,7 @@ class RequestModel {
         let job: String?                                               // getWords: the bank key used (nil for a typed job GPT called "invalid")
         let words: [ServerWord]
         let fromBank: Int?                                             // getWords only — for the logs
+        let translated: Int?                                           // bank words GPT only translated (no new pictures)
         let generated: Int?
     }
     nonisolated struct ServerWord: Decodable, Sendable {

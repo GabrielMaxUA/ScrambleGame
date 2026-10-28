@@ -3,6 +3,7 @@
 // Same requests the app used to make itself (RequestModel), moved here so the key never leaves the server:
 //   wordList(...)      -> gpt-4.1 chat: 5 workplace words for a job, two languages, an image description each,
 //                         plus the job's common English name ("job") or "invalid"
+//   translate(...)     -> gpt-4.1 chat: existing bank words (English names) into the player's languages
 //   image(prompt)      -> gpt-image-1-mini, 1024×1024, low quality, transparent PNG -> raw PNG bytes
 //   isFlagged(text)    -> moderation of the job text the user typed (free)
 // send() does the HTTP part for all three: 90 s timeout, retries 408/429/5xx twice (2 s, 4 s),
@@ -107,6 +108,56 @@ Return exactly this shape:
     logger.warn("wordList: GPT reply wasn't valid JSON");
     throw badResponse();
   }
+}
+
+// MARK: - translate
+// Translates words that are already in the bank (English names, with pictures) into the given languages, in the
+// sense a person in this job uses them ("level" for a bricklayer = spirit level). One text request for the batch,
+// no pictures. Returns toolName -> { language code: word }; words GPT leaves out are simply missing from the map.
+export async function translate(apiKey: string, profession: string, toolNames: string[],
+                                languages: string[]): Promise<Map<string, Record<string, string>>> {
+  const langs = [...new Set(languages)];
+  const prompt = `Translate these workplace items, as a ${profession} uses them, into each of these languages: ${langs.join(", ")}.
+Items (English): ${toolNames.join(", ")}.
+Rules:
+- For each item and each language, give the natural, commonly used word for that item at work, matching the meaning a ${profession} would mean (for example "level" is the spirit level tool, not a game level).
+- Only the word itself: no explanations, articles only where the language always uses them, no alternatives.
+- Keep "toolName" exactly as given.
+- Respond ONLY with a JSON object, no markdown fences or additional text.
+Return exactly this shape:
+  {
+    "items": [
+      { "toolName": "${toolNames[0] ?? "hammer"}", "translations": { ${langs.map((l) => `"${l}": "<word in ${l}>"`).join(", ")} } }
+    ]
+  }`;
+
+  const reply = await send(apiKey, "chat/completions", {
+    model: "gpt-4.1",
+    messages: [{ role: "user", content: prompt }],
+  });
+  const content: unknown = reply?.choices?.[0]?.message?.content;
+  if (typeof content !== "string") throw badResponse();
+  const cleaned = content.replace(/```json/g, "").replace(/```/g, "").trim();
+  const result = new Map<string, Record<string, string>>();
+  try {
+    const parsed = JSON.parse(cleaned);
+    const items: unknown[] = Array.isArray(parsed?.items) ? parsed.items : [];
+    const wanted = new Set(toolNames);
+    for (const item of items as any[]) {
+      const name = typeof item?.toolName === "string" ? item.toolName.trim().toLowerCase() : "";
+      if (!wanted.has(name)) continue;
+      const words: Record<string, string> = {};
+      for (const lang of langs) {
+        const word = item?.translations?.[lang];
+        if (typeof word === "string" && word.trim() && word.length <= 60) words[lang] = word.trim();
+      }
+      result.set(name, words);
+    }
+  } catch {
+    logger.warn("translate: GPT reply wasn't valid JSON");
+    throw badResponse();
+  }
+  return result;
 }
 
 // MARK: - image

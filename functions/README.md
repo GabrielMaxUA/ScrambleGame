@@ -6,12 +6,27 @@ Plan and progress: `Docs/ServerMigrationPlan.md` (Phases 4–8).
 
 | Function | What it does | Replaces in the app |
 |---|---|---|
-| `getWords` | Next batch for a job: word bank first, GPT only for the missing number; tags words with the job; counts the job | `RequestModel.nextBatch`, `generateUniqueWordList`, `FirebaseWordStore.saveIfNeeded`, `ProfessionStore` |
+| `getWords` | Next batch for a job: word bank first (bank words missing the player's languages are only translated by GPT, no new pictures), GPT new words only for the missing number; tags words with the job; counts the job | `RequestModel.nextBatch`, `generateUniqueWordList`, `FirebaseWordStore.saveIfNeeded`, `ProfessionStore` |
 | `getPicture` | One word's picture: the stored one, a repaired link when the app reports it broken, or a new one (GPT → WebP → Storage → saved on the word) | `RequestModel.generateImage`, `FirebaseImageStore` |
 | `getReviewWords` | Struggle review words with translations and picture links | `RequestModel.generateStruggleReview`'s Firestore read |
 
 Files: `src/index.ts` (the three functions), `src/openai.ts` (all OpenAI calls), `src/store.ts` (Firestore + Storage),
 `src/errors.ts` (error codes the app maps to `GenerationError`).
+
+## Filling the bank in the background (`prepareProfession`, `src/prepare.ts`)
+
+Makes about 100 English words with pictures per menu job, so players get words straight from the bank.
+Translations are added when a player first needs them (getWords translates bank words).
+
+Start it in the Firebase console → Firestore → collection `prepare`:
+- **one job:** document ID = the menu name in lowercase (e.g. `cook`), field `status` = `run`; optional `target` = 20
+  for a small test.
+- **all menu jobs:** document `_all` with `status` = `run`; the 32 jobs are queued and filled one after another.
+- **pause:** `status` = `paused`; **resume** or **retry after "failed"**: `status` = `run`.
+
+Each job's document shows `words` (with pictures), `steps`, `lastStep` and any `error`. One step = 10 new words and
+up to 15 pictures; it ends with `done`. Costs roughly one low-quality OpenAI picture per new word: watch the OpenAI
+usage page during a big run. When the menu changes, update `MENU_JOBS` in `src/prepare.ts`.
 
 ## Secret
 
