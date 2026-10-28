@@ -345,7 +345,7 @@ class WordVM {
     Log.debug("📍 advance — now at index \(currentIndex) of \(questions.count) loaded questions", .game)
   }
   
-  private let prefetchThreshold = 3                                    // start the next batch when only this many words (incl. the current one) are left — 3 words of play time to hide GPT + image generation
+  private let prefetchThreshold = 3                                    // start the next batch when only this many words (incl. the current one) are left — 3 words of play time to hide the server call + new pictures
 
   // MARK: - requestMoreIfNeeded
   // Decides whether it's time to quietly start fetching the next batch. Only when:

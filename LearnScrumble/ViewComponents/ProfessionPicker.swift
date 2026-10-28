@@ -14,7 +14,7 @@ import SwiftUI
 //   -> user picks a job -> onChange writes its English name to requestModel.proffession
 //   -> "Not listed?" -> a text field appears and writes what the user types instead
 //   -> on appear, the saved profession is turned back into the menu choice.
-//   RequestModel later sends proffession to GPT to choose the vocabulary.
+//   RequestModel later sends proffession to the server (getWords), which picks the vocabulary from the bank or GPT.
 
 struct ProfessionPicker: View {
   @Bindable var requestModel: RequestModel                  // where the chosen profession is stored

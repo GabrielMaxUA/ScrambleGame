@@ -13,6 +13,9 @@
 		3853E13D3064930300AE6251 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 3853E13C3064930300AE6251 /* FirebaseStorage */; };
 		3888EBCC3081A86900968885 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3888EBCB3081A86900968885 /* FirebaseAnalytics */; };
 		3888EBCE3081A89F00968885 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3888EBCD3081A89F00968885 /* FirebaseCrashlytics */; };
+		38C34BB33091727D00E583E1 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 38C34BB23091727D00E583E1 /* FirebaseAuth */; };
+		38C34BB53091822D00E583E1 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 38C34BB43091822D00E583E1 /* FirebaseFunctions */; };
+		38C34BB93091888D00E583E1 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = 38C34BB83091888D00E583E1 /* FirebaseAppCheck */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,8 +38,11 @@
 				3853E12D30634A2D00AE6251 /* FirebaseCore in Frameworks */,
 				3853E13D3064930300AE6251 /* FirebaseStorage in Frameworks */,
 				3853E12F30634A2D00AE6251 /* FirebaseFirestore in Frameworks */,
+				38C34BB53091822D00E583E1 /* FirebaseFunctions in Frameworks */,
 				3888EBCE3081A89F00968885 /* FirebaseCrashlytics in Frameworks */,
 				3888EBCC3081A86900968885 /* FirebaseAnalytics in Frameworks */,
+				38C34BB33091727D00E583E1 /* FirebaseAuth in Frameworks */,
+				38C34BB93091888D00E583E1 /* FirebaseAppCheck in Frameworks */,
 				3853E1383064928300AE6251 /* SDWebImageWebPCoder in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -96,6 +102,9 @@
 				3853E13C3064930300AE6251 /* FirebaseStorage */,
 				3888EBCB3081A86900968885 /* FirebaseAnalytics */,
 				3888EBCD3081A89F00968885 /* FirebaseCrashlytics */,
+				38C34BB23091727D00E583E1 /* FirebaseAuth */,
+				38C34BB43091822D00E583E1 /* FirebaseFunctions */,
+				38C34BB83091888D00E583E1 /* FirebaseAppCheck */,
 			);
 			productName = LearnScrumble;
 			productReference = 38D434513048C7720046E55F /* LearnScrumble.app */;
@@ -223,7 +232,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"${CONFIGURATION}\" = \"Release\" ]; then\n  ENV=\"Prod\"\n  PROJECT=\"scrumblegame\"\nelse\n  ENV=\"Dev\"\n  PROJECT=\"scrumblegame-dev\"\nfi\n\nSRC=\"${SRCROOT}/FirebaseConfig/${ENV}/GoogleService-Info.plist\"\nDEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\n\n# The plists are not in git: every Mac needs its own FirebaseConfig folder.\nif [ ! -f \"$SRC\" ]; then\n  echo \"error: FirebaseConfig/${ENV}/GoogleService-Info.plist is missing. Download it from the Firebase console (${PROJECT} -> Project settings -> Your apps) and put it there.\"\n  exit 1\nfi\n\ncp \"$SRC\" \"$DEST\" || exit 1\necho \"Copied ${ENV} plist\"\n";
+			shellScript = "# Which Firebase project this build talks to: Build Settings -> User-Defined -> FIREBASE_ENV (Prod or Dev).\n# Release (App Store / TestFlight) must always be Prod. Missing or unknown value -> Prod.\nif [ \"${FIREBASE_ENV}\" = \"Dev\" ] && [ \"${CONFIGURATION}\" != \"Release\" ]; then\n  ENV=\"Dev\"\n  PROJECT=\"scrumblegame-dev\"\nelse\n  ENV=\"Prod\"\n  PROJECT=\"scrumblegame\"\nfi\n\nSRC=\"${SRCROOT}/FirebaseConfig/${ENV}/GoogleService-Info.plist\"\nDEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\n\n# The plists are not in git: every Mac needs its own FirebaseConfig folder.\nif [ ! -f \"$SRC\" ]; then\n  echo \"error: FirebaseConfig/${ENV}/GoogleService-Info.plist is missing. Download it from the Firebase console (${PROJECT} -> Project settings -> Your apps) and put it there.\"\n  exit 1\nfi\n\ncp \"$SRC\" \"$DEST\" || exit 1\necho \"Copied ${ENV} plist\"\n";
 			showEnvVarsInLog = 0;
 		};
 		3888EBCF3081A8F000968885 /* Upload Crashlytics dSYM */ = {
@@ -391,6 +400,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LearnScrumble/LearnScrumble.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
@@ -400,8 +410,10 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
+				FIREBASE_ENV = Prod;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "LearnScrumble-Info.plist";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -438,6 +450,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LearnScrumble/LearnScrumble.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
@@ -446,8 +459,10 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
+				FIREBASE_ENV = Prod;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "LearnScrumble-Info.plist";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -551,6 +566,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCrashlytics;
+		};
+		38C34BB23091727D00E583E1 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		38C34BB43091822D00E583E1 /* FirebaseFunctions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFunctions;
+		};
+		38C34BB83091888D00E583E1 /* FirebaseAppCheck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAppCheck;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

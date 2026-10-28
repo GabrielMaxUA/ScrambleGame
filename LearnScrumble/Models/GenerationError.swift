@@ -15,10 +15,10 @@ import SwiftUI
 enum GenerationError: Error, Equatable {
   case offline              // no internet — OfflineView
   case timedOut             // slow network, temporary
-  case serverBusy           // 429 / 5xx after our retries, temporary
-  case badResponse          // garbled reply from GPT, worth another try
-  case serviceUnavailable   // 4xx — missing/revoked key, billing, bad request: OUR problem, retry won't help
-  case noWordsAvailable     // GPT has nothing new for this profession + language
+  case serverBusy           // server or OpenAI busy (unavailable) / 5xx after retries, temporary
+  case badResponse          // garbled reply (GPT on the server, or a broken picture), worth another try
+  case serviceUnavailable   // server's OpenAI key, billing or App Check problem (failed-precondition): OUR problem, retry won't help
+  case noWordsAvailable     // bank and GPT have nothing new for this profession + language (or the job text was refused)
   case reviewUnavailable    // struggle words exist but their translations couldn't be found
   case noStruggleWords      // nothing to review yet
   case unknown

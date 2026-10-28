@@ -377,6 +377,7 @@ struct SettingsView: View {
   
   // MARK: - row(_:icon:tint:action:)
   // A tappable settings row (icon + title + chevron) that runs `action`.
+  
   #if DEBUG
   // MARK: - debugSection
   // Debug builds only: testing tools. Text(verbatim:) keeps these English labels out of the translation catalog.
@@ -390,7 +391,11 @@ struct SettingsView: View {
       }
       .font(.headline)
       .foregroundStyle(.orange)
-
+      Button {
+        fatalError("Test crash for Crashlytics")
+      } label: {
+        Text("Crashlytics crash test")
+      }
       Button {
         FreeAllowance.shared.resetForTesting()
       } label: {

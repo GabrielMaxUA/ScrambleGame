@@ -13,16 +13,18 @@
   - no tracking, no tracking domains;
   - UserDefaults, reason **CA92.1** (only this app reads and writes it);
   - collected, not linked to the user, for App Functionality: **Other User Content** (the job sent to OpenAI) and **Other Usage Data** (names of practised words sent to OpenAI).
+- **Updated 27 October** for the Cloud Functions and anonymous sign-in: also **User ID** (the random anonymous Firebase ID, App Functionality, not linked — confirm at sign-off), and the job and practised words now go to our server, which passes them to OpenAI.
 - **Updated 15 October** for Crashlytics and Analytics: also **Crash Data** (App Functionality), **Device ID** (Firebase's random IDs, not the advertising ID; App Functionality + Analytics) and **Product Interaction** (Analytics, only with consent). All not linked, no tracking. The App Store Connect privacy answers still need the same update (see `WebsiteContent/README.md`).
 - Firebase 12.19 and SDWebImage include their own manifests.
 - **Keep in sync** with `WebsiteContent/privacy.html` and the App Store privacy answers (3.2).
 
 ### 1.2 ❓ **need discussion** Premium buttons that do nothing (guidelines 2.1, 3.1.1)
-- **Problem:** every "See plans" button only prints `💳 paywall — not built yet`, and `AppManager.hasAccess` is always `false`. After 20 words the reviewer sees "Today's free words are done" with a "See plans" button that does nothing; review of mistakes and the voice picker are locked behind a subscription that can't be bought.
+- **Problem:** every "See plans" button only prints `💳 paywall — not built yet`, and `AppManager.hasAccess` is always `false`. After 10 words (20 until 27 October) the reviewer sees "Today's free words are done" with a "See plans" button that does nothing; review of mistakes and the voice picker are locked behind a subscription that can't be bought.
 - **Plan:** handled when RevenueCat and the paywall are built (`checklist.md` §4.3, `AppFlowIdeas.md` §6). **Must be finished before the first submission.**
 - **If the app has to ship before the paywall:** hide everything premium for 1.0 — no "See plans", no lock icons, review and voice either free or hidden, and at the daily limit a plain "Come back tomorrow" message.
 
-### 1.3 ⬜ **to do** Working privacy policy, terms and support links (guideline 5.1.1(i))
+### 1.3 ✅ *(partly)* Working privacy policy, terms and support links (guideline 5.1.1(i))
+- **Done (18 October):** the pages are live at **https://learnscrumble.com** (`/privacy`, `/terms`, `/support`) on Firebase Hosting, and the app's links come from `AppLinks.swift`; support email support@learnscrumble.com. **Left:** the yellow placeholders and a legal check (`WebsiteContent/TODO.md`), and entering the URLs in App Store Connect. The original plan below is kept for reference.
 - **Problem:** the pages exist in `WebsiteContent/`, but they aren't online yet, so the app still points to placeholders:
   - `Views/EntryView.swift` → `privacyURL` = `https://your-site.com/privacy`
   - `Views/SettingsView.swift` → `privacyURL`, `termsURL` = `your-site.com`, `supportEmail` = `support@example.com`
@@ -60,14 +62,15 @@
 - Words and pictures made from what users type are shared with all users. A reviewer may treat this as user-generated content, which needs a way to report problems.
 - **How:** the planned Report button (`AppFlowIdeas.md` §2). Until then, the support email in Settings plus the support page's "A word, translation or picture looks wrong" answer.
 
-### 2.2 ⬜ **to do** The OpenAI key inside the app (guideline 2.1 in practice)
+### 2.2 ✅ The OpenAI key inside the app (guideline 2.1 in practice)
+- **Done (27 October):** all generation runs in Firebase Cloud Functions; the new key is only in Secret Manager and the old one is deleted. Anonymous sign-in and App Check (monitoring, enforcement later) protect the functions.
 - If the key is extracted and abused, OpenAI can block it, and the app shows "We can't prepare new words" during review: an instant rejection, and the same failure for all users later.
 - **How:** move generation to Firebase Cloud Functions (`AppFlowIdeas.md` §9, step 2).
 
 ### 2.3 ⬜ **to do** Notes for the reviewer (App Store Connect → App Review Information)
 New pictures take 10–30 seconds and need the internet, so explain that up front. Suggested text:
 
-> LearnScrumble creates vocabulary for the user's job with AI, so the first round takes about 30 seconds to prepare (new pictures are generated). An internet connection is needed. Suggested test: I speak English, profession "Cook", I want to learn Polish. After setup a short "How to play" tutorial runs while the first words load. Free users get 20 words per day; [describe how to test the subscription, e.g. sandbox account or promo code]. No account or sign-in is required.
+> LearnScrumble creates vocabulary for the user's job with AI, so the first round takes about 30 seconds to prepare (new pictures are generated). An internet connection is needed. Suggested test: I speak English, profession "Cook", I want to learn Polish. After setup a short "How to play" tutorial runs while the first words load. Free users get 10 words per day; [describe how to test the subscription, e.g. sandbox account or promo code]. No account or sign-in is required (the app signs in anonymously in the background).
 
 ---
 
@@ -75,8 +78,8 @@ New pictures take 10–30 seconds and need the internet, so explain that up fron
 
 - ✅ **Launch screen** shortened from 5 to 2 seconds (`RootView`). Apple discourages long forced splash screens.
 - ✅ **Sounds follow the silent switch** — the audio session is now `.ambient` (`SoundManager`), still mixed with the user's music. Fixed together with the earlier main-thread audio warnings.
-- ✅ **Export compliance:** add `ITSAppUsesNonExemptEncryption = NO` to the target's Info settings (the app only uses standard HTTPS), so App Store Connect stops asking for every build. *(16 October: in `LearnScrumble-Info.plist`, confirmed in the built app's Info.plist)*
-- ⬜ **to do** **App privacy answers** (App Store Connect → App Privacy): no tracking; data not linked to the user: Other User Content and Other Usage Data (App Functionality), plus Crash Data, Device ID and Product Interaction since 15 October (see 1.1) — the same as the privacy manifest. See `WebsiteContent/README.md`.
+- ✅ **Export compliance:** add `ITSAppUsesNonExemptEncryption = NO` to the target's Info settings (the app only uses standard HTTPS), so App Store Connect stops asking for every build. *(16 October: in `LearnScrumble-Info.plist`, confirmed in the built app's Info.plist. 27 October: Xcode moved it to the build settings, `INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO`)*
+- ⬜ **to do** **App privacy answers** (App Store Connect → App Privacy): no tracking; data not linked to the user: Other User Content and Other Usage Data (App Functionality), plus Crash Data, Device ID and Product Interaction since 15 October, and User ID since 27 October (see 1.1) — the same as the privacy manifest. See `WebsiteContent/README.md`.
 - ⬜ **to do** **Age rating questionnaire:** answer the questions about AI-generated content and user-created content honestly.
 - ⬜ **to do** **Store listing:** name, subtitle, description, keywords, category (Education), copyright, and screenshots in the required iPhone sizes (the `WebsiteContent/images/how-to-play/` captures are a starting point, but App Store screenshots need the full device resolution).
 - ✅ **Internal notes ship inside the app:** `checklist.md`, `AppFlowIdeas.md` and this file sit in the `LearnScrumble/` folder, which is synced to the app target, so they're copied into the app and anyone can read them from the downloaded app (business plans, prices, feedback). Move them to a folder outside the app target, e.g. `Docs/` at the repository root. *(16 October: moved to `Docs/` at the repository root, so they stay in the repo but never ship in the app; the built app has no `.md` files)*
@@ -101,8 +104,8 @@ New pictures take 10–30 seconds and need the internet, so explain that up fron
 
 1. ✅ Privacy manifest (1.1)
 2. ✅ Consent step on the setup screen (1.4) *(15 October)*
-3. ⬜ Publish the website and update the app's links (1.3)
+3. ✅ Publish the website and update the app's links (1.3) *(18 October; placeholders left)*
 4. ❓ Paywall with RevenueCat, or 1.0 without premium (1.2)
 5. ⬜ ~~Export compliance key~~ *(done 16 October)*, App Store Connect answers, store listing (3)
 6. ⬜ Reviewer notes (2.3) and a TestFlight round
-7. ⬜ Cloud Functions and the Report button (2.1, 2.2) — strongly recommended before launch, needed soon after at the latest
+7. ✅ *(partly)* Cloud Functions and the Report button (2.1, 2.2) — strongly recommended before launch, needed soon after at the latest *(Cloud Functions done 27 October; the Report button is left)*

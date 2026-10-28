@@ -1,10 +1,10 @@
 # LearnScrumble: moving the AI to the server (plan)
 
-*Written 15 October 2026. Progress updated 16 October: Phases 0–2 done; only the analytics DebugView check (and Node + CLI on the second Mac) are left. Phases 3–9 are planned, not started. Tick items off as we finish them, the same way as `checklist.md`.*
+*Written 15 October 2026. Progress updated 16 October: Phases 0–2 done. **Updated 27 October: Phases 3, 4, 5, 7 (monitoring) and 8 done** — the app gets its words and pictures from Cloud Functions in both projects, the OpenAI key is only on the server (new key; the old one is deleted), anonymous sign-in and App Check run. Left: publish the closed rules (Phase 6), App Check enforcement (Phase 7), server alerts (Phase 8), Phase 9 and the App Store answers (Phase 10). Tick items off as we finish them, the same way as `checklist.md`.*
 
 **Where this stands against `checklist.md`**
 - ✅ **Can go ahead now:** Phases 0–2. Crash reporting and analytics are an open ⬜ **to do** in the checklist (§4.4, §9), and they don't depend on any decision.
-- ❓ **Waits for Konstantin:** Phases 3–9. The checklist marks "OpenAI key off the phone" and "lock down Firebase" as ❓ **need discussion**, because they depend on **packs vs live AI** (§5, §8 Q1). Konstantin asked to settle that first, "so you don't build a server you won't need". `AppFlowIdeas.md` §1 has the hybrid bank agreed between us, but it still needs his OK.
+- ✅ *(27 October: we went ahead with the hybrid bank, see `AppFlowIdeas.md` §1; packs can still be added on top)* ~~**Waits for Konstantin:** Phases 3–9.~~ The checklist marks "OpenAI key off the phone" and "lock down Firebase" as ❓ **need discussion**, because they depend on **packs vs live AI** (§5, §8 Q1). Konstantin asked to settle that first, "so you don't build a server you won't need". `AppFlowIdeas.md` §1 has the hybrid bank agreed between us, but it still needs his OK.
 
 **Goal:** the OpenAI key leaves the phone. All AI calls and all writes to the shared word library happen in Firebase Cloud Functions. The app only asks and reads. We add crash reports, analytics and server logging along the way.
 
@@ -13,10 +13,10 @@
 | Topic | Decision |
 |---|---|
 | Server | Cloud Functions for Firebase (2nd gen), **TypeScript** |
-| Region | **`europe-west1`** (Belgium), for functions, Firestore and Storage where possible |
+| Region | **`us-central1`** for the functions, next to Firestore (`nam5`, United States) and the Storage buckets (US). *(Planned as `europe-west1`; changed on 27 October because the existing database is already in the US. The privacy page covers the transfer, §7)* |
 | Projects | **`scrumblegame-dev`** (new, for testing) + `scrumblegame` (production) |
 | Answers / progress | **Stay on the iPhone in SwiftData**, as today. The server never stores what a user answered |
-| Daily limit | Enforced on the server; the Keychain counter stays as a quick local display |
+| Daily limit | **10 words** (was 20 until 27 October). The Keychain counter enforces it on the phone; the server counts words per anonymous user per day (`usage/{uid}`) but doesn't refuse yet — it can't see subscriptions until the paywall exists |
 | Typed professions | Saved **in English**, without any user ID, so we can see which jobs to add to the list |
 | Analytics consent | On/off switch in onboarding and Settings |
 
@@ -28,8 +28,8 @@
 iPhone (anonymous sign-in + App Check token, both attached automatically)
    │  getWords("kucharz", pl → de, already seen: [...from SwiftData...])
    ▼
-Cloud Function (europe-west1)
-   1. Checks: real app? (App Check) · who? (anonymous ID) · daily limit · rate limit
+Cloud Function (us-central1)
+   1. Checks: real app? (App Check, monitoring for now) · who? (anonymous ID) · daily count (counted, not enforced yet)
    2. Moderation: is the typed job text OK?
    3. One OpenAI call returns the English job name ("cook") + the 5 words
    4. Saves "cook" to the professions list (count +1) if it was typed, not picked
@@ -66,13 +66,13 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
   - The plists are **not in git** (`.gitignore`). Keep a backup; on a new Mac, download them again from the console.
   - ⚠️ *(16 October)* **Every Mac needs its own `FirebaseConfig/` folder.** After pulling the project onto the second Mac, the folder was missing: the copy step failed without stopping the build, and the only sign was "Could not get GOOGLE_APP_ID" from the dSYM upload step. Fixed by downloading the plists again. The dSYM zip, by contrast, is per Debug build, not per Mac.
   - ✅ *(16 October)* The **Copy Firebase plist** script now stops the build when the plist is missing, with a red Xcode error naming the file and the console to download it from (`scrumblegame-dev` for Debug, `scrumblegame` for Release).
-  - To fill the **production** bank while playing, as before: Edit Scheme → Run → Build Configuration → **Release**. Switch back to Debug for coding.
-- ✅ **You:** Firestore in `scrumblegame-dev`: `(default)` database, Standard edition, **test mode**, no backups. *(15 October)* ⚠️ Test mode ends around **14 November 2026**; extend it or write the rules (Phase 6) before then.
+  - ~~To fill the **production** bank while playing: Edit Scheme → Release.~~ *(27 October: replaced by the `FIREBASE_ENV` build setting, `Prod` by default for Debug too; Release is always Prod. See `README.md` → Dev and production)*
+- ✅ **You:** Firestore in `scrumblegame-dev`: `(default)` database, Standard edition, **test mode**, no backups. *(15 October)* ⚠️ Test mode ends around **14 November 2026**; the closed rules of Phase 6 replace it.
 - ✅ **You:** Storage in `scrumblegame-dev`: default bucket `scrumblegame-dev.firebasestorage.app` (no-cost US region, test data only), test mode. *(15 October; needed Blaze, see Phase 2)*
 - ✅ **You:** `FirebaseImageStore` had the production bucket `gs://scrumblegame-tools` hard-coded, so dev pictures would still have gone to production. Now `#if DEBUG` uses the dev plist's default bucket, and Release keeps `scrumblegame-tools`. *(15 October, commit `a43ee47`)*
 - ✅ **Both:** confirmed that Debug runs fill the dev Firestore and Storage and leave production untouched. *(15 October)*
 - ✅ *(partly)* **You:** upgrade Node first: you have **Node 18**, and the current Firebase CLI and Cloud Functions need **Node 20 or newer** (`nvm install 22`). Then install the Firebase CLI and log in. *(16 October, on the main Mac: Node 22.15 was already there; `npm install -g firebase-tools` (CLI 15.34), `firebase login`, and `firebase projects:list` shows both projects. The CLI is a developer tool only: nothing of it goes into the app. Still to do on the second Mac, which has Node 18)*
-- ⬜ **Me:** add a `functions/` folder (TypeScript) and Firebase config files to the repo, outside the app folder. *(Only once Phases 3–9 are agreed)*
+- ✅ **Me:** add a `functions/` folder (TypeScript) and Firebase config files to the repo, outside the app folder. *(27 October: `functions/` with its own README; `firebase.json` has the functions and emulator settings)*
 
 ### Phase 1: crash reports and analytics (small, useful straight away)
 
@@ -112,46 +112,46 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 
 ### Phase 3: anonymous sign-in
 
-- ⬜ **You:** enable Anonymous sign-in in Firebase Authentication (both projects).
-- ⬜ **Me:** sign in silently at launch, next to the existing Firebase setup in `AppDelegate`. No screen, no email.
+- ✅ **You:** enable Anonymous sign-in in Firebase Authentication (both projects), with **auto clean-up** (anonymous accounts are deleted 30 days after they're created). *(27 October)*
+- ✅ **Me:** sign in silently at launch, next to the existing Firebase setup in `AppDelegate`. No screen, no email. *(27 October: `Services/AnonymousAuth.swift`. `ensureSignedIn()` runs at launch and before every function call; if the account was cleaned up or disabled, it signs out and gets a new anonymous ID)*
 
 ### Phase 4: Cloud Functions (on dev first)
 
-- ⬜ **You:** put the OpenAI key into Secret Manager with one CLI command (I give you the command; the key never goes into the repo or the chat).
-- ⬜ **Me:** `getWords`: job + languages + seen words in, 5 words out; English job name, bank first, OpenAI for the rest; saves typed jobs to `professions`. *(16 October: the job counting already runs in the app for now, see the Phase 1 note on `ProfessionStore`; `getWords` takes over the same write, same document format)*
+- ✅ **You:** put the OpenAI key into Secret Manager with one CLI command (I give you the command; the key never goes into the repo or the chat). *(27 October: `OPENAI_API_KEY` in both projects; production's was created during its first deploy)*
+- ✅ **Me:** `getWords`: job + languages + seen words in, 5 words out; English job name, bank first, OpenAI for the rest; saves typed jobs to `professions`. *(27 October: `functions/src/index.ts`. Bank words need a picture and both languages; GPT words that already exist are reused, get missing translations and the job tag; new ones are created without a picture. Counts the job when the app sends `countJob`, same document format as before)*
 - ⬜ **Me:** a meaning-aware bank key, for example "pipe (plumbing)" instead of just "pipe", so the same English name with another meaning in another job doesn't share translations and a picture (`AppFlowIdeas.md` §2). Easiest to decide before the server bank fills up.
-- ⬜ **Me:** `getPicture`: one word in, picture link out; generates, converts to WebP, uploads and saves only if missing.
-- ⬜ **Me:** `getReviewWords`: struggle words in, translations + pictures out.
-- ⬜ **Me:** moderation of typed job text before anything is generated.
-- ⬜ **Me:** daily limit (20 words) and per-user rate limits stored per anonymous user on the server.
-- ⬜ **Me:** clear error codes that map to the app's existing `GenerationError` cases (busy, offline, limit reached, refused text).
-- ⬜ **Both:** test everything on the Mac with the Firebase Emulator Suite (no cost, no risk), then deploy to `scrumblegame-dev`.
+- ✅ **Me:** `getPicture`: one word in, picture link out; generates, converts to WebP, uploads and saves only if missing. *(27 October; production bucket `scrumblegame-tools`)*
+- ✅ **Me:** `getReviewWords`: struggle words in, translations + pictures out. *(27 October)*
+- ✅ **Me:** moderation of typed job text before anything is generated. *(27 October: OpenAI `omni-moderation-latest`, only for a typed job the server hasn't named yet; refused → the app's "change your job" screen)*
+- ✅ *(partly)* **Me:** daily limit (10 words) and per-user rate limits stored per anonymous user on the server. *(27 October: words per anonymous user per UTC day are counted in `usage/{uid}` and over-limit calls are logged, but not refused until the server can see subscriptions (paywall). Rate limits: not yet; `maxInstances: 10` caps the spend)*
+- ✅ **Me:** clear error codes that map to the app's existing `GenerationError` cases (busy, offline, limit reached, refused text). *(27 October: `functions/src/errors.ts` ↔ `RequestModel.functionError`. "Limit reached" comes with enforcement)*
+- ✅ **Both:** test everything on the Mac with the Firebase Emulator Suite (no cost, no risk), then deploy to `scrumblegame-dev`. *(27 October: deployed straight to `scrumblegame-dev` and tested there with the app; the emulator setup is in `functions/README.md` for later)*
 
 ### Phase 5: switch the app to the functions
 
-- ⬜ **Me:** `RequestModel` calls the functions instead of OpenAI; prompts, image conversion, uploads and the API key line are removed from the app.
-- ⬜ **Me:** remove `FirebaseImageStore` and the writing half of `FirebaseWordStore`.
+- ✅ **Me:** `RequestModel` calls the functions instead of OpenAI; prompts, image conversion, uploads and the API key line are removed from the app. *(27 October: the key line is gone; the old OpenAI code is kept commented out in a LEGACY block for now)*
+- ✅ *(partly)* **Me:** remove `FirebaseImageStore` and the writing half of `FirebaseWordStore`. *(27 October: no longer called and marked LEGACY; delete them together with RequestModel's LEGACY block once production has run a while)*
 - ⬜ **Me:** `FreeAllowance` shows the server's count; the Keychain stays as the offline/local check.
-- ⬜ **Me:** loading bar still moves per finished picture (2 picture calls at a time, as today).
-- ⬜ **Both:** full test on a device: new job, picked job, review, daily limit, airplane mode, server error.
+- ✅ **Me:** loading bar still moves per finished picture (2 picture calls at a time, as today). *(27 October)*
+- ✅ *(partly)* **Both:** full test on a device: new job, picked job, review, daily limit, airplane mode, server error. *(27 October, simulator, dev and production: a picked job (Cook), prefetch and the daily limit work. Still to test: a typed job, review, airplane mode, a real iPhone)*
 
 ### Phase 6: lock down Firebase
 
-- ⬜ **Me:** Firestore rules: signed-in users can **read** the word library; nobody can write. Per-user limit documents are written only by the server. `professions` can't be read or written by the app. *(Until `getWords` exists, the app itself writes `professions` (`ProfessionStore`); block it only when the server has taken over that write)*
-- ⬜ **Me:** Storage rules: read-only for signed-in users.
-- ⬜ **Both:** confirm with the rules test tool that a phone can no longer write.
+- ⬜ **You:** Firestore rules: ~~signed-in users can read the word library;~~ nobody can read or write from a phone, because the app no longer touches Firestore (the functions bypass rules). Rules text: `match /{document=**} { allow read, write: if false; }`. Publish in both projects. *(27 October: written; `getWords` now does the `professions` write)*
+- ⬜ **You:** Storage rules: closed as well (`match /{allPaths=**} { allow read, write: if false; }`), for every bucket (production has two: the default one and `scrumblegame-tools`). Pictures still load, because the app uses their download links with a token. *(27 October: written)*
+- ⬜ **Both:** confirm with the rules test tool that a phone can no longer write, and play a round on each project after publishing.
 
 ### Phase 7: App Check
 
-- ⬜ **You:** register the app for App Attest in Firebase App Check; add the simulator debug token.
-- ⬜ **Me:** add App Check (App Attest) to the app; debug provider for the simulator.
-- ⬜ **You:** turn on **monitoring only** and watch the numbers for a few days.
-- ⬜ **You:** switch on **enforcement** for Functions, Firestore and Storage once almost all requests are verified.
+- ✅ **You:** register the app for App Attest in Firebase App Check; add the simulator debug token. *(27 October, both projects, token time to live 1 hour)*
+- ✅ **Me:** add App Check (App Attest) to the app; debug provider for the simulator. *(27 October: `Services/AppCheckSetup.swift`, installed before `FirebaseApp.configure()`; App Attest capability added. The Apple Program License Agreement had to be accepted first)*
+- ✅ **You:** turn on **monitoring only** and watch the numbers for a few days. *(27 October: the functions run with `enforceAppCheck: false`; nothing enforced in the console)*
+- ⬜ **You:** switch on **enforcement** for Functions, Firestore and Storage once almost all requests are verified. *(Check App Check → APIs after a day or two. Functions: `enforceAppCheck: true` in `functions/src/index.ts`, then deploy to both projects)*
 
 ### Phase 8: go live on production
 
-- ⬜ **Both:** deploy the functions and rules to `scrumblegame`; move the existing word library if needed (the current words and pictures stay usable).
-- ⬜ **You:** create a **new OpenAI key** for the server and **delete the old one**. The old key has been inside app builds, so treat it as exposed.
+- ✅ *(partly)* **Both:** deploy the functions and rules to `scrumblegame`; move the existing word library if needed (the current words and pictures stay usable). *(27 October: functions deployed — `getPicture` failed once with a Cloud Build error and worked on the retry; container images are cleaned up after 1 day. No move needed: the words and pictures stay where they were. Rules: Phase 6)*
+- ✅ **You:** create a **new OpenAI key** for the server and **delete the old one**. The old key has been inside app builds, so treat it as exposed. *(27 October: new key in Secret Manager only; old key deleted)*
 - ⬜ **Me:** server alerts: an email when OpenAI starts refusing requests or errors suddenly climb (Cloud Logging + Error Reporting).
 
 ### Phase 9: the profession list in practice
@@ -162,12 +162,12 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 
 ### Phase 10: privacy and App Store updates (before release)
 
-- ✅ *(partly)* **Me:** `PrivacyInfo.xcprivacy`: add crash data, product interaction (analytics), user ID (anonymous); *(15 October: Crash Data, Device ID and Product Interaction added; the anonymous user ID comes with Phase 3)* profession text gets the extra purpose "Analytics" (improving the job list).
-- ✅ *(partly)* **Me:** `privacy.html`: OpenAI now called from our server; anonymous ID; crash reports; analytics with consent; *(15 October: crash reports and analytics with consent are in; the server parts come with Phases 3–8)* typed jobs stored in English without a user ID; server region `europe-west1`.
-- ✅ *(partly)* **Me:** `WebsiteContent/README.md` privacy table and App Store answers updated. *(15 October: updated for Crashlytics and Analytics; the server parts come later)*
+- ✅ **Me:** `PrivacyInfo.xcprivacy`: add crash data, product interaction (analytics), user ID (anonymous); *(15 October: Crash Data, Device ID and Product Interaction added; 27 October: User ID, not linked, App Functionality)* profession text gets the extra purpose "Analytics" (improving the job list).
+- ✅ **Me:** `privacy.html`: OpenAI now called from our server; anonymous ID; crash reports; analytics with consent; *(15 October: crash reports and analytics with consent; 27 October: our server, moderation, the anonymous ID and daily count, App Check, retention; `support.html` FAQ too. Not live until `firebase deploy --only hosting`)* typed jobs stored in English without a user ID; server region ~~`europe-west1`~~ United States (`us-central1`).
+- ✅ **Me:** `WebsiteContent/README.md` privacy table and App Store answers updated. *(15 October: Crashlytics and Analytics; 27 October: the server, anonymous ID, daily count and App Check)*
 - ⬜ **You:** update the App Store Connect privacy answers to match. Today they say "not linked to the user"; with an anonymous ID and server-side limits, check again whether that still holds.
 - ✅ **Me:** move the internal docs (`checklist.md`, `AppFlowIdeas.md`, `AppStoreReadiness.md`, this file) out of `LearnScrumble/`. That folder is synced to the app, so they shipped inside it and anyone could read them (`AppStoreReadiness.md` §3). *(16 October: now in `Docs/` at the repository root: still in the repo for Konstantin, never in the app)*
-- ⬜ **Me:** update `checklist.md` and `AppStoreReadiness.md` (key off the phone, Firebase lock-down, crash reports and analytics → done).
+- ✅ **Me:** update `checklist.md` and `AppStoreReadiness.md` (key off the phone, Firebase lock-down, crash reports and analytics → done). *(27 October; the lock-down stays open until the rules are published)*
 
 ---
 
@@ -185,7 +185,7 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 - ✅ ~~Consent step for sending the job to OpenAI (App Review 5.1.2).~~ Done 15 October, on the same setup-screen card as the analytics consent (`AppStoreReadiness.md` §1.4).
 - Paywall with RevenueCat; it can use the same anonymous ID. Sandbox only, with no live products in your own App Store Connect account (checklist §4.3).
 - Report button for wrong words or pictures; it would write to a `reports` collection through a function. App Review may expect it for AI content (`AppStoreReadiness.md` §2.1).
-- "Delete my data": with the server it also needs to delete the user's limit documents. It's built but commented out today (`SettingsView.swift:68`, `AppManager.swift`).
-- Privacy policy, terms and support pages on Firebase Hosting in `scrumblegame` (`AppStoreReadiness.md` §1.3). This needs the Firebase CLI from Phase 0 *(installed 16 October, so this can go ahead)*.
+- "Delete my data": with the server it also needs to delete the user's limit documents (`usage/{uid}`). Old `usage` documents of cleaned-up anonymous IDs stay behind too; a scheduled clean-up function can remove them later. It's built but commented out today (`SettingsView.swift:68`, `AppManager.swift`).
+- ✅ ~~Privacy policy, terms and support pages on Firebase Hosting in `scrumblegame`.~~ Live at https://learnscrumble.com since 18 October (`WebsiteContent/README.md`).
 - Scheduled Firestore backups for **production** once real users are in the bank (none for dev).
-- The OpenAI key still lives in `RequestModel.swift` on your Mac only, not in git. Always add files to a commit by name until Phase 5 removes the key from the app. ⚠️ *(16 October)* Replace that key **soon**, not only in Phase 8: besides being inside app builds, it was printed in a local Claude session log. Create a new key on the OpenAI dashboard, delete the old one, and keep the new one out of git the same way.
+- ✅ ~~The OpenAI key still lives in `RequestModel.swift`.~~ Gone from the app on 27 October; the new key is only in Secret Manager and the old one is deleted.

@@ -6,7 +6,7 @@ The website is in `WebsiteContent/` (its own README).
 
 ## First setup on a new Mac
 
-Two things are **not in git** and must be added by hand, or the build or the game fails:
+The Firebase plists are **not in git** and must be added by hand, or the build fails:
 
 1. **Firebase plists**, both named `GoogleService-Info.plist` (ignored by `.gitignore`):
    ```
@@ -14,24 +14,33 @@ Two things are **not in git** and must be added by hand, or the build or the gam
    FirebaseConfig/Prod/GoogleService-Info.plist   ← project scrumblegame
    ```
    Copy them from a backup, or download them again: Firebase console → project → ⚙️ Project settings → your iOS app.
-2. **The OpenAI key**: paste it into `apiKey` in `LearnScrumble/Services/RequestModel.swift`.
-   **Never commit that file while the key is in it.** Add files to a commit by name. (The key moves to the server later, see `ServerMigrationPlan.md` Phase 5.)
+2. **The OpenAI key is not needed in the app any more** (since 27 October 2026). It lives only in Google Secret Manager
+   (`OPENAI_API_KEY`, both projects) and is used by the Cloud Functions in `functions/` (their own README).
+3. **Simulator only: an App Check debug token.** Run the app once in a new simulator, filter Xcode's console for
+   `debug token`, and add it in **both** Firebase consoles → App Check → Apps → ⋮ → Manage debug tokens. One token per
+   simulator (a new one after erasing it or reinstalling the app). Real iPhones use App Attest and need nothing.
+   Keep the token out of chats, code and git.
 
 ## Dev and production
 
-| You press | Build | Firebase project | Pictures bucket |
-|---|---|---|---|
-| ▶︎ Run | Debug | `scrumblegame-dev` | dev default bucket |
-| Product → Archive | Release | `scrumblegame` | `gs://scrumblegame-tools` |
+One switch decides which Firebase project a build uses: **Build Settings → User-Defined → `FIREBASE_ENV`** (target LearnScrumble), `Prod` or `Dev`. Since 27 October 2026 it's **`Prod` for both Debug and Release**, so ▶︎ Run fills the real word bank (the app isn't launched yet, and filling the dev project with OpenAI calls would be wasted money).
 
-- The **Copy Firebase plist** build phase copies the right plist into the app; `FirebaseImageStore` picks the bucket with `#if DEBUG`.
-- To fill the **production** word bank while playing: Edit Scheme → Run → Build Configuration → **Release**. Switch back to Debug for coding.
+| `FIREBASE_ENV` | You press | Firebase project | Pictures bucket |
+|---|---|---|---|
+| `Prod` (now) | ▶︎ Run or Archive | `scrumblegame` | `gs://scrumblegame-tools` |
+| `Dev` (Debug only) | ▶︎ Run | `scrumblegame-dev` | dev default bucket |
+
+- The **Copy Firebase plist** build phase reads `FIREBASE_ENV` and copies `FirebaseConfig/Prod/` or `FirebaseConfig/Dev/` into the app. Release (Archive, TestFlight, App Store) is **always** Prod, whatever the setting says. The build log shows "Copied Prod plist" or "Copied Dev plist".
+- The app calls the Cloud Functions of the project it's connected to (`getWords`, `getPicture`, `getReviewWords`, region `us-central1`), so dev builds use the dev functions and the dev word bank. Deploy function changes to `scrumblegame-dev` first (`functions/README.md`).
+- Firestore and Storage rules are meant to be closed to phones (`allow read, write: if false`; publishing them is `Docs/ServerMigrationPlan.md` Phase 6): only the functions write, and pictures load through their download links.
+- To test against dev again (e.g. risky experiments): set `FIREBASE_ENV` to `Dev` for **Debug** only. Debug-only features (Settings → Debug → "Reset free words") work with either.
+- With `Prod`, crash reports and statistics from your test runs land in the production project too; keep test crashes on `Dev`.
 - `LearnScrumble/` is a synced folder: every file in it goes into the app. Keep config files outside it.
   That's why the planning docs live in `Docs/` at the repository root: in the repo for everyone, never inside the app.
 
 ## Testing tricks
 
-**Reset the 20 free words a day.** The counter lives in the Keychain, which survives deleting the app.
+**Reset the 10 free words a day.** The counter lives in the Keychain, which survives deleting the app.
 - Easiest: **Settings → Debug → Reset free words** (Debug builds only, `#if DEBUG`; never in App Store builds).
 - Or, for the simulator's whole Keychain, in Terminal:
   ```bash

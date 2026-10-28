@@ -1,0 +1,24 @@
+{
+  "name": "learnscrumble-functions",
+  "description": "Cloud Functions for LearnScrumble: word lists and pictures through OpenAI, the shared word bank in Firestore. The OpenAI key lives in Secret Manager (OPENAI_API_KEY), never in the app.",
+  "private": true,
+  "main": "lib/index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions,firestore,storage,auth",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^7.0.0",
+    "sharp": "^0.35.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0"
+  }
+}

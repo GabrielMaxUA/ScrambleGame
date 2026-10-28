@@ -22,7 +22,8 @@ import Observation
 @Observable
 final class FreeAllowance {
   static let shared = FreeAllowance()                              // one counter for the whole app
-  static let dailyWordLimit = 20                                   // 2 rounds of 10 — change here only
+  static let dailyWordLimit = 10                                   // 1 round of 10 (was 20 until 27 Oct 2026) — change here only
+                                                                   // and in functions/src/index.ts DAILY_FREE_WORDS
   
   private(set) var wordsUsedToday = 0                              // today's answered words; views update when it changes
   var isLimitReached: Bool { wordsUsedToday >= Self.dailyWordLimit }   // free user is done for today

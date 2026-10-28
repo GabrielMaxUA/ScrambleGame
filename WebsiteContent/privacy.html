@@ -46,7 +46,7 @@
       <p class="muted">Effective date: <span class="fill">[DD Month YYYY]</span></p>
 
       <div class="note good">
-        <strong>In short:</strong> LearnScrumble has no account and doesn't ask for your name, email or phone number. Your settings and progress stay on your iPhone. To create new words and pictures, the app sends your job, your two languages and the words you've already practised to OpenAI — <strong>only after you agree to it in the app</strong> — and shares new words and pictures in a common word library on Google Firebase, without anything that identifies you. If the app crashes or something goes wrong, a short technical report is sent so we can fix the problem. Usage statistics are sent only if you switch them on. We don't show ads, don't track you across apps and don't sell data.
+        <strong>In short:</strong> LearnScrumble has no account and doesn't ask for your name, email or phone number. Your settings and progress stay on your iPhone. To create new words and pictures, the app sends your job, your two languages and the words you've already practised to our server, which asks OpenAI — <strong>only after you agree to it in the app</strong> — and keeps new words and pictures in a common word library on Google Firebase, without anything that identifies you. The app signs in to our server with a random ID, not with your name or email. If the app crashes or something goes wrong, a short technical report is sent so we can fix the problem. Usage statistics are sent only if you switch them on. We don't show ads, don't track you across apps and don't sell data.
       </div>
 
       <h2>Contents</h2>
@@ -75,7 +75,7 @@
           <tbody>
             <tr>
               <td>Your setup</td>
-              <td>The language you speak, the language you learn, your job (from the list or typed by you), speech speed, chosen voice per language, daily reminder on/off and time, whether you finished the setup and the "How to play" tutorial, when you agreed to sending your job to OpenAI, and whether usage statistics are on.</td>
+              <td>The language you speak, the language you learn, your job (from the list or typed by you, and for a typed job the common English name OpenAI gave it, so its saved words can be reused), speech speed, chosen voice per language, daily reminder on/off and time, whether you finished the setup and the "How to play" tutorial, when you agreed to sending your job to OpenAI, and whether usage statistics are on.</td>
               <td>To remember your choices between launches.</td>
             </tr>
             <tr>
@@ -86,7 +86,7 @@
             <tr>
               <td>Daily free-word counter</td>
               <td>Today's date, how many words you've answered today, and the latest date the app has seen. Kept in the iPhone's secure storage (Keychain).</td>
-              <td>To apply the free limit of 20 words a day. It stays on your iPhone even after you delete the app, so the limit can't be reset by reinstalling.</td>
+              <td>To apply the free limit of 10 words a day. It stays on your iPhone even after you delete the app, so the limit can't be reset by reinstalling.</td>
             </tr>
             <tr>
               <td>Daily reminders</td>
@@ -104,32 +104,40 @@
 
       <h3>OpenAI — creating words and pictures</h3>
       <p><strong>We ask first.</strong> Before any request is sent, the app asks you to agree: on the setup screen ("I agree"), or once in a separate question if you set up the app before this question existed. Without your agreement the app can't create words, so no game starts and nothing is sent. The same explanation stays visible in <strong>Settings → Legal and support</strong>.</p>
-      <p>When the app needs new words, it sends a request to OpenAI, L.L.C. (United States) with:</p>
+      <p>When the app needs new words, it sends a request to our server (Google Cloud Functions for Firebase, in the United States), which sends OpenAI, L.L.C. (United States):</p>
       <ul>
         <li>your job (as chosen or typed by you);</li>
         <li>the language you speak and the language you learn;</li>
         <li>the English names of words you've already practised in that language, so they aren't repeated;</li>
         <li>for new pictures: a short description of the object to draw.</li>
       </ul>
-      <p>In the same request, OpenAI is asked for the common English name of your job, for the job list described below.</p>
-      <p>The app doesn't send your name or any account or device identifier. As with any internet request, OpenAI receives your IP address. Please don't type personal information (such as names) into the job field. According to <a href="https://openai.com/policies/">OpenAI's policies</a>, data sent through its API is not used to train its models by default and may be kept for a limited time (currently up to 30 days) to monitor abuse.</p>
+      <p>In the same request, OpenAI is asked for the common English name of your job, for the job list described below. A job you typed yourself is first checked with OpenAI's moderation service, so offensive text isn't used to create words.</p>
+      <p>The app talks only to our server; OpenAI's key is kept on the server, never in the app. Pictures are downloaded straight from the word library (Google Cloud Storage).</p>
+      <p>OpenAI doesn't receive your name, your random sign-in ID or any device identifier; our server sends only the items listed above. OpenAI receives our server's address, not your iPhone's. Please don't type personal information (such as names) into the job field. According to <a href="https://openai.com/policies/">OpenAI's policies</a>, data sent through its API is not used to train its models by default and may be kept for a limited time (currently up to 30 days) to monitor abuse.</p>
 
       <h3>Google Firebase — the shared word library</h3>
-      <p>Words and pictures are stored in a library shared by all LearnScrumble users, on Google Firebase (Cloud Firestore and Cloud Storage), operated by Google LLC / Google Ireland Ltd. The app:</p>
+      <p>Words and pictures are stored in a library shared by all LearnScrumble users, on Google Firebase (Cloud Firestore and Cloud Storage), operated by Google LLC / Google Ireland Ltd. Only our server writes to it; the app itself can't change it. The server:</p>
       <ul>
         <li>reads words that already exist (by their English name), so known words and pictures are reused instead of created again;</li>
         <li>adds new words: the English name, the word in your two languages, and a link to the picture;</li>
-        <li>uploads new pictures (images of objects, never photos of you).</li>
+        <li>marks which jobs a word is used for, by the job's common English name (for example "cook"), so the same words and pictures can be offered to the next learner with that job instead of being created again. If you typed your job, only its English name from OpenAI is stored, never the text you typed;</li>
+        <li>saves new pictures (images of objects drawn by OpenAI, never photos of you).</li>
       </ul>
-      <p>Nothing that identifies you, and not your job, is stored with these words. Google receives your IP address and technical information (such as the app and SDK version and device type) needed to deliver the service. Data location: the United States (Cloud Firestore: Google's “nam5” United States multi-region; Cloud Storage: United States multi-region). See section 7 for how transfers outside the EU are protected.</p>
+      <p>Nothing that identifies you is stored with these words — only the English job names they belong to, shared by everyone with that job. When your iPhone downloads pictures or calls our server, Google receives your IP address and technical information (such as the app and SDK version and device type) needed to deliver the service. Data location: the United States (Cloud Firestore: Google's “nam5” United States multi-region; Cloud Storage: United States multi-region). See section 7 for how transfers outside the EU are protected.</p>
 
       <h3>Google Firebase — the list of jobs people learn for</h3>
-      <p>To decide which jobs to add to the menu, we count which jobs are used, in a list on Google Firebase (Cloud Firestore). When you start learning for a job (once per job on your iPhone):</p>
+      <p>To decide which jobs to add to the menu, our server counts which jobs are used, in a list on Google Firebase (Cloud Firestore). When you start learning for a job (once per job on your iPhone):</p>
       <ul>
         <li>if you chose it from the menu, its English name (for example "electrician") is counted;</li>
         <li>if you typed it yourself, OpenAI also returns its common English name in the same request that creates your words (for example "kucharz" becomes "cook"), and that English name is counted. Text that isn't a real job — such as a name or random text — is not counted.</li>
       </ul>
       <p>The list stores only the English job name, how many times it was chosen or typed, and when it was first and last seen. It never stores the text you typed, and nothing that identifies you or your iPhone.</p>
+
+      <h3>Google Firebase — random sign-in ID and daily word count</h3>
+      <p>So that only the LearnScrumble app can use our server, the app signs in to Firebase Authentication (Google) <strong>anonymously</strong>, without any screen: Firebase gives the app a random ID. It isn't linked to your name, email, phone number or Apple ID. Firebase deletes each anonymous ID 30 days after it was created, and the app then gets a new one.</p>
+      <p>With that ID our server keeps one small record: today's date and how many words it has sent to the app today. It's overwritten every day. It's used to keep the free limit of 10 words a day fair and to protect the service from abuse; it doesn't contain your job, your words or your answers.</p>
+      <h3>Apple and Firebase App Check — proving requests come from the real app</h3>
+      <p>Each request to our server carries a short-lived token from Firebase App Check (Google). On a real iPhone, the token comes from Apple's App Attest, which confirms that the request comes from a genuine copy of LearnScrumble on a genuine Apple device. It contains no personal information and isn't used to identify you.</p>
 
       <h3>Firebase Crashlytics — crash and error reports</h3>
       <p>The app sends a report to Firebase Crashlytics (Google) the next time you open it if it crashed, or if something went wrong without a crash — for example when new words couldn't be loaded because there was no internet. A report contains:</p>
@@ -162,7 +170,7 @@
 
       <h2 id="not">4. What we don't collect</h2>
       <ul>
-        <li>No account, name, email address or phone number.</li>
+        <li>No account, name, email address or phone number. (The app's anonymous sign-in uses a random ID only, see <a href="#sent">section 3</a>.)</li>
         <li>No location, contacts, photos, camera or microphone.</li>
         <li>No advertising, no advertising identifier, no tracking across other apps or websites.</li>
         <li>No usage statistics unless you switch them on (see <a href="#sent">section 3</a>).</li>
@@ -172,7 +180,7 @@
       <h2 id="why">5. Why we use data (legal bases)</h2>
       <ul>
         <li><strong>To provide the app you asked for</strong> — creating words and pictures for your job and languages, remembering your settings and progress (performance of a contract, Art. 6(1)(b) GDPR).</li>
-        <li><strong>To keep the free limit fair and the service working</strong> — the daily counter and the time check (legitimate interests, Art. 6(1)(f) GDPR).</li>
+        <li><strong>To keep the free limit fair and the service working and secure</strong> — the daily counters, the time check, the random sign-in ID and App Check (legitimate interests, Art. 6(1)(f) GDPR).</li>
         <li><strong>To improve the job menu</strong> by counting jobs in English, without anything that identifies you (legitimate interests, Art. 6(1)(f) GDPR).</li>
         <li><strong>To build the shared word library</strong> so words and pictures are reused for all learners (legitimate interests, Art. 6(1)(f) GDPR). It contains no personal data.</li>
         <li><strong>Reminders</strong> only if you allow notifications (consent, Art. 6(1)(a) GDPR) — you can switch them off at any time in the app or in iOS Settings.</li>
@@ -184,6 +192,7 @@
       <ul>
         <li><strong>On your iPhone:</strong> until you reset your progress or delete the app. The daily free-word counter stays in the Keychain until the iPhone is erased.</li>
         <li><strong>Shared word library:</strong> for as long as the service runs; it contains no personal data.</li>
+        <li><strong>Random sign-in ID:</strong> deleted by Firebase 30 days after it was created. <strong>Daily word count on the server:</strong> today's date and count only, overwritten every day.</li>
         <li><strong>OpenAI:</strong> according to OpenAI's API data policy (see above).</li>
         <li><strong>Crash reports and usage statistics:</strong> for the periods given in <a href="#sent">section 3</a>.</li>
         <li><strong>Emails to support:</strong> for as long as needed to answer you, then deleted after 12 months.</li>
@@ -200,7 +209,7 @@
       <p>LearnScrumble is made for adults learning the language of their workplace. It is not directed at children under <span class="fill">[16]</span>.</p>
 
       <h2 id="changes">10. Changes to this policy</h2>
-      <p>If we change what the app collects — for example by sending OpenAI requests through our own server instead of directly from the app — we'll update this page and the effective date before the change reaches the app.</p>
+      <p>If we change what the app collects — for example if accounts or business access codes are added — we'll update this page and the effective date before the change reaches the app.</p>
 
       <h2 id="contact">11. Contact</h2>
       <p>Questions about privacy: <a href="mailto:support@learnscrumble.com">support@learnscrumble.com</a>, or by post to <span class="fill">[postal address]</span>.</p>

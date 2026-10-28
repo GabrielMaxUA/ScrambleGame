@@ -1,0 +1,7 @@
+# Built JavaScript (made by `npm run build` before every deploy)
+lib/
+node_modules/
+# Local secrets for the emulator — never commit
+.secret.local
+.env.local
+*.local

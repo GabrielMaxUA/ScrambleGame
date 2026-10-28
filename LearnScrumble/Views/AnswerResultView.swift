@@ -43,7 +43,7 @@ struct AnswerResultView: View {
           .font(.largeTitle.bold())
           .foregroundStyle(isCorrect ? .green : .red)
         
-        if let note {                                           // tutorial ending: e.g. "You get 20 free words every day."
+        if let note {                                           // tutorial ending: e.g. "You get 10 free words every day."
           Label(note, systemImage: "gift.fill")
             .font(.headline)
             .foregroundStyle(.white)

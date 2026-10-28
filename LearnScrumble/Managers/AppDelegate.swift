@@ -9,9 +9,10 @@ import FirebaseCore
 
 // MARK: - Flow of this file
 // UIKit's app-launch hook, plugged into SwiftUI by LearnScrumbleApp (@UIApplicationDelegateAdaptor).
-//   App starts -> didFinishLaunching -> FirebaseApp.configure()
-//   -> Firestore (FirebaseWordStore) and Storage (FirebaseImageStore) are ready to use.
+//   App starts -> didFinishLaunching -> AppCheckSetup.install() (must come first) -> FirebaseApp.configure()
+//   -> Cloud Functions, Firestore and Storage are ready to use, each call carrying an App Check token.
 //   -> AnalyticsConsent.apply(saved choice): Analytics only collects if the user agreed (off by default).
+//   -> AnonymousAuth.ensureSignedIn() in the background: silent anonymous sign-in (random ID, no screen).
 
 final class AppDelegate: NSObject, UIApplicationDelegate {
   // MARK: - didFinishLaunchingWithOptions
@@ -22,9 +23,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     if FirebaseApp.app() == nil {
+      AppCheckSetup.install()                                       // before configure(), or Firebase ignores it
       FirebaseApp.configure()
     }
     AnalyticsConsent.apply(UserDefaults.standard.bool(forKey: AnalyticsConsent.key))
+    Task { await AnonymousAuth.ensureSignedIn() }                   // doesn't hold up the launch
     return true
   }
 }

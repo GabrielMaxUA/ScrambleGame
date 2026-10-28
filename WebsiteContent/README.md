@@ -82,25 +82,29 @@ Everything runs on the Mac, in Terminal, from the **repository root** (the folde
 | Answers per word: English name, language, right/wrong counts, last answered | iPhone only (SwiftData) |
 | Daily free-word counter: day, count, latest date seen | iPhone only (Keychain — survives deleting the app) |
 | Daily reminders | Scheduled locally by iOS, no server |
-| Profession, both languages, already-practised word names, picture descriptions | OpenAI API (directly from the phone today), only after the user ticks "I agree" (setup screen, or a one-time sheet for older installs) |
+| Profession, both languages, already-practised word names, picture descriptions | Our Cloud Functions (`getWords`, `getPicture`, us-central1), which call the OpenAI API; a typed job also goes through OpenAI moderation first. Only after the user ticks "I agree" (setup screen, or a one-time sheet for older installs). The OpenAI key is on the server only (Secret Manager) |
 | Crash and error reports: where in the code, error type, the two chosen languages, the last app steps (`Log.info` / `Log.error` messages: steps and counts only; words and the profession are `private:` and never sent), device model, iOS/app version, random installation ID | Firebase Crashlytics, always on |
 | Usage events, device model, iOS/app version, approximate country, random app-instance ID (no IDFA) | Google Analytics for Firebase, **only if** "Share usage statistics" is on (off by default; `FIREBASE_ANALYTICS_COLLECTION_ENABLED = NO` in `LearnScrumble-Info.plist`) |
-| New words (English name + 2 translations + picture link), new pictures | Google Firebase (Firestore + Storage), shared library, no user ID |
-| Job counts: English job name (menu name, or GPT's English name for a typed job; "invalid" isn't saved), typed/picked counts, first/last seen, review status | Google Firebase (Firestore `professions`), once per job per install, no user ID, never the typed text (`ProfessionStore`) |
+| New words (English name + 2 translations + picture link + English job names), new pictures | Google Firebase (Firestore + Storage), shared library, no user ID. Written only by the Cloud Functions; the app downloads pictures by their link |
+| Job counts: English job name (menu name, or GPT's English name for a typed job; "invalid" isn't saved), typed/picked counts, first/last seen, review status | Google Firebase (Firestore `professions`), written by `getWords` when the app sends `countJob` (once per job per install, `ProfessionStore`), no user ID, never the typed text |
+| Random anonymous sign-in ID | Firebase Authentication (`AnonymousAuth.swift`), sent with every function call; auto clean-up deletes it 30 days after creation |
+| Today's date + words sent today, per anonymous ID | Firestore `usage/{uid}`, written by `getWords`, overwritten daily (counted, not enforced yet) |
+| App Check token (App Attest on iPhones, debug token in the simulator) | Firebase App Check, with every Firebase call; no personal data |
 | Time check | `HEAD https://www.apple.com` |
 | Purchases | Apple App Store (StoreKit) |
 
-**Update the policy before shipping** any of these (all planned in `Docs/AppFlowIdeas.md`): Cloud Functions (OpenAI calls through our server), anonymous sign-in/App Check, RevenueCat, business access codes, a Report button. *(Crashlytics, optional Analytics and the OpenAI consent were added to the policy on 15 October 2026.)*
+**Update the policy before shipping** any of these (all planned in `Docs/AppFlowIdeas.md`): RevenueCat, business access codes, a Report button, the server enforcing the daily limit. *(Crashlytics, optional Analytics and the OpenAI consent were added to the policy on 15 October 2026; the Cloud Functions, anonymous sign-in, the daily count on the server and App Check on 27 October 2026.)*
 
 ## App Store privacy questions (suggestion)
 
 Apple asks what data the app "collects" (sends off the device and keeps longer than needed to answer the request). Based on the table above, a reasonable starting point — confirm with whoever signs off the release:
 
 - **Tracking:** No.
-- **Data linked to the user:** None (no account; Firebase's random IDs aren't tied to a person).
+- **Data linked to the user:** None (no account; Firebase's random IDs, including the anonymous sign-in ID, aren't tied to a person). ⚠️ Confirm at sign-off: the server keeps a daily word count per anonymous ID, and Apple may see that as "linked". If so, mark User ID and Other Usage Data as linked (still not tracking).
 - **Data not linked to the user** (the same as `LearnScrumble/PrivacyInfo.xcprivacy`):
   - *User Content → Other User Content*: the profession text sent to OpenAI — purposes: App Functionality, and Analytics (its English name is counted to improve the job menu).
-  - *Usage Data → Other Usage Data*: the names of words already practised, sent to OpenAI so they aren't repeated — purpose: App Functionality.
+  - *Usage Data → Other Usage Data*: the names of words already practised, sent to our server and OpenAI so they aren't repeated, and the server's daily word count — purpose: App Functionality.
+  - *Identifiers → User ID*: the random anonymous Firebase sign-in ID — purpose: App Functionality.
   - *Diagnostics → Crash Data*: Crashlytics crash reports — purpose: App Functionality.
   - *Diagnostics → Other Diagnostic Data*: Crashlytics non-fatal error reports (words couldn't be loaded), with the error type, a short technical description, the last steps, free memory and disk space — purpose: App Functionality.
   - *Identifiers → Device ID*: Firebase's random installation / app-instance ID (not the advertising ID) — purposes: App Functionality, Analytics.
@@ -112,4 +116,4 @@ Revisit these answers whenever the table changes (for example, anonymous sign-in
 
 ## Screenshots
 
-`images/how-to-play/*.jpg` were taken from the app's own tutorial in the iOS Simulator (English UI, learning Polish, iPhone 17), resized to 600 px wide. Retake them when the tutorial or the design changes.
+`images/how-to-play/*.jpg` were taken from the app's own tutorial in the iOS Simulator (English UI, learning Polish, iPhone 17), resized to 600 px wide. Retake them when the tutorial or the design changes. *(27 October 2026: `10-lets-go.jpg` edited from "20" to "10 free words"; `how-to-play.html` loads it with `?v=2`.)*

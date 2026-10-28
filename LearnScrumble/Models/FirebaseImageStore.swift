@@ -6,28 +6,36 @@
 //
 
 import UIKit
+import FirebaseCore
 import FirebaseStorage
 import SDWebImageWebPCoder
 
 // MARK: - Flow of this file
-// Saves newly generated word images to Firebase Storage, so other users reuse them instead of paying for a new one.
+// ⚠️ LEGACY — not called any more. Since the Cloud Functions, getPicture on the server converts new pictures to WebP
+// and uploads them (functions/src/store.ts savePicture), and the Storage rules will be read-only for phones.
+// Kept for reference only, with RequestModel's LEGACY block; delete both together.
+//
+// What it did: saved newly generated word images to Firebase Storage, so other users reuse them instead of paying for a new one.
 //   RequestModel.resolveImage -> uploadWebP(pngData, toolName)
 //     -> await encodeWebP(pngData) [background thread]: PNG -> smaller WebP
 //     -> upload to "tools/<toolName>.webp" -> return its download URL
 //   -> FirebaseWordStore.saveIfNeeded stores that URL in the word's Firestore doc.
 
 enum FirebaseImageStore {
-  // Point this at your actual bucket. If "scrumblegame-tools" is the bucket
-  // itself (not a folder inside the default bucket), keep the gs:// form below.
-  
-  // Debug (Run in Xcode) → dev project's default bucket, taken from the dev plist.
-  // Release (Archive) → the production bucket "scrumblegame-tools".
-  #if DEBUG
-    private static let storage = Storage.storage()
-  #else
-    private static let storage = Storage.storage(url: "gs://scrumblegame-tools")
-  #endif
-  private static let folder = "tools" // adjust if your folder is named differently
+  // Which bucket follows the Firebase project this build talks to (FIREBASE_ENV build setting ->
+  // Copy Firebase plist build phase -> the GoogleService-Info.plist inside the app):
+  // - production project "scrumblegame" -> its word-image bucket "scrumblegame-tools"
+  // - dev project "scrumblegame-dev"   -> the dev plist's default bucket
+  // Decided from the loaded plist, not from Debug/Release, so a Debug run against production
+  // uploads to the production bucket too.
+  private static let productionProjectID = "scrumblegame"
+  private static var storage: Storage {
+    if FirebaseApp.app()?.options.projectID == productionProjectID {
+      return Storage.storage(url: "gs://scrumblegame-tools")
+    }
+    return Storage.storage()
+  }
+  private static let folder = "tools"
   
   enum ImageStoreError: Error { case encodingFailed }              // PNG couldn't be turned into WebP
   

@@ -7,13 +7,14 @@ import SwiftUI
 // on `phase` and renders accordingly — all the actual decisions happen here.
 //
 // Two entry points build a session, both follow the same shape:
-//   startGame()            <- normal play: RequestModel generates a fresh
-//                              GPT word list, checkpointMode defaults to
+//   startGame()            <- normal play: RequestModel gets a fresh batch from
+//                              the server (getWords: word bank first, GPT for the
+//                              rest), checkpointMode defaults to
 //                              .everyN(10), fetchMore is wired so WordVM can
 //                              ask for more words indefinitely
 //   startStruggleReview()  <- review mode: pulls a FIXED list of struggling
 //                              toolNames from SwiftData, resolves them via
-//                              Firebase (no GPT word-list call), checkpointMode
+//                              the server (getReviewWords, no GPT), checkpointMode
 //                              is .endOfSession (one checkpoint, at the very end),
 //                              fetchMore is nil (no more content ever comes)
 //
@@ -53,12 +54,13 @@ final class AppManager {
   }
   
   // MARK: - startGame
-  // Normal play — builds a fresh, ever-growing word session via GPT.
+  // Normal play — builds a fresh, ever-growing word session from the server (word bank + GPT).
   // 1. Already loading? ignore the call (an auto-retry and a tap can't start two loads). Marks the session kind as .game.
   // 2. Progress to 0 and phase = .generating -> LoadingView while the first batch is built.
   // 3. FreeAllowance.syncClock(): internet time before checking the allowance.
   //    Can't play (free limit reached) -> back to WelcomeBackView — a safety net, the buttons should already prevent this.
-  // 4. requestModel.generate(): SwiftData exclusion (seen words) + GPT word list + Firebase/GPT images -> requestModel.questions.
+  // 4. requestModel.generate(): SwiftData exclusion (seen words) -> getWords (bank first, GPT for the rest)
+  //    -> pictures (stored, or new from getPicture) -> requestModel.questions.
   //    Nothing usable came back -> showFailure() picks OfflineView or ErrorView, depending on the cause.
   // 5. Builds the WordVM for this session and wires its callbacks:
   //    - questions: the freshly generated batch
@@ -152,7 +154,7 @@ final class AppManager {
   // 1. Already loading? ignore. Marks the session kind as .review, phase = .generating (LoadingView).
   // 2. Pulls the current struggle list for this language from SwiftData — the weakest 10.
   //    Nothing to review right now -> ErrorView with .noStruggleWords.
-  // 3. requestModel.generateStruggleReview(): resolves these known toolNames via Firebase (no GPT word-list call).
+  // 3. requestModel.generateStruggleReview(): resolves these known toolNames via the server (getReviewWords, no GPT).
   //    Nothing came back -> showFailure(), falling back to .reviewUnavailable.
   // 4. Builds the WordVM:
   //    - questions: the fixed set of words to review this session

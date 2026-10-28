@@ -11,7 +11,7 @@ import SwiftUI
 // The list of jobs offered in the profession menu.
 //   ProfessionPicker lists Occupation.sorted(for: locale): alphabetical in the app language, "Not listed?" last
 //   -> the picked case's rawValue (fixed English name) goes into requestModel.proffession
-//   -> RequestModel sends that English name to GPT, so the prompt is the same whatever the app language.
+//   -> RequestModel sends that English name to getWords (the server's GPT prompt and bank key), so it's the same whatever the app language.
 //   .notListed switches the picker to a free-text field.
 
 enum Occupation: String, CaseIterable, Identifiable {

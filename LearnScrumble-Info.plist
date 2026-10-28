@@ -2,15 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Analytics stays off until the user ticks "Share usage statistics" (AnalyticsConsent.swift).
-	     Lives outside LearnScrumble/ because that folder is synced into the app as resources.
-	     Xcode merges these keys with the generated Info.plist (GENERATE_INFOPLIST_FILE = YES). -->
 	<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
-	<false/>
-	<!-- Export compliance: the app only uses encryption built into iOS (HTTPS, Keychain), which is exempt.
-	     Answers App Store Connect's encryption question for every upload, so TestFlight builds aren't held
-	     as "Missing Compliance". Change only if the app ever adds its own encryption. -->
-	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>
 </plist>

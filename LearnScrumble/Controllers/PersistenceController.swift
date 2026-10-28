@@ -17,7 +17,7 @@ import Foundation
 //   container                          <- LearnScrumbleApp attaches it to the window (for @Query in RootView)
 //   context                            <- WordVM reads/writes answer records directly through it
 //   seenToolNames(targetLanguage:)     <- RequestModel.generate / generateMore: "which concepts has the user
-//                                         already practiced in this language" — feeds GPT's exclusion list
+//                                         already practiced in this language" — sent to getWords as `exclude`
 //   struggleToolNames(targetLanguage:) <- AppManager.startStruggleReview: the fixed question pool for review mode;
 //                                         WordVM.hasStruggleWords / WelcomeBackView: just checked for emptiness
 //                                         to decide whether to show the review button
@@ -111,7 +111,7 @@ final class PersistenceController {
     
     // MARK: - resetProgress(targetLanguage:)
     // Deletes all answers in one target language: fetch that language's records -> delete each -> save.
-    // Those words count as unseen again, so GPT may offer them again.
+    // Those words count as unseen again, so the server (bank or GPT) may offer them again.
     func resetProgress(targetLanguage: String) {
         let descriptor = FetchDescriptor<SwiftDataWordModel>(
             predicate: #Predicate { $0.targetLanguage == targetLanguage }

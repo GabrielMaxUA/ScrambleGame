@@ -8,13 +8,13 @@
 
 ## 1. Content: live AI vs pre-made packs
 
-**Direction:** ❓ **need discussion** A hybrid word bank in Firebase, generated on the server. *(Agreed between us; still needs Konstantin)*
+**Direction:** ✅ *(built 27 October)* A hybrid word bank in Firebase, generated on the server. *(Agreed between us; Konstantin still to confirm. Built as: words tagged with the jobs they're used for, the job's bank first, GPT only for the missing words, all in Cloud Functions — `ServerMigrationPlan.md` Phases 4–5)*
 
 - ⬜ **to do** **Pre-generate the listed professions.** A Firebase function generates 100 words for each profession in the picker.
-- ⬜ **to do** **Generate more on demand.** When a profession's words run out, the server generates about 50 more and saves them to the bank.
-- ⬜ **to do** **Typed professions ("Not listed?").** Before generating, the server asks AI to map the text to one English job name or to an existing profession ("cook", "chef", "cooks", "kucharz", "cok" → "Cook"). It checks the bank for words already shared with other professions, generates the rest in the background (the first 10 quickly so the user can play right away) and saves them. *(16 October, first part: typed and picked jobs are already counted in English in Firestore `professions` with no user ID (`ProfessionStore`), so the analyst list exists. Matching to existing professions and generating banks still waits for the server)*
+- ✅ *(differently)* **Generate more on demand.** When a profession's words run out, the server generates about 50 more and saves them to the bank. *(27 October: instead of 50 at once, every batch takes the job's unseen bank words first and GPT makes only the missing ones (up to 5), which are saved to the bank and tagged with the job. The bank grows as people play)*
+- ✅ *(partly)* **Typed professions ("Not listed?").** Before generating, the server asks AI to map the text to one English job name or to an existing profession ("cook", "chef", "cooks", "kucharz", "cok" → "Cook"). It checks the bank for words already shared with other professions, generates the rest in the background (the first 10 quickly so the user can play right away) and saves them. *(16 October, first part: typed and picked jobs are already counted in English in Firestore `professions` with no user ID (`ProfessionStore`), so the analyst list exists. 27 October: the server moderates the typed text, GPT gives it one English job name, and that name is the bank key, so "kucharz" and "Кухар" share the `cook` bank; the phone remembers the name for the next batches. Background pre-generation and matching against the menu's names are still to do (§8))*
 - ⬜ **to do** **New professions are reviewed first.** A typed profession only joins everyone's picker after the analyst team approves it. The user who typed it gets their words straight away.
-- ⬜ **to do** **Translations made when needed.** Pictures and English words are made once; a language's translations are only generated when someone with that language first asks.
+- ✅ **Translations made when needed.** Pictures and English words are made once; a language's translations are only generated when someone with that language first asks. *(27 October: a known word that GPT suggests for a new language pair gets the missing translations added and keeps its picture)*
 
 **Why the hybrid:** packs alone mean native speakers for every language, and users run out of words after the pack. Live AI alone means waiting for generation and unchecked words. A bank that AI fills, that users report on and that we correct turns into packs over time.
 
@@ -110,7 +110,7 @@
 ## 9. Firebase work, done together step by step
 
 - ✅ **Step 1: Crashlytics and Analytics.** Small and low-risk, and they start collecting data straight away: crashes, plus the events "onboarding finished", "round finished", "paywall shown" and "trial started". *(`checklist.md` §4.4)* *(15 October: both libraries are added and crash reports work, tested in a separate dev project `scrumblegame-dev`. The analytics consent switch (15 October), logs, crash breadcrumbs, non-fatal errors and the events (16 October) are done and tested in DebugView and Crashlytics. Only `paywall_shown` and `trial_started` wait for the paywall. Details in `ServerMigrationPlan.md` Phase 1)*
-- ⬜ **to do** **Step 2: Cloud Functions.**
+- ✅ *(partly)* **Step 2: Cloud Functions.** *(27 October: the functions, the key on the server, anonymous sign-in and App Check (monitoring) are done in both projects. Left: publish the closed rules and enforce App Check — `ServerMigrationPlan.md` Phases 6–7)*
   - the OpenAI key moves to the server, with all generation;
   - Firestore rules: the app only reads, the functions write;
   - App Check and anonymous sign-in.
@@ -123,7 +123,7 @@
 ### ⬜ To do
 
 1. ✅ **Firebase step 1:** Crashlytics and Analytics, together. *(§9)* *(Done 15–16 October; `paywall_shown` and `trial_started` come with the paywall)*
-2. ⬜ **Firebase step 2:** Cloud Functions with the OpenAI key, the hybrid word bank and locked-down rules, after the Blaze plan. *(§1, §9)*
+2. ✅ *(partly)* **Firebase step 2:** Cloud Functions with the OpenAI key, the hybrid word bank and locked-down rules, after the Blaze plan. *(§1, §9)* *(27 October: all done except publishing the closed rules and App Check enforcement)*
 3. ⬜ **Word quality:** Report button, a status per word, a meaning-aware bank key. *(§2)*
 4. ⬜ **Safety disclaimer** in the app and terms; no safety commands or instructions. *(§3)*
 5. ⬜ **Offline review for paying users,** plus history on upgrade. *(§4)*
@@ -133,7 +133,7 @@
 
 ### ❓ Need discussion
 
-1. ❓ **The hybrid word bank,** with Konstantin. *(§1)*
+1. ❓ **The hybrid word bank,** with Konstantin. *(§1)* *(Built on 27 October; packs can still be added on top if he wants them)*
 2. ❓ **Safety:** removing safety commands from the pack format, and a lawyer's check of the disclaimer. *(§3)*
 3. ❓ **RevenueCat or StoreKit alone.** *(§6)*
 4. ❓ **Business prices and plans:** per worker or per site, and usage limits. *(§7)*

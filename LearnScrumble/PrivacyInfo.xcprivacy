@@ -6,10 +6,11 @@
 
   - No tracking, no tracking domains.
   - Collected data = what leaves the device (Apple's definition), all for App Functionality, none linked to the user:
-      * Other User Content: the profession the user picks or types, sent to OpenAI to choose the words.
-                            Also Analytics: its English name is counted in Firestore "professions" (no user ID, no typed text)
-                            to improve the job menu (ProfessionStore).
-      * Other Usage Data:   the English names of words already practised, sent to OpenAI so they aren't repeated.
+      * Other User Content: the profession the user picks or types, sent to our Cloud Functions (getWords), which pass it
+                            to OpenAI to choose the words. Also Analytics: the server counts its English name in Firestore
+                            "professions" (no user ID, no typed text) to improve the job menu.
+      * Other Usage Data:   the English names of words already practised, sent to getWords (and on to OpenAI) so they
+                            aren't repeated. The server also keeps today's word count per anonymous ID (usage/{uid}).
     Settings, progress (SwiftData) and the daily free-word counter (Keychain) never leave the device -> not "collected".
     New words / pictures written to the shared Firebase library contain no user data.
       * Crash Data:          Firebase Crashlytics crash reports, sent on the next launch after a crash - App Functionality.
@@ -18,13 +19,18 @@
       * Device ID:           Firebase's random installation / app-instance ID (not the advertising ID) - App Functionality
                              (Crashlytics) and Analytics (only with the user's consent).
       * Product Interaction: Firebase Analytics events, only while "Share usage statistics" is on (off by default) - Analytics.
+      * User ID:             the random anonymous Firebase Authentication ID (AnonymousAuth.swift), sent with every Cloud
+                             Functions call; deleted by Firebase 30 days after it's created - App Functionality.
+                             Declared "not linked": it isn't tied to a name, email, phone or Apple ID. Confirm at release
+                             sign-off (WebsiteContent/README.md -> App Store privacy questions).
+      App Check tokens (App Attest) carry no personal data and aren't declared.
     Firebase's own SDK manifests declare the same; listing them here keeps the app's report complete.
   - Required-reason API: UserDefaults (@AppStorage / UserDefaults.standard), reason CA92.1 = only this app reads/writes it.
   - Required-reason API: system boot time. FreeAllowance measures time passed since the internet-time check with
     clock_gettime_nsec_np(CLOCK_MONOTONIC) (time since the iPhone started), reason 35F9.1 = measuring elapsed time
     between events inside the app. Nothing about it leaves the device.
 
-  Keep in sync with WebsiteContent/privacy.html. Update before adding sign-in, App Check or RevenueCat.
+  Keep in sync with WebsiteContent/privacy.html. Update before adding RevenueCat, accounts or access codes.
 -->
 <plist version="1.0">
 <dict>
@@ -106,6 +112,18 @@
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
 				<string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeUserID</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
 		</dict>
 	</array>

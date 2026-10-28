@@ -37,8 +37,9 @@ nonisolated enum Log {
   nonisolated enum Category: String {                              // shown next to each line in Xcode; filter by it
     case app                                                       // AppManager, screens, paywall
     case game                                                      // WordVM: rounds, answers, checkpoints
-    case words                                                     // RequestModel: GPT word lists and images
+    case words                                                     // RequestModel: words and pictures from the Cloud Functions
     case firebase                                                  // Firestore word documents
+    case auth                                                      // AnonymousAuth: silent anonymous sign-in
     case storage                                                   // SwiftData progress on the phone
     case allowance                                                 // daily free words
     case reminder                                                  // daily notification
