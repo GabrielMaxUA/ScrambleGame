@@ -23,7 +23,7 @@ import { setGlobalOptions } from "firebase-functions/v2";
 import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import * as openai from "./openai";
-import { fetchBank, fetchWords, saveWord, savePicture, countProfession, countUsage, WordDoc } from "./store";
+import { fetchBank, fetchWords, saveWord, savePicture, repairPictureLink, countProfession, countUsage, WordDoc } from "./store";
 import { noWords, refused, badInput, notSignedIn } from "./errors";
 
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
@@ -153,20 +153,35 @@ export const getWords = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 120,
 });
 
 // MARK: - getPicture
-// Input:  { toolName, imagePrompt }   Output: { imageURL }
-// 1. The word already has a picture (another user may have made it meanwhile) -> that link, no cost.
-// 2. Otherwise GPT draws it -> WebP -> Storage tools/<id>.webp -> saved on the word -> its link.
+// Input:  { toolName, imagePrompt, broken? }   Output: { imageURL }
+//   broken = true when the app couldn't download the word's stored picture link.
+// 1. The word has a picture link and the app didn't report it broken (another user may have made it meanwhile)
+//    -> that link, no cost.
+// 2. Reported broken -> repairPictureLink: the file is still in Storage -> the link is rebuilt with the file's current
+//    token and saved on the word, no cost. The file is gone (or the link isn't a Storage link) -> step 3.
+// 3. GPT draws it -> WebP -> Storage tools/<id>.webp -> saved on the word -> its link.
 export const getPicture = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 180, memory: "512MiB", enforceAppCheck: false }, async (request) => {
   requireUser(request);
-  const { toolName, imagePrompt } = request.data ?? {};
+  const { toolName, imagePrompt, broken } = request.data ?? {};
   if (!isText(toolName, 60)) throw badInput("toolName");
   const name = toolName.trim().toLowerCase();
   const description = isText(imagePrompt, 400) ? imagePrompt : name;
 
   const doc = (await fetchWords([name])).get(name);
   if (doc?.image) {
-    logger.info("getPicture: reused stored picture");
-    return { imageURL: doc.image };
+    if (broken !== true) {
+      logger.info("getPicture: reused stored picture");
+      return { imageURL: doc.image };
+    }
+    const repaired = await repairPictureLink(doc).catch((error) => {
+      logger.error("getPicture: link repair failed", { error: String(error) });
+      return null;
+    });
+    if (repaired) {
+      logger.info(repaired.changed ? "getPicture: repaired a stale picture link" : "getPicture: stored link was fine");
+      return { imageURL: repaired.url };
+    }
+    logger.info("getPicture: stored picture is missing, drawing a new one");
   }
   const png = await openai.image(OPENAI_API_KEY.value(), description);
   const imageURL = await savePicture(name, png);

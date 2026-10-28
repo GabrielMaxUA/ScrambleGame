@@ -110,7 +110,7 @@
 ## 9. Firebase work, done together step by step
 
 - ✅ **Step 1: Crashlytics and Analytics.** Small and low-risk, and they start collecting data straight away: crashes, plus the events "onboarding finished", "round finished", "paywall shown" and "trial started". *(`checklist.md` §4.4)* *(15 October: both libraries are added and crash reports work, tested in a separate dev project `scrumblegame-dev`. The analytics consent switch (15 October), logs, crash breadcrumbs, non-fatal errors and the events (16 October) are done and tested in DebugView and Crashlytics. Only `paywall_shown` and `trial_started` wait for the paywall. Details in `ServerMigrationPlan.md` Phase 1)*
-- ✅ *(partly)* **Step 2: Cloud Functions.** *(27 October: the functions, the key on the server, anonymous sign-in and App Check (monitoring) are done in both projects. Left: publish the closed rules and enforce App Check — `ServerMigrationPlan.md` Phases 6–7)*
+- ✅ *(partly)* **Step 2: Cloud Functions.** *(27 October: the functions, the key on the server, anonymous sign-in and App Check (monitoring) are done in both projects. The closed rules are published. Left: App Check enforcement — `ServerMigrationPlan.md` Phase 7)*
   - the OpenAI key moves to the server, with all generation;
   - Firestore rules: the app only reads, the functions write;
   - App Check and anonymous sign-in.
@@ -123,7 +123,7 @@
 ### ⬜ To do
 
 1. ✅ **Firebase step 1:** Crashlytics and Analytics, together. *(§9)* *(Done 15–16 October; `paywall_shown` and `trial_started` come with the paywall)*
-2. ✅ *(partly)* **Firebase step 2:** Cloud Functions with the OpenAI key, the hybrid word bank and locked-down rules, after the Blaze plan. *(§1, §9)* *(27 October: all done except publishing the closed rules and App Check enforcement)*
+2. ✅ *(partly)* **Firebase step 2:** Cloud Functions with the OpenAI key, the hybrid word bank and locked-down rules, after the Blaze plan. *(§1, §9)* *(27 October: all done except App Check enforcement)*
 3. ⬜ **Word quality:** Report button, a status per word, a meaning-aware bank key. *(§2)*
 4. ⬜ **Safety disclaimer** in the app and terms; no safety commands or instructions. *(§3)*
 5. ⬜ **Offline review for paying users,** plus history on upgrade. *(§4)*

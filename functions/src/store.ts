@@ -96,10 +96,59 @@ export async function savePicture(toolName: string, png: Buffer): Promise<string
     contentType: "image/webp",
     metadata: { metadata: { firebaseStorageDownloadTokens: token } },
   });
-  const url = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(path)}?alt=media&token=${token}`;
+  const url = pictureURL(bucket.name, path, token);
   await db.collection("words").doc(docID(toolName)).set({ image: url }, { merge: true });
   return url;
 }
+
+// MARK: - repairPictureLink
+// A word's picture link stopped working although the file is still in Storage: the file was uploaded again
+// (the old app redrew pictures after a failed download, or two phones made the same word at once), which gave the
+// file a new download token, while the word kept the link with the old one. With the rules closed, only a link
+// with the file's current token opens it.
+// 1. Reads the bucket, path and token out of the word's link. Not a Storage link -> null.
+// 2. The file is gone -> null (the caller draws a new picture).
+// 3. The link's token is still one of the file's tokens -> nothing to fix.
+//    Otherwise -> the link is rebuilt with the file's current token (one is created if the file has none)
+//    and saved on the word (unless `write` is false: a check without changes).
+// Costs nothing: no picture is drawn.
+export async function repairPictureLink(doc: WordDoc, write = true):
+    Promise<{ url: string; changed: boolean } | null> {
+  const place = parsePictureURL(doc.image);
+  if (!place) return null;
+  const file = getStorage().bucket(place.bucket).file(place.path);
+  const [exists] = await file.exists();
+  if (!exists) return null;
+  const [meta] = await file.getMetadata();
+  const tokens = String(meta.metadata?.firebaseStorageDownloadTokens ?? "")
+    .split(",").map((t) => t.trim()).filter(Boolean);
+  if (place.token && tokens.includes(place.token)) return { url: doc.image, changed: false };
+  let token = tokens[0];
+  if (!token) {
+    token = randomUUID();
+    if (write) await file.setMetadata({ metadata: { firebaseStorageDownloadTokens: token } });
+  }
+  const url = pictureURL(place.bucket, place.path, token);
+  if (write) await db.collection("words").doc(docID(doc.word)).update({ image: url });
+  return { url, changed: true };
+}
+
+// MARK: - parsePictureURL / pictureURL
+// Firebase download links look like
+//   https://firebasestorage.googleapis.com/v0/b/<bucket>/o/<path, URL-encoded>?alt=media&token=<token>
+export function parsePictureURL(link: string): { bucket: string; path: string; token: string | null } | null {
+  try {
+    const url = new URL(link);
+    const match = url.pathname.match(/^\/v0\/b\/([^/]+)\/o\/(.+)$/);
+    if (!match) return null;
+    return { bucket: match[1], path: decodeURIComponent(match[2]), token: url.searchParams.get("token") };
+  } catch {
+    return null;
+  }
+}
+
+const pictureURL = (bucket: string, path: string, token: string) =>
+  `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(path)}?alt=media&token=${token}`;
 
 // MARK: - pictureBucket
 // Production keeps its pictures in the separate bucket "scrumblegame-tools" (as the app did);

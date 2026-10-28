@@ -7,7 +7,7 @@ Plan and progress: `Docs/ServerMigrationPlan.md` (Phases 4–8).
 | Function | What it does | Replaces in the app |
 |---|---|---|
 | `getWords` | Next batch for a job: word bank first, GPT only for the missing number; tags words with the job; counts the job | `RequestModel.nextBatch`, `generateUniqueWordList`, `FirebaseWordStore.saveIfNeeded`, `ProfessionStore` |
-| `getPicture` | One word's picture: the stored one, or a new one (GPT → WebP → Storage → saved on the word) | `RequestModel.generateImage`, `FirebaseImageStore` |
+| `getPicture` | One word's picture: the stored one, a repaired link when the app reports it broken, or a new one (GPT → WebP → Storage → saved on the word) | `RequestModel.generateImage`, `FirebaseImageStore` |
 | `getReviewWords` | Struggle review words with translations and picture links | `RequestModel.generateStruggleReview`'s Firestore read |
 
 Files: `src/index.ts` (the three functions), `src/openai.ts` (all OpenAI calls), `src/store.ts` (Firestore + Storage),
@@ -37,6 +37,13 @@ firebase emulators:start --only functions,firestore,storage,auth --project scrum
 Emulator UI: http://localhost:4000. The functions in the emulator still call the real OpenAI API (costs money),
 using the key from a local file `functions/.secret.local` with one line `OPENAI_API_KEY=...` — that file is
 git-ignored; delete it when you're done.
+
+## Stale picture links
+
+Some old words have picture links with an outdated download token (the file was uploaded again later), which the
+closed Storage rules refuse (403). When the app can't download a stored picture, it calls `getPicture` with
+`broken: true`; the server rebuilds the link with the file's current token and saves it (no new picture, no cost),
+or draws a new picture if the file is gone. Each word is fixed the first time someone plays it.
 
 ## Notes
 

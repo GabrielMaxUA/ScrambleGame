@@ -32,7 +32,7 @@ One switch decides which Firebase project a build uses: **Build Settings → Use
 
 - The **Copy Firebase plist** build phase reads `FIREBASE_ENV` and copies `FirebaseConfig/Prod/` or `FirebaseConfig/Dev/` into the app. Release (Archive, TestFlight, App Store) is **always** Prod, whatever the setting says. The build log shows "Copied Prod plist" or "Copied Dev plist".
 - The app calls the Cloud Functions of the project it's connected to (`getWords`, `getPicture`, `getReviewWords`, region `us-central1`), so dev builds use the dev functions and the dev word bank. Deploy function changes to `scrumblegame-dev` first (`functions/README.md`).
-- Firestore and Storage rules are meant to be closed to phones (`allow read, write: if false`; publishing them is `Docs/ServerMigrationPlan.md` Phase 6): only the functions write, and pictures load through their download links.
+- Firestore and Storage rules are closed to phones (`allow read, write: if false`, since 27 October): only the functions write, and pictures load through their download links. A link with an outdated token gets a 403; `getPicture` repairs it (`functions/README.md`).
 - To test against dev again (e.g. risky experiments): set `FIREBASE_ENV` to `Dev` for **Debug** only. Debug-only features (Settings → Debug → "Reset free words") work with either.
 - With `Prod`, crash reports and statistics from your test runs land in the production project too; keep test crashes on `Dev`.
 - `LearnScrumble/` is a synced folder: every file in it goes into the app. Keep config files outside it.

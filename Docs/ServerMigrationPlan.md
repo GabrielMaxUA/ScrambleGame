@@ -1,6 +1,6 @@
 # LearnScrumble: moving the AI to the server (plan)
 
-*Written 15 October 2026. Progress updated 16 October: Phases 0–2 done. **Updated 27 October: Phases 3, 4, 5, 7 (monitoring) and 8 done** — the app gets its words and pictures from Cloud Functions in both projects, the OpenAI key is only on the server (new key; the old one is deleted), anonymous sign-in and App Check run. Left: publish the closed rules (Phase 6), App Check enforcement (Phase 7), server alerts (Phase 8), Phase 9 and the App Store answers (Phase 10). Tick items off as we finish them, the same way as `checklist.md`.*
+*Written 15 October 2026. Progress updated 16 October: Phases 0–2 done. **Updated 27 October: Phases 3, 4, 5, 7 (monitoring) and 8 done** — the app gets its words and pictures from Cloud Functions in both projects, the OpenAI key is only on the server (new key; the old one is deleted), anonymous sign-in and App Check run. Left: deploy the getPicture link repair (Phase 6), fix App Attest on real iPhones ("App attestation failed": check the Team ID 7XZJ4BCPR6 in App Check) and then enforcement (Phase 7), server alerts (Phase 8), Phase 9 and the App Store answers (Phase 10). Tick items off as we finish them, the same way as `checklist.md`.*
 
 **Where this stands against `checklist.md`**
 - ✅ **Can go ahead now:** Phases 0–2. Crash reporting and analytics are an open ⬜ **to do** in the checklist (§4.4, §9), and they don't depend on any decision.
@@ -137,9 +137,9 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 
 ### Phase 6: lock down Firebase
 
-- ⬜ **You:** Firestore rules: ~~signed-in users can read the word library;~~ nobody can read or write from a phone, because the app no longer touches Firestore (the functions bypass rules). Rules text: `match /{document=**} { allow read, write: if false; }`. Publish in both projects. *(27 October: written; `getWords` now does the `professions` write)*
-- ⬜ **You:** Storage rules: closed as well (`match /{allPaths=**} { allow read, write: if false; }`), for every bucket (production has two: the default one and `scrumblegame-tools`). Pictures still load, because the app uses their download links with a token. *(27 October: written)*
-- ⬜ **Both:** confirm with the rules test tool that a phone can no longer write, and play a round on each project after publishing.
+- ✅ **You:** Firestore rules: ~~signed-in users can read the word library;~~ nobody can read or write from a phone, because the app no longer touches Firestore (the functions bypass rules). Rules text: `match /{document=**} { allow read, write: if false; }`. Publish in both projects. *(27 October: published in both projects; `getWords` now does the `professions` write)*
+- ✅ **You:** Storage rules: closed as well (`match /{allPaths=**} { allow read, write: if false; }`), for every bucket (production has two: the default one and `scrumblegame-tools`). Pictures still load, because the app uses their download links with a token. *(27 October: published. It showed that some old words had links with an outdated token (the file had been uploaded again), refused with 403: `getPicture` now repairs those links when the app reports them, each word the first time someone plays it. Also: production's `getPicture` had to be set to **Allow public access** in Cloud Run after its failed first deploy — our code still requires the app's sign-in)*
+- ✅ *(partly)* **Both:** confirm with the rules test tool that a phone can no longer write, and play a round on each project after publishing. *(27 October: played on a real iPhone against production; the rules test tool check is still open)*
 
 ### Phase 7: App Check
 

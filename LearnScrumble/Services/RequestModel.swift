@@ -18,7 +18,8 @@ import FirebaseFunctions
 //   nextBatch(excluding:countJob:) -> getWords (server: word bank first, GPT only for the missing number)
 //   buildQuestions(from:)          -> loadImage() per word:
 //                                     stored picture link -> download it
-//                                     no link (new word) or broken -> getPicture (server draws + saves it) -> download
+//                                     no link (new word) or broken -> getPicture (server repairs a stale link,
+//                                     or draws + saves a new picture) -> download
 //   generateStruggleReview         -> getReviewWords (server reads the words' translations + pictures) -> buildQuestions
 //
 // Every call: AnonymousAuth.ensureSignedIn() first (the functions refuse calls without a signed-in user).
@@ -329,9 +330,11 @@ class RequestModel {
     // Picture bytes for one word.
     // 1. The word has a stored picture link -> download it (1 retry). It must really be an image (a 404 page is not one).
     //    Cancelled -> stop; any other problem -> step 2.
-    // 2. No link (new word) or the download failed -> getPicture: the server returns the stored link, or draws a new
-    //    picture, saves it as WebP in Storage and on the word -> download that.
+    // 2. No link (new word) or the download failed -> getPicture, with broken = true when step 1 failed:
+    //    the server repairs a stale link (the file is there but its token changed) or draws a new picture,
+    //    saves it as WebP in Storage and on the word -> download that.
     private func loadImage(for word: ServerWord) async throws -> Data {
+        var broken = false
         if let link = word.imageURL, !link.isEmpty {
             do {
                 let data = try await download(link)
@@ -341,11 +344,12 @@ class RequestModel {
                 throw CancellationError()
             } catch {
                 Log.error("Stored picture unusable, asking the server", .words, private: "\(word.toolName): \(error)")
+                broken = true
             }
         }
         Log.info("🎨 loadImage — asking getPicture", .words, private: "'\(word.toolName)'")
         let reply: PictureReply = try await callFunction("getPicture", PictureRequest(
-            toolName: word.toolName, imagePrompt: word.imagePrompt
+            toolName: word.toolName, imagePrompt: word.imagePrompt, broken: broken
         ), timeout: 180)
         return try await download(reply.imageURL)
     }
@@ -426,7 +430,11 @@ class RequestModel {
         let countJob: Bool
     }
     nonisolated private struct ReviewRequest: Encodable, Sendable { let toolNames: [String]; let origin: String; let target: String }
-    nonisolated private struct PictureRequest: Encodable, Sendable { let toolName: String; let imagePrompt: String }
+    nonisolated private struct PictureRequest: Encodable, Sendable {
+        let toolName: String
+        let imagePrompt: String
+        let broken: Bool                                               // the stored link failed -> the server repairs or redraws it
+    }
     nonisolated private struct PictureReply: Decodable, Sendable { let imageURL: String }
     nonisolated private struct WordsReply: Decodable, Sendable {
         let job: String?                                               // getWords: the bank key used (nil for a typed job GPT called "invalid")

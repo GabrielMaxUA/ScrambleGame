@@ -26,7 +26,7 @@ The game itself is in good shape. **The app around it is not finished yet.**
 - ✅ There is no first-run onboarding. *(Now: the setup screen, then an interactive "How to play" tutorial on the real game screen, with a saved completion flag and a welcome-back screen; see §4.1)*
 - ✅ "Settings" is the setup screen again, reached from the gear button. *(Now a real Settings screen: `SettingsView.swift`.)*
 - ⬜ **to do** There is no paywall, no reminders, and no support or terms pages. *(The daily reminder is done (§4.1 #4). Support, privacy and terms pages are live at https://learnscrumble.com since 18 October, linked from Settings. Only the paywall is left)*
-- ✅ *(partly)* The things that block a public release are still open (§4.4). *(27 October: the OpenAI key is off the phone, anonymous sign-in and App Check run; closed Firebase rules, App Check enforcement and the paywall are left)*
+- ✅ *(partly)* The things that block a public release are still open (§4.4). *(27 October: the OpenAI key is off the phone, anonymous sign-in and App Check run, the Firebase rules are closed; App Check enforcement and the paywall are left)*
 
 Since mid-September, about half of the new Swift code (52% of 3,469 added lines) went into screens, components and animations. Very little went into what a release needs:
 - ✅ server-side AI calls: none; *(27 October: all OpenAI calls and all writes to the word bank run in Firebase Cloud Functions — `getWords`, `getPicture`, `getReviewWords` — in both projects. See `ServerMigrationPlan.md` Phases 4–5)*
@@ -106,7 +106,7 @@ Work in this order. The sizes are rough estimates.
 | What | Why |
 |---|---|
 | ✅ Get the OpenAI key off the phone (a server function), or remove OpenAI from the app entirely if we switch to pre-created packs (§5) | Any key inside an app can be extracted. Let's settle the packs question (§8) first, so you don't build a server you won't need *(Done 27 October: Cloud Functions in both projects; the new key is only in Secret Manager and the old one is deleted. The daily limit is counted on the server but not enforced yet)* |
-| ✅ *(partly)* Firebase: sign-in, read-only rules for the shared word bank, App Check | Today any phone can overwrite words and pictures that every user sees *(27 October: anonymous sign-in and App Check (monitoring) are in; the app no longer writes anything. Left: publish the closed Firestore and Storage rules, then App Check enforcement. `ServerMigrationPlan.md` Phases 6–7)* |
+| ✅ *(partly)* Firebase: sign-in, read-only rules for the shared word bank, App Check | Today any phone can overwrite words and pictures that every user sees *(27 October: anonymous sign-in and App Check (monitoring) are in; the app no longer writes anything. The closed Firestore and Storage rules are published (27 October). Left: App Check enforcement. `ServerMigrationPlan.md` Phases 6–7)* |
 | ✅ *(partly)* A real privacy policy and terms of use | Required by App Review, by the paywall and by the consent step *(Live at learnscrumble.com since 18 October; placeholders and a legal review are left, `WebsiteContent/TODO.md`)* |
 | ✅ Crash reporting and basic analytics: onboarding finished, round finished, paywall shown, trial started | Without them we can't tell whether onboarding or the paywall works *(Started 15 October: Crashlytics and Analytics are linked, with the dSYM upload, and Debug builds report to a separate `scrumblegame-dev` project. A test crash arrived decoded in dev Crashlytics. The consent switch (15 October), logs with crash breadcrumbs, non-fatal errors and the events (16 October) are done and tested; `paywall_shown` and `trial_started` wait for the paywall. See `ServerMigrationPlan.md` Phase 1)* |
 | ✅ App icon; a realistic minimum iOS (26.0 is a settings change, older needs fallbacks for the glass effects); iPhone locked to portrait | Install base, store listing and the landscape layout problem *(Icon set; minimum iOS 18.0 with glass fallbacks in `ButtonModifier.swift`; portrait only)* |
@@ -190,7 +190,7 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 | ✅ Engagement | Daily reminder at a chosen time; missed-word review *(the missed-word review and the daily reminder at a chosen time are both done)* | Plus streaks and a weekly recap |
 | ✅ Loading | Clear progress and error states (mostly done) *(progress ring, retry-or-exit error screen, earlier prefetch)* | Polished, or largely unnecessary with packs |
 | ❓ **need discussion** Design | One consistent design pass over all screens *(glass buttons with iOS 18 fallbacks are shared across screens; whether that counts as the design pass needs a review)* | Full design system |
-| ✅ *(partly)* Always required | No API key in the app, locked-down Firebase, consent, a real privacy policy and terms, crash reporting and analytics *(consent, crash reporting and analytics done 15–16 October; privacy and terms live 18 October; no API key in the app 27 October; Firebase lock-down partly: closed rules and App Check enforcement left)* | The same, plus account deletion if accounts exist, App Review compliance, and an Android plan |
+| ✅ *(partly)* Always required | No API key in the app, locked-down Firebase, consent, a real privacy policy and terms, crash reporting and analytics *(consent, crash reporting and analytics done 15–16 October; privacy and terms live 18 October; no API key in the app 27 October; Firebase lock-down partly: App Check enforcement left)* | The same, plus account deletion if accounts exist, App Review compliance, and an Android plan |
 
 ## 8. Questions for you
 
@@ -213,7 +213,7 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 
 1. ❓ **Packs or live AI** (§5, §8 Q1). This decides items 2–5 below.
 2. ✅ **Get the OpenAI key off the phone.** The plan is to move AI calls and Firestore reads and writes into Firebase Cloud Functions, with the daily limit enforced on the server. *(§2, §4.4)* *(Done 27 October; the server counts the daily limit but enforces it only once the paywall exists)*
-3. ✅ *(partly)* **Lock down Firebase:** anonymous sign-in, read-only rules for the shared word bank, App Check. *(§4.4)* *(27 October: anonymous sign-in and App Check in monitoring mode. Left: publish the closed rules, then enforce App Check)*
+3. ✅ *(partly)* **Lock down Firebase:** anonymous sign-in, read-only rules for the shared word bank, App Check. *(§4.4)* *(27 October: anonymous sign-in, App Check in monitoring mode and the closed rules. Left: enforce App Check)*
 4. ✅ *(partly)* **Real privacy policy, terms of use and support email.** All are placeholders today, in `EntryView` and `SettingsView`. The paywall links depend on them too. *(§3 #1, §4.2, §4.3, §4.4)* *(18 October: live at learnscrumble.com, support@learnscrumble.com. Left: name, address, dates, minimum age, governing law, legal review)*
 5. ✅ **Consent step:** a plain explanation that the job text goes to OpenAI, with an explicit "OK". *(§2, §4.1 #5)* *(Done 15 October)*
 6. ❓ **Delete my data.** It's built but commented out in `SettingsView.swift:68` and `AppManager.swift`. *(§4.2)*
@@ -317,4 +317,5 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 - ✅ **Crashlytics and Analytics in production** too; Analytics data retention 2 months.
 - ✅ **Builds use production by default** (`FIREBASE_ENV = Prod`), so playing fills the real bank; dev is one setting away.
 - ✅ Privacy policy, support FAQ, privacy manifest (User ID) and the suggested App Store answers updated for the server, the anonymous ID and App Check. The how-to-play picture says 10 free words.
-- ⬜ **Left:** publish the closed Firestore and Storage rules in both projects; App Check enforcement after a few days of monitoring; enter the App Store privacy answers; deploy the website.
+- ✅ **Closed Firestore and Storage rules** in both projects: phones can't read or write the database directly any more. Old words with an outdated picture link are repaired by `getPicture` the first time someone plays them.
+- ⬜ **Left:** deploy the link repair; fix App Attest on real iPhones (Team ID); App Check enforcement after a few days of monitoring; enter the App Store privacy answers; deploy the website.
