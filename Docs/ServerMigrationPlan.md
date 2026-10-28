@@ -183,8 +183,16 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 ## Still open (not part of this plan)
 
 - ✅ ~~Consent step for sending the job to OpenAI (App Review 5.1.2).~~ Done 15 October, on the same setup-screen card as the analytics consent (`AppStoreReadiness.md` §1.4).
+- ✅ *(differently)* Paywall: built on 28 October with StoreKit 2 directly (`Purchases.swift`), one-time unlock per profession; RevenueCat not used.
 - Paywall with RevenueCat; it can use the same anonymous ID. Sandbox only, with no live products in your own App Store Connect account (checklist §4.3).
-- Report button for wrong words or pictures; it would write to a `reports` collection through a function. App Review may expect it for AI content (`AppStoreReadiness.md` §2.1).
+- ✅ *(pictures)* Report button: built on 28 October — `reportPicture` draws a picture for the reporter only, `reports` collection, approve/reject in the console, daily email (`functions/README.md` "Reported pictures"). Wrong *words* can't be reported in the app yet.
+- ⬜ **to do** **One counter document per user, and no word counting.** Today each anonymous user has two daily records:
+  `usage/{uid}` (words the server sent today — nothing reads it, the app checks the 10 free words itself) and
+  `reportUsage/{uid}` (pictures reported today — needed for the 10-reports-a-day limit). Plan: drop the word count
+  in `getWords` (`countUsage`), keep only `{ day, reports }` in `usage/{uid}` from `reportPicture` (`countReport`
+  writes there; `countUsage` was the reason for the separate collection, it rewrote the whole document), delete the
+  `reportUsage` collection, update the privacy policy's "daily counts" text and `WebsiteContent/README.md`. Deploy dev,
+  then prod. About 15 minutes. *(Agreed 28 October, postponed.)*
 - "Delete my data": with the server it also needs to delete the user's limit documents (`usage/{uid}`). Old `usage` documents of cleaned-up anonymous IDs stay behind too; a scheduled clean-up function can remove them later. It's built but commented out today (`SettingsView.swift:68`, `AppManager.swift`).
 - ✅ ~~Privacy policy, terms and support pages on Firebase Hosting in `scrumblegame`.~~ Live at https://learnscrumble.com since 18 October (`WebsiteContent/README.md`).
 - Scheduled Firestore backups for **production** once real users are in the bank (none for dev).
