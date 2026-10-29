@@ -20,8 +20,8 @@ import Observation
 // Testing without App Store Connect: StoreKit/LearnScrumble.storekit, set in the scheme (Run -> Options),
 // has all the products; Xcode -> Debug -> StoreKit -> Manage Transactions removes a test purchase.
 // The products still have to be created in App Store Connect with the same IDs before release.
-//   Debug builds only: SettingsView's "Unlock every profession" -> debugUnlockAll: acts as if every job was bought
-//   (no StoreKit), to test the paid version from any run. Doesn't exist in Release builds.
+//   Debug and tester builds only: SettingsView's "Unlock every profession" -> debugUnlockAll: acts as if every job was bought
+//   (no StoreKit), to test the paid version from any run. Never in App Store builds (README "Tester builds").
 @Observable
 final class Purchases {
   static let shared = Purchases()                                  // one purchase state for the whole app
@@ -37,11 +37,11 @@ final class Purchases {
   var hasAnyUnlock: Bool { debugUnlocked || !unlockedIDs.isEmpty } // owns at least one job (voice picker)
 
   // MARK: - isUnlocked(_:)
-  // Has the user bought this job? (Debug builds: or the debug switch is on.)
+  // Has the user bought this job? (Debug and tester builds: or the debug switch is on.)
   func isUnlocked(_ job: Occupation) -> Bool { debugUnlocked || unlockedIDs.contains(job.productID) }
 
-  #if DEBUG
-  static let debugUnlockKey = "debugUnlockAll"                     // UserDefaults, Debug builds only
+  #if DEBUG || TESTFLIGHT_TOOLS
+  static let debugUnlockKey = "debugUnlockAll"                     // UserDefaults, Debug and tester builds only
   var debugUnlockAll = UserDefaults.standard.bool(forKey: debugUnlockKey) {   // Settings -> Debug -> Unlock every profession
     didSet { UserDefaults.standard.set(debugUnlockAll, forKey: Self.debugUnlockKey) }
   }

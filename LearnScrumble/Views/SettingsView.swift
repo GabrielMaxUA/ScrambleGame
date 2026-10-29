@@ -74,8 +74,8 @@ struct SettingsView: View {
         subscriptionSection
         legalSection
         //deleteSection
-        #if DEBUG
-        debugSection                                               // testing tools, never in App Store builds
+        #if DEBUG || TESTFLIGHT_TOOLS
+        debugSection                                               // testing tools: Debug and tester builds, never in App Store builds
         #endif
         
         Text(verbatim: "LearnScrumble \(appVersion)")              // verbatim: not looked up for translation
@@ -403,9 +403,9 @@ struct SettingsView: View {
   // MARK: - row(_:icon:tint:action:)
   // A tappable settings row (icon + title + chevron) that runs `action`.
   
-  #if DEBUG
+  #if DEBUG || TESTFLIGHT_TOOLS
   // MARK: - debugSection
-  // Debug builds only: testing tools. Text(verbatim:) keeps these English labels out of the translation catalog.
+  // Debug builds and tester builds (TESTFLIGHT_TOOLS, see README "Tester builds") only: testing tools. Text(verbatim:) keeps these English labels out of the translation catalog.
   //   "Crashlytics crash test" (red) -> fatalError: a real crash for testing Crashlytics (README → Crashlytics test crash)
   //   "Reset free words" -> FreeAllowance.resetForTesting(): the 10 free words again (shows how many are used now)
   //   "Unlock every profession" -> Purchases.debugUnlockAll: the paid version (unlimited words, My words, voices)

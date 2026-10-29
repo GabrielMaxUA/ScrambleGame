@@ -16,7 +16,7 @@ import Observation
 //   WordVM.onWordAnswered -> recordAnsweredWord(): +1, saved to the Keychain
 //   AppManager.canPlay / canFetchMore read isLimitReached / wordsUsed (no downloads the user can't play)
 //   MenuAlert / OnboardingView read freeWordLimit for their texts
-//   Debug builds only: SettingsView's "Reset free words" -> resetForTesting(): the count back to 0
+//   Debug and tester builds only: SettingsView's "Reset free words" -> resetForTesting(): the count back to 0
 @Observable
 final class FreeAllowance {
   static let shared = FreeAllowance()                              // one counter for the whole app
@@ -50,10 +50,10 @@ final class FreeAllowance {
     wordsUsed = Self.load()?.count ?? 0
   }
 
-  #if DEBUG
+  #if DEBUG || TESTFLIGHT_TOOLS
   // MARK: - resetForTesting
-  // Debug builds only (Settings -> Debug -> Reset free words), so testers get the 10 words again without Terminal.
-  // Doesn't exist in Release (App Store / TestFlight) builds.
+  // Debug and tester builds only (Settings -> Debug -> Reset free words), so testers get the 10 words again.
+  // Doesn't exist in App Store builds (README "Tester builds").
   func resetForTesting() {
     Self.save(Stored(count: 0))
     wordsUsed = 0

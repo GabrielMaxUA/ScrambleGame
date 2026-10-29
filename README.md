@@ -100,6 +100,14 @@ language English (U.S.).
    (Apple reviews the first build, about a day).
 5. Testers install Apple's **TestFlight** app, then LearnScrumble.
 
+**Tester builds (for TestFlight only):** `scripts/upload-tester-build.sh <build number>` archives and uploads a
+Release build with the `TESTFLIGHT_TOOLS` flag: Settings then shows the Debug section (Reset free words, Unlock every
+profession), so you and your testers can test the paid parts and play again after the 10 free words. Everything else
+is the real thing (production Firebase, App Attest, App Store purchases). **Never submit a tester build for review**
+(the reviewer would see "Unlock every profession"): the review build is a normal Xcode **Product → Archive** with a
+higher build number, picked on the iOS version page. Products and prices belong to the app, not to a build, so every
+build uses the same ones. Build 2 (29 October) is a tester build.
+
 **"Upload Symbols Failed … did not include a dSYM for …framework" after uploading:** warnings, not errors — the build
 is uploaded. Google ships some Firebase parts prebuilt without symbol files, so Apple's crash reports can't name the
 code *inside* those frameworks; our own code is symbolicated (and Crashlytics gets our dSYM). Since 29 October only
