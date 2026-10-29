@@ -100,7 +100,7 @@ New pictures take 10–30 seconds and need the internet, so explain that up fron
 - ✅ App icon has no transparency.
 - ✅ No tracking, no advertising identifier.
 - ✅ Restore purchases in Settings and on the paywall (required for non-consumables). *("Manage subscription" was removed on 28 October: there's no subscription)*
-- ✅ *(mostly)* Every screen localized into the app's languages, including right-to-left. *(28 October: about 32 new texts — paywall, My words, reports, streak — are English only so far, and ~22 old catalog entries are stale; translation is planned at the end)*
+- ✅ Every screen localized into the app's languages, including right-to-left. *(29 October: the 28 new texts — paywall, My words, reports, streak — are translated into all 53 languages (AI-made, native review recommended); 22 stale catalog entries removed; 0 untranslated)*
 - ✅ Offline and error states with clear recovery (no blank screens or endless spinners).
 
 ---

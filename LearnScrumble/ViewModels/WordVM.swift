@@ -75,7 +75,7 @@ class WordVM {
   private let onCheckpoint: (() -> Void)?                        // closure back to AppManager: "show ResultView now"
   private let onResume: (() -> Void)?                            // closure back to AppManager: "return to playing (or generating if still loading)"
   private let onFetchFailed: (() -> Void)?        // closure back to AppManager: "the user is waiting and the fetch failed — show ErrorView"
-  private let onWordAnswered: (() -> Void)?            // AppManager: count this word toward today's free allowance
+  private let onWordAnswered: (() -> Void)?            // AppManager: count this word toward the 10 free words
   private let canContinue: (() -> Bool)?               // AppManager: may the user play another word?
   private let canFetchMore: ((Int) -> Bool)?           // AppManager: may we download more, given how many words are still unplayed?
   private let onReportPicture: ((QuestionModel) async -> RequestModel.ReportResult)?   // AppManager -> RequestModel.reportPicture; nil = no flag (tutorial)
@@ -276,7 +276,7 @@ class WordVM {
     guessResult = nil
     if let canContinue, !canContinue() {
       isAtCheckpoint = true
-      Log.info("⛔️ nextWord — daily free limit reached, ending the round", .game)
+      Log.info("⛔️ nextWord — free words used up, ending the round", .game)
       onCheckpoint?()
       return
     }
@@ -320,7 +320,7 @@ class WordVM {
   //    so onResume is only signalled here when the next word was ready.
   func continueFromCheckpoint() {
     if let canContinue, !canContinue() {
-      Log.info("⛔️ continueFromCheckpoint — daily free limit reached, not advancing", .game)
+      Log.info("⛔️ continueFromCheckpoint — free words used up, not advancing", .game)
       onResume?()
       return
     }
@@ -383,7 +383,7 @@ class WordVM {
           fetchMore != nil else { return }
     let unplayed = questions.count - currentIndex
     guard canFetchMore?(unplayed) ?? true else {
-      Log.debug("⛔️ requestMoreIfNeeded — skipping prefetch, daily free limit", .game)
+      Log.debug("⛔️ requestMoreIfNeeded — skipping prefetch, free words used up", .game)
       return
     }
     Log.info("🛰️ requestMoreIfNeeded — index \(currentIndex), \(unplayed) of \(questions.count) left, triggering prefetch", .game)

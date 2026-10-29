@@ -17,7 +17,7 @@ import SwiftUI
 //   -> above it: the title + Skip, and the game's top row (settings gear, speaker)
 //   -> one task at a time: a pointer (PointerUp) taps on the button to use, with a tooltip saying what to do;
 //      both move on as soon as the task is done (OnboardingService.instruction / pointerTarget)
-//   -> the word spelled -> "Correct!" (the game's own success screen, with the daily free words and "Let's go!")
+//   -> the word spelled -> "Correct!" (the game's own success screen, with the 10 free words and "Let's go!")
 //      -> Let's go! -> OnboardingService.completed
 //   Skip / completed -> OnboardingService.finish() (saved as seen) -> onDone() -> RootView hides it.
 

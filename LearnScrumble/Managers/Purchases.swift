@@ -123,8 +123,33 @@ final class Purchases {
 
   // MARK: - restore
   // "Restore purchases": AppStore.sync() asks Apple again (may ask the user to sign in), then refresh().
-  func restore() async throws {
-    try await AppStore.sync()
+  // Returns false when the user cancelled Apple's sign-in: not an error, the screens just close quietly.
+  // Any other failure is thrown, and the screens show "Couldn't restore purchases".
+  func restore() async throws -> Bool {
+    do {
+      try await AppStore.sync()
+    } catch where Self.isCancellation(error) {
+      Log.info("💳 Purchases — restore cancelled by the user", .app)
+      return false
+    } catch {
+      Log.error("💳 Purchases — restore failed: \(error)", .app)
+      throw error
+    }
     await refresh()
+    return true
+  }
+
+  // MARK: - isCancellation(_:)
+  // True when the user closed Apple's sheet instead of something going wrong. StoreKit reports that in several ways:
+  // StoreKit 2's userCancelled, the older SKError paymentCancelled, or an Apple Account error whose
+  // description (or an underlying error's) says it was cancelled.
+  static func isCancellation(_ error: Error) -> Bool {
+    if case StoreKitError.userCancelled = error { return true }
+    if let skError = error as? SKError, skError.code == .paymentCancelled { return true }
+    if error is CancellationError { return true }
+    let nsError = error as NSError
+    if "\(nsError)".localizedCaseInsensitiveContains("cancel") { return true }
+    if let underlying = nsError.userInfo[NSUnderlyingErrorKey] as? Error { return isCancellation(underlying) }
+    return false
   }
 }

@@ -24,7 +24,7 @@ import AVFoundation
 struct SettingsView: View {
   @Bindable var requestModel: RequestModel                         // languages and profession are edited right in it
   let hasAccess: Bool                                              // at least one profession unlocked: the voice picker opens
-  var onShowPaywall: () -> Void                                    // "See plans" in the locked alert
+  var onShowPaywall: () -> Void                                    // "Unlock" in the locked alert -> PaywallView
   var onDone: () -> Void                                           // back to the welcome-back screen
   var onHowToPlay: () -> Void = {}                                 // RootView: show the "How to play" tutorial again
   
@@ -460,21 +460,17 @@ struct SettingsView: View {
   
   // MARK: - restorePurchases
   // Purchases.restore(): AppStore.sync() asks Apple for the user's purchases and re-reads the unlocked jobs
-  // -> success or failure message -> shows the result alert.
+  // -> success or failure message -> shows the result alert. The user cancelled Apple's sign-in -> nothing at all.
   private func restorePurchases() {
     Task {
       do {
-        try await Purchases.shared.restore()
+        guard try await Purchases.shared.restore() else { return }   // cancelled: close quietly
         restoreMessage = "Your purchases have been restored."
         showRestoreAlert = true
       } catch {
-        if String(describing: error).contains("userCancelled") {
-          return
-        }
         restoreMessage = "Couldn't restore purchases. Please try again."
         showRestoreAlert = true
       }
-      
     }
   }
 }

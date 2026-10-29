@@ -132,12 +132,13 @@ struct PaywallView: View {
 
   // MARK: - restore
   // Asks Apple for earlier purchases; the job is owned now -> onUnlocked, otherwise a note.
+  // The user cancelled Apple's sign-in -> no note, the paywall just stays as it was.
   private func restore() async {
     isBuying = true
     defer { isBuying = false }
     note = nil
     do {
-      try await Purchases.shared.restore()
+      guard try await Purchases.shared.restore() else { return }     // cancelled: nothing to say
       if Purchases.shared.isUnlocked(job) {
         onUnlocked()
       } else {

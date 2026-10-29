@@ -26,7 +26,7 @@ The privacy page now says these are in place, so they have to be:
 ## Before App Review
 
 - ✅ **Paywall.** *(28 October: built as one-time profession unlocks, $9.99, after 10 free words once. `terms.html` §4–5, `support.html` ("Free words and unlocking a profession"), `index.html` ("Try 10 words free") and `how-to-play.html` match it. The 32 products still have to be created in App Store Connect with the IDs from `StoreKit/LearnScrumble.storekit`.)*
-- ⬜ **Retake `images/how-to-play/10-lets-go.jpg`**: the app's note now says "You get 10 free words to try the app." (then raise its `?v=` in `how-to-play.html`).
+- ✅ *(28 October)* **Retake `images/how-to-play/10-lets-go.jpg`**: the app's note now says "You get 10 free words to try the app." (then raise its `?v=` in `how-to-play.html`).
 - ⬜ **App Store button** (`index.html`): Apple's official "Download on the App Store" badge (Apple Marketing Resources, not a home-made button, not the app icon), linked to the app's App Store page once it exists in App Store Connect.
 - ⬜ **Legal review** of `privacy.html` and `terms.html` by someone qualified (GDPR, EU consumer law). They match the app as of 18 October 2026 but are drafts, not legal advice.
 - ⬜ **App Store Connect privacy answers:** enter them from "App Store privacy questions" in `README.md` (they match `PrivacyInfo.xcprivacy`, including Other Diagnostic Data and, since 27 October, User ID).

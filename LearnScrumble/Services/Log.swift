@@ -42,7 +42,7 @@ nonisolated enum Log {
     case firebase                                                  // Firestore word documents
     case auth                                                      // AnonymousAuth: silent anonymous sign-in
     case storage                                                   // SwiftData progress on the phone
-    case allowance                                                 // daily free words
+    case allowance                                                 // the 10 free words (FreeAllowance)
     case reminder                                                  // daily notification
     case sound                                                     // sound effects
     case analytics                                                 // Track: Firebase Analytics events

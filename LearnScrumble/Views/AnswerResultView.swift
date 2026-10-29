@@ -13,7 +13,7 @@ import SwiftUI
 //   -> correct: green title, the animals dance; incorrect: red title + the correct word, the animals droop and walk off
 //   -> "Next" -> onNext -> WordVM.nextWord() (which may fire a checkpoint -> ResultView).
 //   AnimalStage (below) draws the icon + animals and plays the success / incorrect sound.
-//   Tutorial (OnboardingView): a custom button title ("Let's go!") and a highlighted note (the daily free words);
+//   Tutorial (OnboardingView): a custom button title ("Let's go!") and a highlighted note (the 10 free words);
 //   Next reports its place through TutorialAnchorKey for the pointer.
 
 struct AnswerResultView: View {
@@ -21,7 +21,7 @@ struct AnswerResultView: View {
   let correctAnswer: String                  // the target word, shown when the answer was wrong
   let onNext: () -> Void                     // WordVM.nextWord
   var nextTitle: LocalizedStringKey = "Next" // the button's text — the tutorial's last screen says "Let's go!"
-  var note: LocalizedStringKey? = nil        // optional highlighted line under the title (tutorial: the daily free words)
+  var note: LocalizedStringKey? = nil        // optional highlighted line under the title (tutorial: the 10 free words)
   
   private var isCorrect: Bool { result == .correct }   // shortcut used all over the view
   

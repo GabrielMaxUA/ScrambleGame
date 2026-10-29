@@ -21,7 +21,6 @@ import Observation
 final class FreeAllowance {
   static let shared = FreeAllowance()                              // one counter for the whole app
   static let freeWordLimit = 10                                    // free words, once — change here only
-                                                                   // (functions/src/index.ts DAILY_FREE_WORDS still counts per day, logging only)
 
   private(set) var wordsUsed = 0                                   // free words answered so far; views update when it changes
   var isLimitReached: Bool { wordsUsed >= Self.freeWordLimit }     // the free words are used up

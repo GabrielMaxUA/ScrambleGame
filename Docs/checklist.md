@@ -4,7 +4,7 @@
 **From:** Konstantin
 **Based on:** your code at `1e60eb9` (1 October 2026), which I built and reviewed on 4 October. Nothing new had been pushed by 7 October.
 **Status:** revised 7 October to the direction "keep building toward a finished app". Ready to send after Konstantin's read-through.
-**Progress check (14 October, against the current code; updated 18 and 27 October):** ✅ = done · ❓ **need discussion** = waiting on a conversation or decision · ⬜ **to do** = not started yet
+**Progress check (14 October, against the current code; updated 18, 27, 28 and 29 October):** ✅ = done · ❓ **need discussion** = waiting on a conversation or decision · ⬜ **to do** = not started yet
 
 ---
 
@@ -105,7 +105,7 @@ Work in this order. The sizes are rough estimates.
 
 | What | Why |
 |---|---|
-| ✅ Get the OpenAI key off the phone (a server function), or remove OpenAI from the app entirely if we switch to pre-created packs (§5) | Any key inside an app can be extracted. Let's settle the packs question (§8) first, so you don't build a server you won't need *(Done 27 October: Cloud Functions in both projects; the new key is only in Secret Manager and the old one is deleted. The daily limit is counted on the server but not enforced yet)* |
+| ✅ Get the OpenAI key off the phone (a server function), or remove OpenAI from the app entirely if we switch to pre-created packs (§5) | Any key inside an app can be extracted. Let's settle the packs question (§8) first, so you don't build a server you won't need *(Done 27 October: Cloud Functions in both projects; the new key is only in Secret Manager and the old one is deleted. The daily limit is counted on the server but not enforced yet)* *(28 October: no word counting on the server any more; the 10 free words and the unlocks are checked on the phone)* |
 | ✅ *(partly)* Firebase: sign-in, read-only rules for the shared word bank, App Check | Today any phone can overwrite words and pictures that every user sees *(27 October: anonymous sign-in and App Check (monitoring) are in; the app no longer writes anything. The closed Firestore and Storage rules are published (27 October). Left: App Check enforcement. `ServerMigrationPlan.md` Phases 6–7)* |
 | ✅ *(partly)* A real privacy policy and terms of use | Required by App Review, by the paywall and by the consent step *(Live at learnscrumble.com since 18 October; placeholders and a legal review are left, `WebsiteContent/TODO.md`)* |
 | ✅ Crash reporting and basic analytics: onboarding finished, round finished, paywall shown, trial started | Without them we can't tell whether onboarding or the paywall works *(Started 15 October: Crashlytics and Analytics are linked, with the dSYM upload, and Debug builds report to a separate `scrumblegame-dev` project. A test crash arrived decoded in dev Crashlytics. The consent switch (15 October), logs with crash breadcrumbs, non-fatal errors and the events (16 October) are done and tested; `paywall_shown` and `trial_started` wait for the paywall. See `ServerMigrationPlan.md` Phase 1)* |
@@ -172,7 +172,7 @@ Everything in §4 carries over either way: onboarding, settings and the paywall 
 |---|---|
 | ❓ **need discussion** This week | We talk this through, including your answers to §8 |
 | ✅ *(partly)* Next 2 weeks | §3 fixes, then onboarding (§4.1) and settings (§4.2) *(7 of 8 §3 fixes done; Settings mostly done; onboarding's reminder (14 October) and consent (15 October) steps are done too)* |
-| ✅ *(partly)* Following 1–2 weeks | The paywall in sandbox (§4.3), plus crash reporting and analytics *(crash reporting, analytics with consent, logs, non-fatal errors and events done 15–16 October; the paywall is still to do)* |
+| ✅ *(partly)* Following 1–2 weeks | The paywall in sandbox (§4.3), plus crash reporting and analytics *(crash reporting, analytics with consent, logs, non-fatal errors and events done 15–16 October; the paywall is still to do)* *(28 October: the paywall is done, tested with the local StoreKit file)* |
 | ❓ **need discussion** Once the packs question is settled | The §4.4 security work, in whichever form we choose |
 | ❓ **need discussion** Every week | A short update from you: what shipped, what's blocked. You get feedback on each build |
 
@@ -212,12 +212,12 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 ### ❓ Remaining: need discussion
 
 1. ❓ **Packs or live AI** (§5, §8 Q1). This decides items 2–5 below.
-2. ✅ **Get the OpenAI key off the phone.** The plan is to move AI calls and Firestore reads and writes into Firebase Cloud Functions, with the daily limit enforced on the server. *(§2, §4.4)* *(Done 27 October; the server counts the daily limit but enforces it only once the paywall exists)*
+2. ✅ **Get the OpenAI key off the phone.** The plan is to move AI calls and Firestore reads and writes into Firebase Cloud Functions, with the daily limit enforced on the server. *(§2, §4.4)* *(Done 27 October; the server counts the daily limit but enforces it only once the paywall exists)* *(28 October: the server no longer counts words; the phone checks the free words and the unlocks)*
 3. ✅ *(partly)* **Lock down Firebase:** anonymous sign-in, read-only rules for the shared word bank, App Check. *(§4.4)* *(27 October: anonymous sign-in, App Check in monitoring mode and the closed rules. Left: enforce App Check)*
 4. ✅ *(partly)* **Real privacy policy, terms of use and support email.** All are placeholders today, in `EntryView` and `SettingsView`. The paywall links depend on them too. *(§3 #1, §4.2, §4.3, §4.4)* *(18 October: live at learnscrumble.com, support@learnscrumble.com. Left: name, address, dates, minimum age, governing law, legal review)*
 5. ✅ **Consent step:** a plain explanation that the job text goes to OpenAI, with an explicit "OK". *(§2, §4.1 #5)* *(Done 15 October)*
 6. ❓ **Delete my data.** It's built but commented out in `SettingsView.swift:68` and `AppManager.swift`. *(§4.2)*
-7. ❓ **Plans and prices:** monthly and annual, with a free trial. *(§4.3)*
+7. ✅ **Plans and prices:** monthly and annual, with a free trial. *(§4.3)* *(Decided 28 October: one-time $9.99 per profession, no subscription, no trial. ❓ Konstantin to confirm the price)*
 8. ❓ **Design pass:** does the shared glass style count as the "one consistent design pass"? *(§7)*
 9. ❓ **§8 Q2–Q5:** weekly hours until mid-December, IP clause, Android approach, the order in §6.
 10. ❓ **Weekly update rhythm.** *(§6)*
@@ -242,7 +242,7 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 **Settings (§4.2)**
 - ✅ Languages and job, with the per-language progress warning.
 - ✅ Audio: speech speed and voice picker. Speech stays on demand; auto-play is left out on purpose.
-- ✅ Reset progress with confirmation; manage subscription; Restore Purchases; app version.
+- ✅ Reset progress with confirmation; manage subscription; Restore Purchases; app version. *(28 October: "Manage subscription" removed, no subscription; 29 October: cancelling Restore purchases no longer shows an error)*
 
 **Paywall groundwork (§4.3)**
 - ✅ Daily free limit: 20 words (2 rounds), stored in the Keychain and dated with internet time. *(10 words, 1 round, since 27 October)* *(10 words once per install since 28 October)*
@@ -313,12 +313,12 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 - ✅ **OpenAI key off the phone:** the new key is only in Secret Manager; the old one is deleted.
 - ✅ **Anonymous sign-in** at launch and before every call (`AnonymousAuth.swift`), with Firebase's auto clean-up after 30 days.
 - ✅ **App Check** (`AppCheckSetup.swift`): App Attest on iPhones, debug tokens for the simulators, both projects, monitoring mode.
-- ✅ **Daily free limit: 10 words** (1 round). The server also counts words per anonymous user per day (`usage/{uid}`), not enforced yet. *(28 October: 10 words once, not per day; the server's `usage/{uid}` count is removed in the code — delete the collection after deploying `getWords`)*
+- ✅ **Daily free limit: 10 words** (1 round). The server also counts words per anonymous user per day (`usage/{uid}`), not enforced yet. *(28 October: 10 words once, not per day; the server's `usage/{uid}` count is removed in the code — `getWords` deployed 28 October; ⬜ delete the Firestore collection `usage` (Firebase console, your step))*
 - ✅ **Crashlytics and Analytics in production** too; Analytics data retention 2 months.
 - ✅ **Builds use production by default** (`FIREBASE_ENV = Prod`), so playing fills the real bank; dev is one setting away.
 - ✅ Privacy policy, support FAQ, privacy manifest (User ID) and the suggested App Store answers updated for the server, the anonymous ID and App Check. The how-to-play picture says 10 free words.
 - ✅ **Closed Firestore and Storage rules** in both projects: phones can't read or write the database directly any more. Old words with an outdated picture link are repaired by `getPicture` the first time someone plays them.
-- ⬜ **Left:** deploy the link repair; fix App Attest on real iPhones (Team ID); App Check enforcement after a few days of monitoring; enter the App Store privacy answers; deploy the website. *(28 October: Debug builds on real iPhones now use App Check debug tokens instead of App Attest; check App Attest in the first TestFlight build)*
+- ⬜ **Left:** ❓ confirm the `getPicture` link repair is deployed (it's in the code since 27 October); fix App Attest on real iPhones (Team ID); App Check enforcement after a few days of monitoring; enter the App Store privacy answers; deploy the website. *(28 October: Debug builds on real iPhones now use App Check debug tokens instead of App Attest; check App Attest in the first TestFlight build)*
 
 **One-time unlocks, My words, streak and picture reports (28 October)**
 - ✅ **10 free words once** per install (Keychain, survives a reinstall), then **unlock the profession**: one-time $9.99 in-app purchase per menu job (StoreKit 2, `Purchases.swift`, `PaywallView.swift`). Restore purchases in Settings and on the paywall. 32 products in the local `StoreKit/LearnScrumble.storekit` for testing.
@@ -328,4 +328,15 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 - ✅ **Typed jobs ("Not listed?") hidden** for now: only menu jobs can be bought.
 - ✅ **Word bank:** `getWords` translates bank words that are missing the player's languages instead of making new ones; `prepareProfession` fills ~100 words with pictures per menu job in the background; one-off tools split shared words ("motor oil" vs "oil") and check translations (`functions/README.md`).
 - ✅ The StoreKit test file is attached to the Run scheme (path fixed); the startup warning "Firebase app has not yet been configured" is gone; Debug builds use App Check debug tokens on every device; Settings → Debug has a red "Crashlytics crash test" button next to "Reset free words" and "Unlock every profession".
-- ⬜ **Left:** create the 32 products in App Store Connect; deploy `getWords` (no more daily word count) and then delete the Firestore collection `usage`; decide whether to delete the unused `getReviewWords`; translate the new texts (~32) and clean ~22 stale catalog entries; retake the how-to-play picture with "10 free words to try the app"; check on the server that a user owns the job (today only the phone checks).
+- ⬜ **Left (updated 29 October):**
+  - ⬜ create the 32 products in App Store Connect (with the App Check work, in the account the app ships from);
+  - ✅ deploy `getWords` without the daily word count (28 October); ⬜ then delete the Firestore collection `usage` (your step; keep `reportUsage`);
+  - ✅ `getReviewWords`: decided to keep it deployed for now (unused);
+  - ✅ translate the new texts and clean the stale catalog entries (29 October);
+  - ✅ retake the how-to-play picture with "10 free words to try the app" (28 October);
+  - ⬜ check on the server that a user owns the job (today only the phone checks).
+
+**Translations and fixes (29 October)**
+- ✅ 28 new texts (My words, streak, picture reports, the unlock and purchase messages) translated into all 53 languages *(AI-made, like the rest; native review recommended)*. 22 unused texts removed from the catalog; `!`, `-`, `?` and the version number marked "don't translate". 0 texts left untranslated.
+- ✅ Restore purchases: cancelling the App Store sign-in just closes it, with no error alert (`Purchases.restore`, Settings and the paywall).
+- ✅ Old comments and log lines that still said "daily" free words or "subscription" are updated.
