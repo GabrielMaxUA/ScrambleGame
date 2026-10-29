@@ -17,7 +17,9 @@
 //   next step) ... -> "done" when the job has `target` words with pictures, or GPT has no new words twice in a row.
 //   A step: GPT names 10 new English workplace words for the job (skipping the job's bank words), each is saved and
 //   tagged with the job (an existing word just gets the tag), and words without a picture get one
-//   (3 at a time, at most 15 per step). An error -> status "failed" with the message; set status "run" to try again.
+//   (3 at a time, at most 15 per step). A picture OpenAI's safety system refuses is skipped: the word is marked
+//   pictureRefused (logged with its prompt) and later steps leave it alone; getPicture still tries when someone plays it.
+//   Any other error -> status "failed" with the message, and the next queued job starts; set status "run" to retry.
 // Cost: roughly one OpenAI picture per new word (low quality) plus small text requests. Words other jobs already
 // have are tagged, not drawn again. Keep an eye on the OpenAI usage page during a big run.
 
@@ -26,7 +28,8 @@ import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import { FieldValue } from "firebase-admin/firestore";
 import * as openai from "./openai";
-import { db, fetchBank, fetchWords, saveWord, savePicture, WordDoc } from "./store";
+import { db, docID, fetchBank, fetchWords, saveWord, savePicture, WordDoc } from "./store";
+import { isPictureRefused } from "./errors";
 
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 const DEFAULT_TARGET = 100;
@@ -89,6 +92,7 @@ export const prepareProfession = onDocumentWritten(
     } catch (error) {
       logger.error("prepareProfession: step failed", { key, error: String(error) });
       await ref.update({ status: "failed", error: String(error).slice(0, 300) });
+      await startNextQueued();                                     // one failed job doesn't stop the queue
     }
   },
 );
@@ -117,15 +121,25 @@ async function step(key: string): Promise<{ words: number; added: number }> {
   }
 
   // Pictures for the job's words that have none (new ones, and any left from an interrupted step), up to 15 a step.
+  // A prompt OpenAI's safety system refuses ("violence" for swarf or a reamer) skips that word instead of failing the step.
   const tagged = await fetchBank(key);
-  const missing = tagged.filter((d: WordDoc) => !d.image).slice(0, MAX_PICTURES_PER_STEP);
+  const missing = tagged.filter((d: WordDoc) => !d.image && !d.pictureRefused).slice(0, MAX_PICTURES_PER_STEP);
+  let refused = 0;
   for (let i = 0; i < missing.length; i += PICTURES_AT_ONCE) {
     await Promise.all(missing.slice(i, i + PICTURES_AT_ONCE).map(async (d) => {
-      const png = await openai.image(apiKey, prompts.get(d.word) ?? `${d.word}, as used by a ${key}`);
-      await savePicture(d.word, png);
+      const prompt = prompts.get(d.word) ?? `${d.word}, as used by a ${key}`;
+      try {
+        const png = await openai.image(apiKey, prompt);
+        await savePicture(d.word, png);
+      } catch (error) {
+        if (!isPictureRefused(error)) throw error;
+        refused++;
+        logger.warn("prepareProfession: picture refused by OpenAI's safety system, word skipped", { key, word: d.word, prompt });
+        await db.collection("words").doc(docID(d.word)).update({ pictureRefused: true });
+      }
     }));
   }
-  const words = tagged.filter((d) => d.image).length + missing.length;   // the job's words with a picture now
+  const words = tagged.filter((d) => d.image).length + missing.length - refused;   // the job's words with a picture now
   return { words, added: batch.length };
 }
 

@@ -16,6 +16,10 @@ import { HttpsError } from "firebase-functions/v2/https";
 export const busy = () => new HttpsError("unavailable", "serverBusy");
 export const timedOut = () => new HttpsError("deadline-exceeded", "timedOut");
 export const serviceUnavailable = () => new HttpsError("failed-precondition", "serviceUnavailable");
+// OpenAI's safety system refused a picture prompt: the same code for the app, marked so prepare.ts can skip the word.
+export const pictureRefused = () => new HttpsError("failed-precondition", "serviceUnavailable", { safety: true });
+export const isPictureRefused = (error: unknown) =>
+  error instanceof HttpsError && (error.details as { safety?: boolean } | undefined)?.safety === true;
 export const badResponse = () => new HttpsError("internal", "badResponse");
 export const noWords = () => new HttpsError("not-found", "noWordsAvailable");
 export const refused = () => new HttpsError("invalid-argument", "refused");

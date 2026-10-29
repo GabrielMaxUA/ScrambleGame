@@ -30,6 +30,7 @@ export interface WordDoc {
   image: string;
   professions?: string[];
   imagePrompt?: string;
+  pictureRefused?: boolean;   // prepare.ts skipped it: OpenAI's safety system refused the picture prompt
 }
 
 // MARK: - docID

@@ -26,6 +26,10 @@ Start it in the Firebase console → Firestore → collection `prepare`:
   for a small test.
 - **all menu jobs:** document `_all` with `status` = `run`; the 32 jobs are queued and filled one after another.
 - **pause:** `status` = `paused`; **resume** or **retry after "failed"**: `status` = `run`.
+- **refused pictures:** when OpenAI's safety system refuses a picture (e.g. "violence" for swarf or a reamer), the word
+  gets `pictureRefused: true` and is skipped; the log shows the word and the prompt ("picture refused"). `getPicture`
+  still tries again when a player reaches it. A job that fails for another reason no longer stops the queue: the next
+  queued job starts (since 29 Oct 2026).
 
 Each job's document shows `words` (with pictures), `steps`, `lastStep` and any `error`. One step = 10 new words and
 up to 15 pictures; it ends with `done`. Costs roughly one low-quality OpenAI picture per new word: watch the OpenAI

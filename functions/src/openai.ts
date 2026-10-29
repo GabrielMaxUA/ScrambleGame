@@ -17,7 +17,7 @@
 // and turns any other failure into the errors in errors.ts.
 
 import * as logger from "firebase-functions/logger";
-import { busy, timedOut, serviceUnavailable, badResponse } from "./errors";
+import { busy, timedOut, serviceUnavailable, pictureRefused, badResponse } from "./errors";
 
 export interface GptWord {
   toolName: string;     // canonical English name, lowercase — the Firestore document key
@@ -50,6 +50,7 @@ async function send(apiKey: string, path: string, body: unknown): Promise<any> {
     const detail = (await response.text()).slice(0, 300);           // OpenAI's error text — never user data
     logger.error(`openai ${path}: status ${response.status}`, { detail });
     if (response.status === 408) throw timedOut();
+    if (response.status === 400 && /safety system|safety_violations/.test(detail)) throw pictureRefused();
     throw retryable ? busy() : serviceUnavailable();
   }
 }
