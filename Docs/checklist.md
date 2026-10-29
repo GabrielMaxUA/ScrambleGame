@@ -25,14 +25,14 @@
 The game itself is in good shape. **The app around it is not finished yet.**
 - ✅ There is no first-run onboarding. *(Now: the setup screen, then an interactive "How to play" tutorial on the real game screen, with a saved completion flag and a welcome-back screen; see §4.1)*
 - ✅ "Settings" is the setup screen again, reached from the gear button. *(Now a real Settings screen: `SettingsView.swift`.)*
-- ⬜ **to do** There is no paywall, no reminders, and no support or terms pages. *(The daily reminder is done (§4.1 #4). Support, privacy and terms pages are live at https://learnscrumble.com since 18 October, linked from Settings. Only the paywall is left)*
+- ✅ There is no paywall, no reminders, and no support or terms pages. *(The daily reminder is done (§4.1 #4). Support, privacy and terms pages are live at https://learnscrumble.com since 18 October, linked from Settings. The paywall is built since 28 October: a one-time $9.99 unlock per profession, see §4.3)*
 - ✅ *(partly)* The things that block a public release are still open (§4.4). *(27 October: the OpenAI key is off the phone, anonymous sign-in and App Check run, the Firebase rules are closed; App Check enforcement and the paywall are left)*
 
 Since mid-September, about half of the new Swift code (52% of 3,469 added lines) went into screens, components and animations. Very little went into what a release needs:
-- ✅ server-side AI calls: none; *(27 October: all OpenAI calls and all writes to the word bank run in Firebase Cloud Functions — `getWords`, `getPicture`, `getReviewWords` — in both projects. See `ServerMigrationPlan.md` Phases 4–5)*
+- ✅ server-side AI calls: none; *(27 October: all OpenAI calls and all writes to the word bank run in Firebase Cloud Functions — `getWords`, `getPicture`, `getReviewWords` — in both projects. See `ServerMigrationPlan.md` Phases 4–5)* *(Since 28 October the app calls `getWords`, `getPicture` and `reportPicture`; `getReviewWords` is still deployed but no longer called, because "My words" plays from the phone)*
 - ✅ analytics and crash reporting: none; *(15–16 October: Crashlytics, opt-in Analytics, logs with crash breadcrumbs, non-fatal errors and the analytics events are in and tested. `paywall_shown` and `trial_started` come with the paywall)*
 - ✅ consent and privacy: an AI disclaimer and a placeholder privacy link so far; *(15 October: the OpenAI consent step and the usage-statistics opt-in; 18 October: the real privacy policy at learnscrumble.com/privacy; 27 October: updated for the server, anonymous sign-in and App Check. Placeholders (name, address, dates) and a legal review are left: `WebsiteContent/TODO.md`)*
-- ⬜ **to do** a paywall or seat access: none. *(The single `hasAccess` check is ready for it)*
+- ✅ a paywall or seat access: none. *(28 October: one-time unlock per profession with StoreKit 2, `Purchases.swift` and `PaywallView.swift`; `hasAccess` = the current job is unlocked. Seat access for employers is still an idea, `AppFlowIdeas.md` §7)*
 
 That's about direction, not effort. We never agreed on a clear target, and that's on me. **This document is that target: §3, then §4, in that order.**
 
@@ -62,7 +62,7 @@ Work in this order. The sizes are rough estimates.
 **Build:**
 1. ✅ **Welcome.** One sentence on what the app does, in the user's own language, for example "Learn the words you need at work, in your language". The current welcome text is a good start.
 2. ✅ **Languages.** "I speak" and "I'm learning", using the existing pickers.
-3. ✅ **Job.** A short list of common jobs to tap, plus the existing free-text field. This also tells us which jobs people actually pick. *(`ProfessionPicker`: an occupation menu plus "Not listed?" free text)*
+3. ✅ **Job.** A short list of common jobs to tap, plus the existing free-text field. This also tells us which jobs people actually pick. *(`ProfessionPicker`: an occupation menu plus "Not listed?" free text)* *(28 October: "Not listed?" is hidden for now, because only menu jobs can be unlocked: each is its own product. The code is kept to bring it back, see the MARK in `OccupationModel.swift`)*
 4. ✅ **Daily reminder.** Ask for a time, then ask for notification permission on this screen with a one-line reason. Not at launch. *(A "Daily reminder" card on the setup screen: a time picker (9:00 by default) with the reason under it, "We'll remind you once a day, only if you haven't played yet." Permission is asked once, on the Start button. The reminder goes out at that time on days the user hasn't played yet, booked 7 days ahead and renewed each time the app opens (`DailyReminder.swift`))*
 5. ✅ **Consent.** Say plainly that the job text is sent to OpenAI to create words and pictures, and get an explicit "OK", with a link to the real privacy policy. Apple's App Review rule 5.1.2(i) requires this; the current disclaimer isn't enough. *(Done 15 October: an "I agree" checkbox on the setup screen, a one-time sheet for existing users, and the sentence in Settings; see `AppStoreReadiness.md` §1.4. The privacy link still points to the placeholder until the website is live. If we switch to packs, the wording changes)*
 6. ✅ **Straight into the first round.** Aim for the first correct word within about a minute of opening the app.
@@ -83,23 +83,23 @@ Work in this order. The sizes are rough estimates.
 - ✅ **Reminder:** on/off and time. *(A "Daily reminder" card: on/off toggle and time picker, sharing the time picked during setup. Turning it on for someone who was never asked shows the iOS popup; if iOS notifications are off, a note and an "Open Settings" row appear)*
 - ✅ **Audio:** speech speed, and auto-play on or off. *(Speech speed and a voice picker are done. Auto-play is left out on purpose: speech stays on demand through the speaker button, because speaking every word automatically gets annoying. Worth telling Konstantin)*
 - ✅ **Progress:** reset progress, with a confirmation.
-- ✅ **Subscription:** manage subscription, and Restore Purchases.
+- ✅ **Subscription:** manage subscription, and Restore Purchases. *(28 October: no subscription any more; Settings keeps **Restore purchases** for the job unlocks. "Manage subscription" is gone)*
 - ✅ **Legal and support:** privacy policy, terms of use, and a support email. *(18 October: learnscrumble.com pages and support@learnscrumble.com)*
 - ❓ **need discussion** **Delete my data:** local progress now, account data later. *(Built, but commented out in `SettingsView.swift:68` and `AppManager.swift`)*
 - ✅ **App version.**
 
 ### 4.3 Paywall (about 3–5 days)
 
-- ⬜ **to do** **RevenueCat on top of StoreKit**, as planned in the brief.
-- ✅ *(partly)* **Free first, paywall after value.** Show the paywall after the first completed round, never at launch. A starting proposal is a set number of free rounds per day, tuned later from data. *(The daily free limit is done: 10 words, which is 1 round (20 until 27 October), in `FreeAllowance`, stored in the Keychain and dated with internet time; the server counts it too but doesn't enforce it yet. The paywall screen itself isn't built yet)*
-- ❓ **need discussion** **Plans.** Monthly and annual, with a free trial. For reference, education-app medians in our research are about $9.99 a month and $40–45 a year (RevenueCat benchmarks). Set the final prices with me.
-- ⬜ **to do** **App Review must-haves (guideline 3.1.2):**
-  - ⬜ **to do** before purchase, show the price, the period and what's included;
-  - ⬜ **to do** show the auto-renewal terms;
-  - ⬜ **to do** link to the terms of use and the privacy policy; *(the pages are live since 18 October; the paywall must link to them)*
-  - ✅ include a Restore Purchases button. *(In Settings; the paywall needs one too)*
-- ✅ **One access check, two ways in.** Build a single `hasAccess` check that a subscription unlocks today, and that an agency or employer access code can unlock later. Then the work isn't wasted if employers end up paying instead of workers. *(`AppManager.hasAccess` gates review, voices and the daily limit; for now it's always `false`)*
-- ⬜ **to do** **Sandbox only for now.** *(Applies once the paywall is built; no StoreKit products exist in the project yet)* Develop against a local StoreKit configuration file or the sandbox. **Don't create live in-app products in your own App Store Connect account yet.** The plan is to publish from Auxility's account, and we'll set that up when our agreement is in place. Moving live products between accounts later is painful.
+- ✖️ **dropped** **RevenueCat on top of StoreKit**, as planned in the brief. *(28 October: StoreKit 2 directly is enough for one-time unlocks)*
+- ✅ *(partly)* **Free first, paywall after value.** Show the paywall after the first completed round, never at launch. A starting proposal is a set number of free rounds per day, tuned later from data. *(The daily free limit is done: 10 words, which is 1 round (20 until 27 October), in `FreeAllowance`, stored in the Keychain and dated with internet time; the server counts it too but doesn't enforce it yet. The paywall screen itself isn't built yet)* *(28 October: now **10 free words once** per install, not per day, then the paywall for the job. The Keychain keeps the count after a reinstall; the server no longer counts words)*
+- ✅ **Plans.** Monthly and annual, with a free trial. For reference, education-app medians in our research are about $9.99 a month and $40–45 a year (RevenueCat benchmarks). Set the final prices with me. *(Decided 28 October: no plans, no trial — one-time **$9.99 per profession** (non-consumable), unlimited words and "My words" for that job, voices for every unlocked user. Konstantin to confirm the price)*
+- ✅ *(mostly)* **App Review must-haves (guideline 3.1.2):** *(3.1.2 is for subscriptions; for one-time unlocks Apple needs the price before purchase and Restore purchases)*
+  - ✅ before purchase, show the price, the period and what's included; *(the paywall shows the price in the user's currency and the five things included; no period, it's a one-time purchase)*
+  - ✖️ **not needed** show the auto-renewal terms; *(no subscription)*
+  - ⬜ *(optional)* link to the terms of use and the privacy policy; *(not required for one-time purchases, but nice on the paywall; today they're in Settings and on the website)*
+  - ✅ include a Restore Purchases button. *(In Settings and on the paywall)*
+- ✅ **One access check, two ways in.** Build a single `hasAccess` check that a subscription unlocks today, and that an agency or employer access code can unlock later. Then the work isn't wasted if employers end up paying instead of workers. *(`AppManager.hasAccess` gates review, voices and the daily limit; for now it's always `false`)* *(28 October: `hasAccess` is true when the current job is unlocked)*
+- ✅ *(partly)* **Sandbox only for now.** *(28 October: `StoreKit/LearnScrumble.storekit` has all 32 products, $9.99 each, `com.MaxGabriel.LearnScrumble.job.<case name>`, attached to the Run scheme; the scheme path was fixed the same day. Still to do: create the same 32 products in App Store Connect — in Auxility's account if that's where the app goes)* Develop against a local StoreKit configuration file or the sandbox. **Don't create live in-app products in your own App Store Connect account yet.** The plan is to publish from Auxility's account, and we'll set that up when our agreement is in place. Moving live products between accounts later is painful.
 
 ### 4.4 Before anyone outside your circle installs it
 
@@ -186,8 +186,8 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 |---|---|---|
 | ✅ Onboarding | The full flow in §4.1 *(setup, daily reminder, the "How to play" tutorial and the consent step (15 October) are all done)* | The same, polished, plus store screenshots |
 | ✅ *(partly)* Settings | The full screen in §4.2 *(the reminder is done; legal links and delete data need discussion)* | The same |
-| ⬜ **to do** Paywall | Subscription in sandbox, with an access-code path ready | Live products in Auxility's account, prices tuned with data |
-| ✅ Engagement | Daily reminder at a chosen time; missed-word review *(the missed-word review and the daily reminder at a chosen time are both done)* | Plus streaks and a weekly recap |
+| ✅ *(partly)* Paywall | Subscription in sandbox, with an access-code path ready *(28 October: one-time unlock per job, tested with the local StoreKit file)* | Live products in Auxility's account, prices tuned with data |
+| ✅ Engagement | Daily reminder at a chosen time; missed-word review *(the missed-word review and the daily reminder at a chosen time are both done)* | Plus streaks and a weekly recap *(streak done 28 October; weekly recap still open)* |
 | ✅ Loading | Clear progress and error states (mostly done) *(progress ring, retry-or-exit error screen, earlier prefetch)* | Polished, or largely unnecessary with packs |
 | ❓ **need discussion** Design | One consistent design pass over all screens *(glass buttons with iOS 18 fallbacks are shared across screens; whether that counts as the design pass needs a review)* | Full design system |
 | ✅ *(partly)* Always required | No API key in the app, locked-down Firebase, consent, a real privacy policy and terms, crash reporting and analytics *(consent, crash reporting and analytics done 15–16 October; privacy and terms live 18 October; no API key in the app 27 October; Firebase lock-down partly: App Check enforcement left)* | The same, plus account deletion if accounts exist, App Review compliance, and an Android plan |
@@ -206,7 +206,7 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 
 ### ⬜ Remaining: to do
 
-1. ⬜ **Paywall.** RevenueCat on StoreKit; the paywall screen after the first completed round, showing price, period, what's included and the auto-renewal terms; Restore Purchases on the paywall too; a local StoreKit or sandbox setup with no live products. *(§2, §4.3, §7)*
+1. ✅ **Paywall.** RevenueCat on StoreKit; the paywall screen after the first completed round, showing price, period, what's included and the auto-renewal terms; Restore Purchases on the paywall too; a local StoreKit or sandbox setup with no live products. *(§2, §4.3, §7)* *(Done differently on 28 October: one-time $9.99 unlock per profession after the 10 free words, StoreKit 2 without RevenueCat, price, what's included and Restore on the paywall, local StoreKit file. Left: the products in App Store Connect)*
 2. ✅ **Crash reporting and analytics**, with the events: onboarding finished, round finished, paywall shown, trial started. *(§2, §4.4)* *(Done 15–16 October: Crashlytics with breadcrumbs and non-fatal errors, opt-in Analytics with its events, tested in a separate dev project. `paywall_shown` and `trial_started` are wired when the paywall is built)*
 
 ### ❓ Remaining: need discussion
@@ -245,7 +245,7 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 - ✅ Reset progress with confirmation; manage subscription; Restore Purchases; app version.
 
 **Paywall groundwork (§4.3)**
-- ✅ Daily free limit: 20 words (2 rounds), stored in the Keychain and dated with internet time. *(10 words, 1 round, since 27 October)*
+- ✅ Daily free limit: 20 words (2 rounds), stored in the Keychain and dated with internet time. *(10 words, 1 round, since 27 October)* *(10 words once per install since 28 October)*
 - ✅ A single `hasAccess` check, ready for a subscription or an access code.
 
 **Release basics (§4.4, §7)**
@@ -279,7 +279,7 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 - ✅ Shown right after the setup screen's Start, while the first words load; also once at launch for anyone set up before it existed; replayable from Settings → How to play.
 - ✅ One session on the real game screen with a practice word ("cat" in the language being learned, English "cat" for scripts that join letters) and a cat picture.
 - ✅ A tapping pointer and a tooltip on every task: first letter, a wrong letter on purpose, send it back, ↻, the hint (in the user's language), the speaker, the settings gear, then the whole word.
-- ✅ Ends on the real "Correct!" screen with "You get 20 free words every day." (10 since 27 October) and "Let's go!". Skip works at any moment.
+- ✅ Ends on the real "Correct!" screen with "You get 20 free words every day." (10 since 27 October) and "Let's go!". Skip works at any moment. *(Since 28 October: "You get 10 free words to try the app.")*
 - ✅ Nothing from the practice word is saved to the user's progress.
 - ✅ Tutorial and reminder texts translated into all 54 app languages *(AI-made, like the rest; native review recommended)*.
 - ✅ Rarely supported languages removed: Bhojpuri, Bodo, Dogri, Konkani, Maithili, Manipuri, Sanskrit.
@@ -309,13 +309,23 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 
 **Word bank, server and security (27 October)**
 - ✅ **Shared word bank per job.** Every word is tagged with the jobs it was used for (`professions` on the word). A batch takes unseen words from the job's bank first (with a picture and both of the user's languages) and asks GPT only for the missing number; words GPT suggests that already exist get their picture reused, missing translations filled and the job tag added. Typed jobs use the English job name GPT gave them.
-- ✅ **Cloud Functions** (`functions/`, TypeScript, `us-central1`) in both projects: `getWords`, `getPicture`, `getReviewWords`. The app no longer calls OpenAI or writes to Firebase; the job counter and the bank writes run on the server. Typed jobs go through OpenAI moderation first.
+- ✅ **Cloud Functions** (`functions/`, TypeScript, `us-central1`) in both projects: `getWords`, `getPicture`, `getReviewWords`. The app no longer calls OpenAI or writes to Firebase; the job counter and the bank writes run on the server. Typed jobs go through OpenAI moderation first. *(Later: `reportPicture`, `reviewReport`, `mailReports`, `prepareProfession`; `getReviewWords` unused since 28 October)*
 - ✅ **OpenAI key off the phone:** the new key is only in Secret Manager; the old one is deleted.
 - ✅ **Anonymous sign-in** at launch and before every call (`AnonymousAuth.swift`), with Firebase's auto clean-up after 30 days.
 - ✅ **App Check** (`AppCheckSetup.swift`): App Attest on iPhones, debug tokens for the simulators, both projects, monitoring mode.
-- ✅ **Daily free limit: 10 words** (1 round). The server also counts words per anonymous user per day (`usage/{uid}`), not enforced yet.
+- ✅ **Daily free limit: 10 words** (1 round). The server also counts words per anonymous user per day (`usage/{uid}`), not enforced yet. *(28 October: 10 words once, not per day; the server's `usage/{uid}` count is removed in the code — delete the collection after deploying `getWords`)*
 - ✅ **Crashlytics and Analytics in production** too; Analytics data retention 2 months.
 - ✅ **Builds use production by default** (`FIREBASE_ENV = Prod`), so playing fills the real bank; dev is one setting away.
 - ✅ Privacy policy, support FAQ, privacy manifest (User ID) and the suggested App Store answers updated for the server, the anonymous ID and App Check. The how-to-play picture says 10 free words.
 - ✅ **Closed Firestore and Storage rules** in both projects: phones can't read or write the database directly any more. Old words with an outdated picture link are repaired by `getPicture` the first time someone plays them.
-- ⬜ **Left:** deploy the link repair; fix App Attest on real iPhones (Team ID); App Check enforcement after a few days of monitoring; enter the App Store privacy answers; deploy the website.
+- ⬜ **Left:** deploy the link repair; fix App Attest on real iPhones (Team ID); App Check enforcement after a few days of monitoring; enter the App Store privacy answers; deploy the website. *(28 October: Debug builds on real iPhones now use App Check debug tokens instead of App Attest; check App Attest in the first TestFlight build)*
+
+**One-time unlocks, My words, streak and picture reports (28 October)**
+- ✅ **10 free words once** per install (Keychain, survives a reinstall), then **unlock the profession**: one-time $9.99 in-app purchase per menu job (StoreKit 2, `Purchases.swift`, `PaywallView.swift`). Restore purchases in Settings and on the paywall. 32 products in the local `StoreKit/LearnScrumble.storekit` for testing.
+- ✅ **My words** (unlocked jobs): every word played for the job, weakest first, with picture and right/wrong counts; tap to hear it; **Repeat all** plays them as a game in rounds of 10. Everything comes from the phone, so it works **offline** (`MyWordsView.swift`).
+- ✅ **Progress and streak:** a job card on Welcome back and Results with the streak (🔥 days in a row), words learned, right and wrong answers. A word counts as learned when it's right at least twice and 3 times out of 4.
+- ✅ **Report a wrong picture:** the flag on the picture → `reportPicture` draws a new picture for that user only; reports are emailed every morning to support@learnscrumble.com (`mailReports`), and approved in Firestore (`reviewReport`). 10 reports per user per day.
+- ✅ **Typed jobs ("Not listed?") hidden** for now: only menu jobs can be bought.
+- ✅ **Word bank:** `getWords` translates bank words that are missing the player's languages instead of making new ones; `prepareProfession` fills ~100 words with pictures per menu job in the background; one-off tools split shared words ("motor oil" vs "oil") and check translations (`functions/README.md`).
+- ✅ The StoreKit test file is attached to the Run scheme (path fixed); the startup warning "Firebase app has not yet been configured" is gone; Debug builds use App Check debug tokens on every device; Settings → Debug has a red "Crashlytics crash test" button next to "Reset free words" and "Unlock every profession".
+- ⬜ **Left:** create the 32 products in App Store Connect; deploy `getWords` (no more daily word count) and then delete the Firestore collection `usage`; decide whether to delete the unused `getReviewWords`; translate the new texts (~32) and clean ~22 stale catalog entries; retake the how-to-play picture with "10 free words to try the app"; check on the server that a user owns the job (today only the phone checks).

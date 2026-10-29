@@ -16,10 +16,13 @@ The Firebase plists are **not in git** and must be added by hand, or the build f
    Copy them from a backup, or download them again: Firebase console → project → ⚙️ Project settings → your iOS app.
 2. **The OpenAI key is not needed in the app any more** (since 27 October 2026). It lives only in Google Secret Manager
    (`OPENAI_API_KEY`, both projects) and is used by the Cloud Functions in `functions/` (their own README).
-3. **Simulator only: an App Check debug token.** Run the app once in a new simulator, filter Xcode's console for
+3. **An App Check debug token per device for Debug builds.** Every ▶︎ Run build (simulator **and** a real iPhone) uses
+   App Check's debug provider since 28 October 2026. Run the app once on the device, filter Xcode's console for
    `debug token`, and add it in **both** Firebase consoles → App Check → Apps → ⋮ → Manage debug tokens. One token per
-   simulator (a new one after erasing it or reinstalling the app). Real iPhones use App Attest and need nothing.
-   Keep the token out of chats, code and git.
+   device (a new one after erasing a simulator or reinstalling the app). TestFlight and App Store builds use App Attest
+   and need nothing. Keep the token out of chats, code and git; delete tokens you no longer use.
+4. **Cloud Functions on a new Mac:** run `npm install` in `functions/` once before building or deploying them
+   (`functions/README.md`); without it the build fails with "Cannot find module 'nodemailer'".
 
 ## Dev and production
 
@@ -31,7 +34,7 @@ One switch decides which Firebase project a build uses: **Build Settings → Use
 | `Dev` (Debug only) | ▶︎ Run | `scrumblegame-dev` | dev default bucket |
 
 - The **Copy Firebase plist** build phase reads `FIREBASE_ENV` and copies `FirebaseConfig/Prod/` or `FirebaseConfig/Dev/` into the app. Release (Archive, TestFlight, App Store) is **always** Prod, whatever the setting says. The build log shows "Copied Prod plist" or "Copied Dev plist".
-- The app calls the Cloud Functions of the project it's connected to (`getWords`, `getPicture`, `getReviewWords`, region `us-central1`), so dev builds use the dev functions and the dev word bank. Deploy function changes to `scrumblegame-dev` first (`functions/README.md`).
+- The app calls the Cloud Functions of the project it's connected to (`getWords`, `getPicture`, `reportPicture`, region `us-central1`; `getReviewWords` is still deployed but no longer called), so dev builds use the dev functions and the dev word bank. Deploy function changes to `scrumblegame-dev` first (`functions/README.md`).
 - Firestore and Storage rules are closed to phones (`allow read, write: if false`, since 27 October): only the functions write, and pictures load through their download links. A link with an outdated token gets a 403; `getPicture` repairs it (`functions/README.md`).
 - To test against dev again (e.g. risky experiments): set `FIREBASE_ENV` to `Dev` for **Debug** only. Debug-only features (Settings → Debug → "Reset free words") work with either.
 - With `Prod`, crash reports and statistics from your test runs land in the production project too; keep test crashes on `Dev`.
@@ -47,7 +50,7 @@ One switch decides which Firebase project a build uses: **Build Settings → Use
   xcrun simctl keychain booted reset
   ```
 
-**Test the profession unlocks without App Store Connect.** The scheme uses `StoreKit/LearnScrumble.storekit` (Edit Scheme → Run → Options → StoreKit Configuration): one $9.99 non-consumable per menu job, `com.MaxGabriel.LearnScrumble.job.<case name>`. Purchases in the simulator are fake and only work when the app is started from Xcode (▶︎ Run). To buy again, Xcode → Debug → StoreKit → Manage Transactions → delete. The same product IDs must be created in App Store Connect before release.
+**Test the profession unlocks without App Store Connect.** The scheme uses `StoreKit/LearnScrumble.storekit` (Edit Scheme → Run → Options → StoreKit Configuration): one $9.99 non-consumable per menu job, `com.MaxGabriel.LearnScrumble.job.<case name>`. Purchases in the simulator are fake and only work when the app is started from Xcode (▶︎ Run); started from the icon or `simctl`, the app finds no product ("no product for …" in the log) and the Unlock button does nothing. The scheme's path is `../../StoreKit/LearnScrumble.storekit` (relative to `xcshareddata/xcschemes/`; fixed 28 October). Without buying: **Settings → Debug → Unlock every profession**. To buy again, Xcode → Debug → StoreKit → Manage Transactions → delete. The same product IDs must be created in App Store Connect before release.
 
 **Start as a brand-new user.** Delete the app from the simulator (long-press the icon → Remove App), then Run again. Add the Keychain reset above for fresh free words too.
 
@@ -63,11 +66,10 @@ One switch decides which Firebase project a build uses: **Build Settings → Use
 4. Events show within seconds. Logs never show there, only events.
 
 **Crashlytics test crash.**
-1. Add a temporary button inside `#if DEBUG` that calls `fatalError("Test crash")`.
-2. Stop Xcode, open the app from the simulator icon (a crash isn't recorded while the debugger is attached), crash it.
+1. The button is already there in Debug builds: **Settings → Debug → Crashlytics crash test** (red; it calls `fatalError`).
+2. Stop Xcode, open the app from the simulator icon (a crash isn't recorded while the debugger is attached), tap it.
 3. Open the app again and leave it open for a minute; the report is sent on that launch.
 4. Debug builds only: Crashlytics → dSYMs shows "Missing (required)". Zip `LearnScrumble.app.dSYM` from DerivedData (`Build/Products/Debug-iphonesimulator`) and drag it onto that page. Release builds upload it by themselves.
-5. Remove the button.
 
 ## Git
 

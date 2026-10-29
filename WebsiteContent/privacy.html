@@ -136,9 +136,9 @@
       <h3>Google Firebase and OpenAI — reporting a wrong picture</h3>
       <p>If a picture doesn't show its word, you can tap the flag on the picture and confirm. The app then sends our server the word's English name, your job's English name and the link of the picture you saw. The server asks OpenAI to describe the object again for your job and draw a new picture, which is sent to your iPhone and kept there with the word — only you see it. The report is added to a list of reported pictures (word, jobs, number of reports, the picture you saw, the new picture and its description, times), and we receive a daily email with the new reports. After checking, we may use the new picture in the shared word library for everyone. To count how many different people reported a word, the server keeps a one-way code made from your random sign-in ID (it can't be turned back into the ID); nothing else about you is stored with a report. To stop misuse, the server also counts how many pictures each random sign-in ID reported today (overwritten every day).</p>
 
-      <h3>Google Firebase — random sign-in ID and daily counts</h3>
+      <h3>Google Firebase — random sign-in ID and daily report count</h3>
       <p>So that only the LearnScrumble app can use our server, the app signs in to Firebase Authentication (Google) <strong>anonymously</strong>, without any screen: Firebase gives the app a random ID. It isn't linked to your name, email, phone number or Apple ID. Firebase deletes each anonymous ID 30 days after it was created, and the app then gets a new one.</p>
-      <p>With that ID our server keeps two small records: today's date with how many words it has sent to the app today, and how many pictures you've reported today. Both are overwritten every day. They're used to protect the service from abuse; they don't contain your job, your words or your answers.</p>
+      <p>With that ID our server keeps one small record: today's date and how many pictures you've reported today, overwritten every day. It limits reports to protect the service from abuse; it doesn't contain your job, your words or your answers.</p>
       <h3>Apple and Firebase App Check — proving requests come from the real app</h3>
       <p>Each request to our server carries a short-lived token from Firebase App Check (Google). On a real iPhone, the token comes from Apple's App Attest, which confirms that the request comes from a genuine copy of LearnScrumble on a genuine Apple device. It contains no personal information and isn't used to identify you.</p>
 
@@ -182,7 +182,7 @@
       <h2 id="why">5. Why we use data (legal bases)</h2>
       <ul>
         <li><strong>To provide the app you asked for</strong> — creating words and pictures for your job and languages, remembering your settings and progress (performance of a contract, Art. 6(1)(b) GDPR).</li>
-        <li><strong>To keep the free words fair and the service working and secure</strong> — the free-word counter, the daily counts, the random sign-in ID and App Check (legitimate interests, Art. 6(1)(f) GDPR).</li>
+        <li><strong>To keep the free words fair and the service working and secure</strong> — the free-word counter, the daily report count, the random sign-in ID and App Check (legitimate interests, Art. 6(1)(f) GDPR).</li>
         <li><strong>To fix wrong pictures</strong> you report (legitimate interests, Art. 6(1)(f) GDPR). A report holds only a one-way code of your random sign-in ID, to count reporters.</li>
         <li><strong>To improve the job menu</strong> by counting jobs in English, without anything that identifies you (legitimate interests, Art. 6(1)(f) GDPR).</li>
         <li><strong>To build the shared word library</strong> so words and pictures are reused for all learners (legitimate interests, Art. 6(1)(f) GDPR). It contains no personal data.</li>
@@ -195,7 +195,7 @@
       <ul>
         <li><strong>On your iPhone:</strong> until you reset your progress or delete the app. The free-word counter stays in the Keychain until the iPhone is erased.</li>
         <li><strong>Shared word library:</strong> for as long as the service runs; it contains no personal data.</li>
-        <li><strong>Random sign-in ID:</strong> deleted by Firebase 30 days after it was created. <strong>Daily counts on the server</strong> (words sent, pictures reported): today's date and counts only, overwritten every day.</li>
+        <li><strong>Random sign-in ID:</strong> deleted by Firebase 30 days after it was created. <strong>Daily report count on the server</strong>: today's date and the number of pictures reported only, overwritten every day.</li>
         <li><strong>Reported pictures:</strong> the list of reports, the pictures drawn for them and the replaced pictures for as long as the service runs; the one-way reporter codes are kept with them. The daily report emails are kept in our mailbox.</li>
         <li><strong>OpenAI:</strong> according to OpenAI's API data policy (see above).</li>
         <li><strong>Crash reports and usage statistics:</strong> for the periods given in <a href="#sent">section 3</a>.</li>

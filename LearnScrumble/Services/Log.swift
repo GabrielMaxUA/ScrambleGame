@@ -30,7 +30,8 @@ import FirebaseCrashlytics
 //     <private>, and it never goes to Crashlytics.
 //
 // Crashlytics only exists after FirebaseApp.configure() (AppDelegate). Lines logged before that
-// (RequestModel.init, PersistenceController.init) only go to the console.
+// (RequestModel.init, AppManager.init) only go to the console. AppDelegate sets firebaseConfigured right after
+// configure(); checking FirebaseApp.app() instead would make Firebase print "has not yet been configured" each time.
 // nonisolated: SoundManager logs from its background queue; Logger and Crashlytics are both thread-safe.
 
 nonisolated enum Log {
@@ -89,7 +90,9 @@ nonisolated enum Log {
     }
   }
 
+  nonisolated(unsafe) static var firebaseConfigured = false        // set once by AppDelegate, on launch, before any other thread logs to Crashlytics
+
   private static var crashlytics: Crashlytics? {                   // nil until AppDelegate has configured Firebase
-    FirebaseApp.app() == nil ? nil : Crashlytics.crashlytics()
+    firebaseConfigured ? Crashlytics.crashlytics() : nil
   }
 }

@@ -17,6 +17,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "38D434503048C7720046E55F"
                BuildableName = "LearnScrumble.app"
+               BlueprintName = "LearnScrumble"
                ReferencedContainer = "container:LearnScrumble.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -48,6 +49,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "38D434503048C7720046E55F"
             BuildableName = "LearnScrumble.app"
+            BlueprintName = "LearnScrumble"
             ReferencedContainer = "container:LearnScrumble.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -58,7 +60,7 @@
          </CommandLineArgument>
       </CommandLineArguments>
       <StoreKitConfigurationFileReference
-         identifier = "../StoreKit/LearnScrumble.storekit">
+         identifier = "../../StoreKit/LearnScrumble.storekit">
       </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction
@@ -73,6 +75,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "38D434503048C7720046E55F"
             BuildableName = "LearnScrumble.app"
+            BlueprintName = "LearnScrumble"
             ReferencedContainer = "container:LearnScrumble.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

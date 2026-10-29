@@ -89,7 +89,6 @@ Everything runs on the Mac, in Terminal, from the **repository root** (the folde
 | New words (English name + 2 translations + picture link + English job names), new pictures | Google Firebase (Firestore + Storage), shared library, no user ID. Written only by the Cloud Functions; the app downloads pictures by their link |
 | Job counts: English job name (menu name, or GPT's English name for a typed job; "invalid" isn't saved), typed/picked counts, first/last seen, review status | Google Firebase (Firestore `professions`), written by `getWords` when the app sends `countJob` (once per job per install, `ProfessionStore`), no user ID, never the typed text |
 | Random anonymous sign-in ID | Firebase Authentication (`AnonymousAuth.swift`), sent with every function call; auto clean-up deletes it 30 days after creation |
-| Today's date + words sent today, per anonymous ID | Firestore `usage/{uid}`, written by `getWords`, overwritten daily (counted, not enforced) |
 | Picture reports: word's English name, job's English name, the picture link seen | `reportPicture` -> OpenAI (word + job, to describe and draw it again) -> the new picture only to the reporter (Storage `reports/`). Firestore `reports/{word}`: word, jobs, counts, the picture seen, the suggested picture + description, status; `reports/{word}/reporters/{code}`: a one-way hash of the anonymous ID, to count people. Daily email to support@learnscrumble.com (`mailReports`). The bank picture changes only when the developer approves |
 | Today's date + pictures reported today, per anonymous ID | Firestore `reportUsage/{uid}`, written by `reportPicture`, overwritten daily (max 10 a day) |
 | App Check token (App Attest on iPhones, debug token in the simulator) | Firebase App Check, with every Firebase call; no personal data |
@@ -102,10 +101,10 @@ Everything runs on the Mac, in Terminal, from the **repository root** (the folde
 Apple asks what data the app "collects" (sends off the device and keeps longer than needed to answer the request). Based on the table above, a reasonable starting point — confirm with whoever signs off the release:
 
 - **Tracking:** No.
-- **Data linked to the user:** None (no account; Firebase's random IDs, including the anonymous sign-in ID, aren't tied to a person). ⚠️ Confirm at sign-off: the server keeps a daily word count per anonymous ID, and Apple may see that as "linked". If so, mark User ID and Other Usage Data as linked (still not tracking).
+- **Data linked to the user:** None (no account; Firebase's random IDs, including the anonymous sign-in ID, aren't tied to a person). ⚠️ Confirm at sign-off: the server keeps a daily report count per anonymous ID (`reportUsage/{uid}`), and Apple may see that as "linked". If so, mark User ID and Other Usage Data as linked (still not tracking). (The daily word count `usage/{uid}` was removed on 28 October 2026.)
 - **Data not linked to the user** (the same as `LearnScrumble/PrivacyInfo.xcprivacy`):
   - *User Content → Other User Content*: the profession text sent to OpenAI — purposes: App Functionality, and Analytics (its English name is counted to improve the job menu).
-  - *Usage Data → Other Usage Data*: the names of words already practised, sent to our server and OpenAI so they aren't repeated, the server's daily word and report counts, and picture reports (word + job) — purpose: App Functionality.
+  - *Usage Data → Other Usage Data*: the names of words already practised, sent to our server and OpenAI so they aren't repeated, the server's daily report count, and picture reports (word + job) — purpose: App Functionality.
   - *Identifiers → User ID*: the random anonymous Firebase sign-in ID — purpose: App Functionality.
   - *Diagnostics → Crash Data*: Crashlytics crash reports — purpose: App Functionality.
   - *Diagnostics → Other Diagnostic Data*: Crashlytics non-fatal error reports (words couldn't be loaded), with the error type, a short technical description, the last steps, free memory and disk space — purpose: App Functionality.

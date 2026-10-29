@@ -18,10 +18,12 @@
 - Firebase 12.19 and SDWebImage include their own manifests.
 - **Keep in sync** with `WebsiteContent/privacy.html` and the App Store privacy answers (3.2).
 
-### 1.2 ❓ **need discussion** Premium buttons that do nothing (guidelines 2.1, 3.1.1)
+### 1.2 ✅ *(app side)* Premium buttons that do nothing (guidelines 2.1, 3.1.1)
 - **Problem:** every "See plans" button only prints `💳 paywall — not built yet`, and `AppManager.hasAccess` is always `false`. After 10 words (20 until 27 October) the reviewer sees "Today's free words are done" with a "See plans" button that does nothing; review of mistakes and the voice picker are locked behind a subscription that can't be bought.
 - **Plan:** handled when RevenueCat and the paywall are built (`checklist.md` §4.3, `AppFlowIdeas.md` §6). **Must be finished before the first submission.**
 - **If the app has to ship before the paywall:** hide everything premium for 1.0 — no "See plans", no lock icons, review and voice either free or hidden, and at the daily limit a plain "Come back tomorrow" message.
+- **Done (28 October):** the paywall is real. After **10 free words (once per install)** the app shows "Unlock your profession": a one-time **$9.99 in-app purchase per menu job** (non-consumable, StoreKit 2, `Purchases.swift` / `PaywallView.swift`) with the price in the user's currency, what's included, **Restore purchases** and "Not now". Unlocking gives unlimited words and "My words" for that job, and the voice picker. Tested with the local `StoreKit/LearnScrumble.storekit` (Xcode test purchase works since the scheme path fix on 28 October).
+- **Still needed before submitting (guideline 3.1.1):** create the **32 non-consumable products** in App Store Connect with exactly the IDs `com.MaxGabriel.LearnScrumble.job.<case name>` (list in the `.storekit` file), each with a display name, description, price ($9.99 tier) and a review screenshot of the paywall; submit them **together with** the app version. Create them in the account the app will be published from (Auxility's, if agreed — `checklist.md` §4.3). Optional: Terms and Privacy links on the paywall (required only for subscriptions).
 
 ### 1.3 ✅ *(partly)* Working privacy policy, terms and support links (guideline 5.1.1(i))
 - **Done (18 October):** the pages are live at **https://learnscrumble.com** (`/privacy`, `/terms`, `/support`) on Firebase Hosting, and the app's links come from `AppLinks.swift`; support email support@learnscrumble.com. **Left:** the yellow placeholders and a legal check (`WebsiteContent/TODO.md`), and entering the URLs in App Store Connect. The original plan below is kept for reference.
@@ -58,9 +60,10 @@
 
 ## 2. Risks: may cause a rejection
 
-### 2.1 ⬜ **to do** A way to report AI content (guideline 1.2)
+### 2.1 ✅ A way to report AI content (guideline 1.2)
 - Words and pictures made from what users type are shared with all users. A reviewer may treat this as user-generated content, which needs a way to report problems.
 - **How:** the planned Report button (`AppFlowIdeas.md` §2). Until then, the support email in Settings plus the support page's "A word, translation or picture looks wrong" answer.
+- **Done (28 October):** a **flag on every game picture** → "Report this picture?" → `reportPicture` draws a new picture for that user right away, records the report, and `mailReports` emails the day's reports to support@learnscrumble.com every morning; approve or reject in Firestore `reports` (`functions/README.md` "Reported pictures"). Wrong **words or translations** are still reported by email (support page).
 
 ### 2.2 ✅ The OpenAI key inside the app (guideline 2.1 in practice)
 - **Done (27 October):** all generation runs in Firebase Cloud Functions; the new key is only in Secret Manager and the old one is deleted. Anonymous sign-in and App Check (monitoring, enforcement later) protect the functions.
@@ -70,7 +73,9 @@
 ### 2.3 ⬜ **to do** Notes for the reviewer (App Store Connect → App Review Information)
 New pictures take 10–30 seconds and need the internet, so explain that up front. Suggested text:
 
-> LearnScrumble creates vocabulary for the user's job with AI, so the first round takes about 30 seconds to prepare (new pictures are generated). An internet connection is needed. Suggested test: I speak English, profession "Cook", I want to learn Polish. After setup a short "How to play" tutorial runs while the first words load. Free users get 10 words per day; [describe how to test the subscription, e.g. sandbox account or promo code]. No account or sign-in is required (the app signs in anonymously in the background).
+> LearnScrumble creates vocabulary for the user's job with AI. Most words come from a prepared word bank, so a round usually loads in a few seconds; a new picture can take up to 30 seconds. An internet connection is needed (except "My words", which works offline). Suggested test: I speak English, profession "Cook", I want to learn Polish. After setup a short "How to play" tutorial runs while the first words load. The first 10 words are free (once per install); after them the app offers a one-time in-app purchase to unlock the chosen profession (US$9.99, non-consumable, no subscription) — please buy it with your sandbox account to test unlimited words, "My words" (Welcome back screen), and the voice picker (Settings). Restore purchases is in Settings and on the purchase screen. The flag on a picture reports a wrong picture. No account or sign-in is required (the app signs in anonymously in the background).
+
+*(Updated 28 October for the one-time unlocks. Check before submitting that the prepared bank has words for "Cook" and Polish translations.)*
 
 ---
 
@@ -83,7 +88,7 @@ New pictures take 10–30 seconds and need the internet, so explain that up fron
 - ⬜ **to do** **Age rating questionnaire:** answer the questions about AI-generated content and user-created content honestly.
 - ⬜ **to do** **Store listing:** name, subtitle, description, keywords, category (Education), copyright, and screenshots in the required iPhone sizes (the `WebsiteContent/images/how-to-play/` captures are a starting point, but App Store screenshots need the full device resolution).
 - ✅ **Internal notes ship inside the app:** `checklist.md`, `AppFlowIdeas.md` and this file sit in the `LearnScrumble/` folder, which is synced to the app target, so they're copied into the app and anyone can read them from the downloaded app (business plans, prices, feedback). Move them to a folder outside the app target, e.g. `Docs/` at the repository root. *(16 October: moved to `Docs/` at the repository root, so they stay in the repo but never ship in the app; the built app has no `.md` files)*
-- ⬜ **to do** **TestFlight round** on a real iPhone before submitting: first launch, tutorial, a full round, daily limit, reminder, offline screen, Settings.
+- ⬜ **to do** **TestFlight round** on a real iPhone before submitting: first launch, tutorial, a full round, the 10 free words → paywall → sandbox purchase → unlimited words, My words (also offline), Restore purchases, reporting a picture, reminder, offline screen, Settings. Also confirm **App Attest** works in the TestFlight build (Debug builds use App Check debug tokens since 28 October).
 
 ---
 
@@ -94,8 +99,8 @@ New pictures take 10–30 seconds and need the internet, so explain that up fron
 - ✅ iPhone only, portrait, minimum iOS 18.
 - ✅ App icon has no transparency.
 - ✅ No tracking, no advertising identifier.
-- ✅ Restore Purchases and Manage subscription in Settings (needed for 3.1.1 once subscriptions exist).
-- ✅ Every screen localized into the app's languages, including right-to-left.
+- ✅ Restore purchases in Settings and on the paywall (required for non-consumables). *("Manage subscription" was removed on 28 October: there's no subscription)*
+- ✅ *(mostly)* Every screen localized into the app's languages, including right-to-left. *(28 October: about 32 new texts — paywall, My words, reports, streak — are English only so far, and ~22 old catalog entries are stale; translation is planned at the end)*
 - ✅ Offline and error states with clear recovery (no blank screens or endless spinners).
 
 ---
@@ -105,7 +110,7 @@ New pictures take 10–30 seconds and need the internet, so explain that up fron
 1. ✅ Privacy manifest (1.1)
 2. ✅ Consent step on the setup screen (1.4) *(15 October)*
 3. ✅ Publish the website and update the app's links (1.3) *(18 October; placeholders left)*
-4. ❓ Paywall with RevenueCat, or 1.0 without premium (1.2)
+4. ✅ *(app side)* Paywall with RevenueCat, or 1.0 without premium (1.2) *(28 October: one-time unlock per profession with StoreKit 2; the products in App Store Connect are left)*
 5. ⬜ ~~Export compliance key~~ *(done 16 October)*, App Store Connect answers, store listing (3)
 6. ⬜ Reviewer notes (2.3) and a TestFlight round
-7. ✅ *(partly)* Cloud Functions and the Report button (2.1, 2.2) — strongly recommended before launch, needed soon after at the latest *(Cloud Functions done 27 October; the Report button is left)*
+7. ✅ Cloud Functions and the Report button (2.1, 2.2) — strongly recommended before launch, needed soon after at the latest *(Cloud Functions done 27 October; picture reports done 28 October)*

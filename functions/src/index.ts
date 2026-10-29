@@ -30,7 +30,7 @@ import { setGlobalOptions } from "firebase-functions/v2";
 import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import * as openai from "./openai";
-import { fetchBank, fetchWords, saveWord, savePicture, repairPictureLink, countProfession, countUsage, WordDoc,
+import { fetchBank, fetchWords, saveWord, savePicture, repairPictureLink, countProfession, WordDoc,
          countReport, saveReportPicture, recordReport, parsePictureURL, samePicture } from "./store";
 import { noWords, refused, badInput, notSignedIn, tooManyReports } from "./errors";
 export { prepareProfession } from "./prepare";                  // background bank filling (prepare.ts)
@@ -40,8 +40,6 @@ const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 setGlobalOptions({ region: "us-central1", maxInstances: 10 });
 
 const BATCH = 5;                   // words per batch, as in the app
-const DAILY_FREE_WORDS = 10;       // logged only (see getWords step 7). The app's 10 free words are once per install now
-                                   // (FreeAllowance.freeWordLimit), checked on the phone together with the job unlock
 const REPORTS_PER_DAY = 10;        // reports one user can send per day — each one draws a picture, so this caps the cost
 const MAX_GPT_ATTEMPTS = 3;        // as RequestModel.maxGenerationAttempts
 
@@ -85,10 +83,10 @@ interface WordOut {
 // 5. GPT words: existing docs are reused (picture link, missing translations filled, job tag added);
 //    new words are created with image "" (the app then calls getPicture for them).
 // 6. countJob -> the job counter.
-// 7. Usage per user per day is counted; going over the free limit is only logged for now, because the server can't see
-//    subscriptions yet (paid users have no limit). Enforcement comes with the paywall.
+// The free words (10, once per install) and the job unlocks are checked on the phone (FreeAllowance, Purchases);
+// the server doesn't verify purchases yet, so it doesn't limit words either.
 export const getWords = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 120, enforceAppCheck: false }, async (request) => {
-  const uid = requireUser(request);
+  requireUser(request);                                           // signed-in (anonymous) users only
   const data = request.data ?? {};
   const { origin, target, profession, isMenuJob } = data;
   if (!isLang(origin) || !isLang(target)) throw badInput("language");
@@ -183,10 +181,6 @@ export const getWords = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 120,
     await countProfession(key, isMenuJob ? "picked" : "typed", isMenuJob === true)
       .catch((error) => logger.error("getWords: job counter failed", { error: String(error) }));
   }
-
-  // 7. Usage (counted, not enforced yet)
-  const today = await countUsage(uid, words.length).catch(() => 0);
-  if (today > DAILY_FREE_WORDS) logger.info("getWords: user over the free daily words (not enforced yet)", { today });
 
   return { job: key, words, fromBank: picked.length, translated, generated };
 });

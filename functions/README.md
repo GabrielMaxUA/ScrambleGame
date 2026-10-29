@@ -39,6 +39,9 @@ then deploy again so the functions pick up the new version.
 
 ## Everyday commands (from this `functions/` folder)
 
+`npm install` first on every Mac (and after a pull that changes `package.json`): `node_modules` isn't in git, and
+without it the build stops with "Cannot find module 'nodemailer'".
+
 ```
 npm install                      # once per Mac, and after package.json changes
 npm run build                    # TypeScript -> lib/ (deploy does this by itself)
@@ -71,7 +74,9 @@ The flag on a game picture calls `reportPicture` with the word, the menu job and
   gets it (kept with the word in "My words"). **The bank picture doesn't change.**
 - **For you, every morning at 8:00 (Toronto):** `mailReports` emails support@learnscrumble.com the reports since the
   last email: word, jobs, reports and different users, the current and the suggested picture, and a **Review** link.
-  No new reports, no email. Sent through Namecheap Private Email (needs the secret below).
+  No new reports, no email. Sent through Namecheap Private Email (needs the secret below). To send it right away:
+  Google Cloud console → Cloud Scheduler (project `scrumblegame`) → job `firebase-schedule-mailReports-us-central1` →
+  ⋮ → **Force run** (tested 28 Oct 2026).
 - **Your decision:** open the Review link (Firestore → `reports` → the word) and set `status` to
   - `approve` → `reviewReport` copies the suggested picture over the word's picture for everyone (the old one goes to
     `rejected/`), saves its description on the word, and sets `status` to `approved`;
@@ -130,8 +135,9 @@ pallet jack, for a hand truck). In the file set `"apply": false` or change `"fix
 
 - App Check is in monitoring mode (`enforceAppCheck: false`). Switch to `true` in `src/index.ts` once the
   console shows almost all requests verified, and deploy.
-- The 10 free words a day are counted per anonymous user (`usage/{uid}`) but not enforced yet: the server
-  can't see subscriptions until the paywall exists.
+- No word counting on the server (removed 28 Oct 2026): the 10 free words are once per install and the job unlocks are
+  checked on the phone (`FreeAllowance`, `Purchases`). The server doesn't verify purchases yet. After deploying
+  `getWords`, the old `usage` collection can be deleted; `reportUsage/{uid}` (10 reports a day) stays.
 - The first deploy to a project can fail for one function with "Build failed … An unexpected error occurred" (Cloud Build
   setting itself up). Deploy just that function again: `firebase deploy --only functions:<name> --project <project>`.
 - The app needs nothing else: Firestore and Storage rules can stay closed to phones (`allow read, write: if false`),

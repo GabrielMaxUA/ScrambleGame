@@ -375,6 +375,7 @@ struct SettingsView: View {
   #if DEBUG
   // MARK: - debugSection
   // Debug builds only: testing tools. Text(verbatim:) keeps these English labels out of the translation catalog.
+  //   "Crashlytics crash test" (red) -> fatalError: a real crash for testing Crashlytics (README → Crashlytics test crash)
   //   "Reset free words" -> FreeAllowance.resetForTesting(): the 10 free words again (shows how many are used now)
   //   "Unlock every profession" -> Purchases.debugUnlockAll: the paid version (unlimited words, My words, voices)
   //   without buying anything
@@ -390,7 +391,15 @@ struct SettingsView: View {
       Button {
         fatalError("Test crash for Crashlytics")
       } label: {
-        Text("Crashlytics crash test")
+        Label {
+          Text(verbatim: "Crashlytics crash test (closes the app)")
+        } icon: {
+          Image(systemName: "exclamationmark.triangle.fill")
+        }
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(.red.opacity(0.25), in: .rect(cornerRadius: 16))
       }
       Button {
         FreeAllowance.shared.resetForTesting()
@@ -457,10 +466,15 @@ struct SettingsView: View {
       do {
         try await Purchases.shared.restore()
         restoreMessage = "Your purchases have been restored."
+        showRestoreAlert = true
       } catch {
+        if String(describing: error).contains("userCancelled") {
+          return
+        }
         restoreMessage = "Couldn't restore purchases. Please try again."
+        showRestoreAlert = true
       }
-      showRestoreAlert = true
+      
     }
   }
 }

@@ -1,6 +1,6 @@
 # LearnScrumble: moving the AI to the server (plan)
 
-*Written 15 October 2026. Progress updated 16 October: Phases 0–2 done. **Updated 27 October: Phases 3, 4, 5, 7 (monitoring) and 8 done** — the app gets its words and pictures from Cloud Functions in both projects, the OpenAI key is only on the server (new key; the old one is deleted), anonymous sign-in and App Check run. Left: deploy the getPicture link repair (Phase 6), fix App Attest on real iPhones ("App attestation failed": check the Team ID 7XZJ4BCPR6 in App Check) and then enforcement (Phase 7), server alerts (Phase 8), Phase 9 and the App Store answers (Phase 10). Tick items off as we finish them, the same way as `checklist.md`.*
+*Written 15 October 2026. Progress updated 16 October: Phases 0–2 done. **Updated 27 October: Phases 3, 4, 5, 7 (monitoring) and 8 done** — the app gets its words and pictures from Cloud Functions in both projects, the OpenAI key is only on the server (new key; the old one is deleted), anonymous sign-in and App Check run. Left: deploy the getPicture link repair (Phase 6), fix App Attest on real iPhones ("App attestation failed": check the Team ID 7XZJ4BCPR6 in App Check) and then enforcement (Phase 7), server alerts (Phase 8), Phase 9 and the App Store answers (Phase 10). Tick items off as we finish them, the same way as `checklist.md`.* **28 October:** one-time job unlocks (StoreKit), My words offline, picture reports with a daily email, `prepareProfession`, translations of bank words in `getWords`; the server's daily word count removed (code; deploy pending).
 
 **Where this stands against `checklist.md`**
 - ✅ **Can go ahead now:** Phases 0–2. Crash reporting and analytics are an open ⬜ **to do** in the checklist (§4.4, §9), and they don't depend on any decision.
@@ -16,7 +16,7 @@
 | Region | **`us-central1`** for the functions, next to Firestore (`nam5`, United States) and the Storage buckets (US). *(Planned as `europe-west1`; changed on 27 October because the existing database is already in the US. The privacy page covers the transfer, §7)* |
 | Projects | **`scrumblegame-dev`** (new, for testing) + `scrumblegame` (production) |
 | Answers / progress | **Stay on the iPhone in SwiftData**, as today. The server never stores what a user answered |
-| Daily limit | **10 words** (was 20 until 27 October). The Keychain counter enforces it on the phone; the server counts words per anonymous user per day (`usage/{uid}`) but doesn't refuse yet — it can't see subscriptions until the paywall exists |
+| Free words | **10 words once per install** (since 28 October; 20 a day until 27 October, then 10 a day). The Keychain counter on the phone enforces it, together with the job unlock (`Purchases`). The server no longer counts words (`countUsage` removed 28 October, deploy pending) and doesn't verify purchases yet |
 | Typed professions | Saved **in English**, without any user ID, so we can see which jobs to add to the list |
 | Analytics consent | On/off switch in onboarding and Settings |
 
@@ -39,7 +39,7 @@ Cloud Function (us-central1)
 iPhone gets words + picture links → downloads pictures → plays → SwiftData records answers
 ```
 
-**What stays exactly as today:** SwiftData progress, the "already seen" list built from it, review of struggle words (the list of words comes from SwiftData; only the translations and pictures come from the server), settings, reminders, the tutorial and all the screens.
+**What stays exactly as today:** SwiftData progress, the "already seen" list built from it, review of struggle words (the list of words comes from SwiftData; only the translations and pictures come from the server), settings, reminders, the tutorial and all the screens. *(28 October: the review became **My words** and needs no server at all: every played word is saved on the phone with its translations and picture)*
 
 ### About the typed profession
 
@@ -119,11 +119,11 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 
 - ✅ **You:** put the OpenAI key into Secret Manager with one CLI command (I give you the command; the key never goes into the repo or the chat). *(27 October: `OPENAI_API_KEY` in both projects; production's was created during its first deploy)*
 - ✅ **Me:** `getWords`: job + languages + seen words in, 5 words out; English job name, bank first, OpenAI for the rest; saves typed jobs to `professions`. *(27 October: `functions/src/index.ts`. Bank words need a picture and both languages; GPT words that already exist are reused, get missing translations and the job tag; new ones are created without a picture. Counts the job when the app sends `countJob`, same document format as before)*
-- ⬜ **Me:** a meaning-aware bank key, for example "pipe (plumbing)" instead of just "pipe", so the same English name with another meaning in another job doesn't share translations and a picture (`AppFlowIdeas.md` §2). Easiest to decide before the server bank fills up.
+- ⬜ **Me:** a meaning-aware bank key, for example "pipe (plumbing)" instead of just "pipe", so the same English name with another meaning in another job doesn't share translations and a picture (`AppFlowIdeas.md` §2). Easiest to decide before the server bank fills up. *(28 October, partly: GPT names new words per job ("motor oil"); `src/tools/splitSharedWords.ts` splits old shared words and `src/tools/checkTranslations.ts` checks translations per job)*
 - ✅ **Me:** `getPicture`: one word in, picture link out; generates, converts to WebP, uploads and saves only if missing. *(27 October; production bucket `scrumblegame-tools`)*
-- ✅ **Me:** `getReviewWords`: struggle words in, translations + pictures out. *(27 October)*
+- ✅ **Me:** `getReviewWords`: struggle words in, translations + pictures out. *(27 October)* *(28 October: **no longer called** — My words plays from the phone. Still deployed in both projects; delete it from the code and with `firebase functions:delete getReviewWords` when you decide)*
 - ✅ **Me:** moderation of typed job text before anything is generated. *(27 October: OpenAI `omni-moderation-latest`, only for a typed job the server hasn't named yet; refused → the app's "change your job" screen)*
-- ✅ *(partly)* **Me:** daily limit (10 words) and per-user rate limits stored per anonymous user on the server. *(27 October: words per anonymous user per UTC day are counted in `usage/{uid}` and over-limit calls are logged, but not refused until the server can see subscriptions (paywall). Rate limits: not yet; `maxInstances: 10` caps the spend)*
+- ✅ *(partly)* **Me:** daily limit (10 words) and per-user rate limits stored per anonymous user on the server. *(27 October: words per anonymous user per UTC day are counted in `usage/{uid}` and over-limit calls are logged, but not refused until the server can see subscriptions (paywall). Rate limits: not yet; `maxInstances: 10` caps the spend)* *(28 October: the word count is **removed** from `getWords` (`countUsage`, `DAILY_FREE_WORDS`) — the free words are 10 once and checked on the phone. After deploying `getWords`, delete the Firestore collection `usage`. The report limit (`reportUsage/{uid}`, 10 a day) stays)*
 - ✅ **Me:** clear error codes that map to the app's existing `GenerationError` cases (busy, offline, limit reached, refused text). *(27 October: `functions/src/errors.ts` ↔ `RequestModel.functionError`. "Limit reached" comes with enforcement)*
 - ✅ **Both:** test everything on the Mac with the Firebase Emulator Suite (no cost, no risk), then deploy to `scrumblegame-dev`. *(27 October: deployed straight to `scrumblegame-dev` and tested there with the app; the emulator setup is in `functions/README.md` for later)*
 
@@ -156,8 +156,8 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 
 ### Phase 9: the profession list in practice
 
-- ⬜ **Me:** a simple way for you to see the `professions` list sorted by count (Firestore console view to start; a small admin page later if useful). *(16 October: works now: Firebase console → Firestore → `professions`, sort by `typed` or `picked`)*
-- ⬜ **Me:** background job `prepareProfession`: when a job is added to the menu, build its 100-word bank (first 10 fast, the rest after), plus 50 more on demand (AppFlowIdeas §1). Run it once for **every profession already in the picker** too (AppFlowIdeas §1, "Pre-generate the listed professions"). This replaces filling the bank by playing.
+- ✅ **Me:** a simple way for you to see the `professions` list sorted by count (Firestore console view to start; a small admin page later if useful). *(16 October: works now: Firebase console → Firestore → `professions`, sort by `typed` or `picked`. Since 28 October typed jobs are hidden in the app, so only `picked` grows)*
+- ✅ **Me:** background job `prepareProfession`: when a job is added to the menu, build its 100-word bank (first 10 fast, the rest after), plus 50 more on demand (AppFlowIdeas §1). Run it once for **every profession already in the picker** too (AppFlowIdeas §1, "Pre-generate the listed professions"). This replaces filling the bank by playing. *(27–28 October: `functions/src/prepare.ts`, triggered by Firestore `prepare/{job}` or `prepare/_all` (status `run` / `paused`); ~100 words with pictures per menu job, 10 per step; deployed in both projects — `functions/README.md`. Not "50 more on demand": `getWords` makes only the missing words per batch instead)*
 - ⬜ **Both:** decide the rule for adding a job (for example "typed 10+ times and looks right").
 
 ### Phase 10: privacy and App Store updates (before release)
@@ -184,16 +184,13 @@ Who does it: **You** = Firebase/Google/OpenAI consoles, card, Apple account. **M
 
 - ✅ ~~Consent step for sending the job to OpenAI (App Review 5.1.2).~~ Done 15 October, on the same setup-screen card as the analytics consent (`AppStoreReadiness.md` §1.4).
 - ✅ *(differently)* Paywall: built on 28 October with StoreKit 2 directly (`Purchases.swift`), one-time unlock per profession; RevenueCat not used.
-- Paywall with RevenueCat; it can use the same anonymous ID. Sandbox only, with no live products in your own App Store Connect account (checklist §4.3).
+- ~~Paywall with RevenueCat; it can use the same anonymous ID. Sandbox only, with no live products in your own App Store Connect account (checklist §4.3).~~ See the line above. Left: the 32 products in App Store Connect, and **server-side purchase checks** (today the server can't tell a paying user, so a modified app could get unlimited words; App Check enforcement makes that hard). Options: send the StoreKit transaction (JWS) with `getWords` and verify it with Apple's App Store Server API.
 - ✅ *(pictures)* Report button: built on 28 October — `reportPicture` draws a picture for the reporter only, `reports` collection, approve/reject in the console, daily email (`functions/README.md` "Reported pictures"). Wrong *words* can't be reported in the app yet.
-- ⬜ **to do** **One counter document per user, and no word counting.** Today each anonymous user has two daily records:
-  `usage/{uid}` (words the server sent today — nothing reads it, the app checks the 10 free words itself) and
-  `reportUsage/{uid}` (pictures reported today — needed for the 10-reports-a-day limit). Plan: drop the word count
-  in `getWords` (`countUsage`), keep only `{ day, reports }` in `usage/{uid}` from `reportPicture` (`countReport`
-  writes there; `countUsage` was the reason for the separate collection, it rewrote the whole document), delete the
-  `reportUsage` collection, update the privacy policy's "daily counts" text and `WebsiteContent/README.md`. Deploy dev,
-  then prod. About 15 minutes. *(Agreed 28 October, postponed.)*
-- "Delete my data": with the server it also needs to delete the user's limit documents (`usage/{uid}`). Old `usage` documents of cleaned-up anonymous IDs stay behind too; a scheduled clean-up function can remove them later. It's built but commented out today (`SettingsView.swift:68`, `AppManager.swift`).
+- ✅ *(differently, 28 October)* **One counter document per user, and no word counting.** The plan was to keep the report count in `usage/{uid}` and delete `reportUsage`. Done the other way round, with no data to move: `countUsage` and `DAILY_FREE_WORDS` are removed from `getWords`, `reportUsage/{uid}` stays as the report limit, and the `usage` collection is no longer written. Privacy policy and `WebsiteContent/README.md` updated. **Left: deploy `getWords`** (dev, then prod), **then delete the `usage` collection** in both Firestore consoles.
+- "Delete my data": with the server it also needs to delete the user's report counter (`reportUsage/{uid}`). Old counter documents of cleaned-up anonymous IDs stay behind; a scheduled clean-up function can remove them later. It's built but commented out today (`SettingsView.swift`, `AppManager.swift`).
 - ✅ ~~Privacy policy, terms and support pages on Firebase Hosting in `scrumblegame`.~~ Live at https://learnscrumble.com since 18 October (`WebsiteContent/README.md`).
 - Scheduled Firestore backups for **production** once real users are in the bank (none for dev).
 - ✅ ~~The OpenAI key still lives in `RequestModel.swift`.~~ Gone from the app on 27 October; the new key is only in Secret Manager and the old one is deleted.
+- ⬜ **Email secret:** `mailReports` sends through the support mailbox with the secret `SUPPORT_EMAIL_PASSWORD` (both projects). Set it again and redeploy if the mailbox password changes (`functions/README.md`). Tested 28 October with a manual "Force run" of the Cloud Scheduler job `firebase-schedule-mailReports-us-central1`.
+- ⬜ **App Check on real iPhones:** since 28 October Debug builds use debug tokens on every device (App Attest failed in Debug builds on an iPhone); check App Attest in the first TestFlight build before switching to enforcement.
+- ⬜ **On a new Mac:** `npm install` in `functions/` before building or deploying (the build fails with "Cannot find module 'nodemailer'" otherwise).

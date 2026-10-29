@@ -17,14 +17,17 @@ import FirebaseCore
 final class AppDelegate: NSObject, UIApplicationDelegate {
   // MARK: - didFinishLaunchingWithOptions
   // Runs once when the app launches. Sets up Firebase, only if it isn't set up yet
-  // (configuring twice would crash). Returning true lets the launch continue.
+  // (configuring twice would crash), then tells Log that Crashlytics can be used. Returning true lets the launch continue.
+  // Log.firebaseConfigured is checked instead of FirebaseApp.app(): asking Firebase before configure() prints
+  // "The default Firebase app has not yet been configured".
   func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
-    if FirebaseApp.app() == nil {
+    if !Log.firebaseConfigured {
       AppCheckSetup.install()                                       // before configure(), or Firebase ignores it
       FirebaseApp.configure()
+      Log.firebaseConfigured = true                                 // from now on Log also writes Crashlytics breadcrumbs
     }
     AnalyticsConsent.apply(UserDefaults.standard.bool(forKey: AnalyticsConsent.key))
     Task { await AnonymousAuth.ensureSignedIn() }                   // doesn't hold up the launch

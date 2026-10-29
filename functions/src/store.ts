@@ -6,7 +6,6 @@
 //       imagePrompt?: the description the picture was last drawn from (only set by reportPicture so far) }
 //   professions/{name} the job counter (was ProfessionStore in the app)
 //     { name, typed, picked, firstSeen, lastSeen, status: "in menu" | "new" | "added" | "rejected" }
-//   usage/{uid}       words handed out per anonymous user per day — counted, not yet enforced (see index.ts)
 //   reports/{id}      pictures users reported as wrong (reportPicture), same id as the word
 //     { word, jobs, reports, users, lastReport, bankImage, suggested: { url, path, imagePrompt, job, at },
 //       status: "new" | "approve" | "reject" (set by you) | "approved" | "rejected", notified, approvedAt? }
@@ -187,23 +186,8 @@ export async function countProfession(name: string, field: "typed" | "picked", i
   });
 }
 
-// MARK: - countUsage
-// Words handed out today to this anonymous user. Returns today's total. UTC day.
-export async function countUsage(uid: string, words: number): Promise<number> {
-  const ref = db.collection("usage").doc(uid);
-  const day = new Date().toISOString().slice(0, 10);
-  return db.runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
-    const previous = snap.exists && snap.get("day") === day ? (snap.get("words") as number) : 0;
-    const total = previous + words;
-    tx.set(ref, { day, words: total, updated: FieldValue.serverTimestamp() });
-    return total;
-  });
-}
-
 // MARK: - countReport
 // Pictures reported today by this anonymous user, +1. Returns today's total (after this report). UTC day.
-// Separate from usage/{uid}: countUsage rewrites that whole document.
 export async function countReport(uid: string): Promise<number> {
   const ref = db.collection("reportUsage").doc(uid);
   const day = new Date().toISOString().slice(0, 10);
