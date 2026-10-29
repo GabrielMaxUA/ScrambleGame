@@ -28,15 +28,28 @@ final class SpeechManager: NSObject, AVSpeechSynthesizerDelegate {
   }
 
   // MARK: - voices(for:)
-  // Installed voices for a language, best quality first. Falls back to the same base language
-  // (e.g. "pt" for "pt-BR") if no exact match.
-  // Steps: all voices -> keep exact language matches -> none? keep same base language -> sort best quality first.
+  // Installed voices for a language: this exact language first (e.g. es-CL), then the other regions of the same
+  // language (es-ES, es-MX…) for more choice; best quality first within each.
+  // Doubles removed: iOS lists one voice per installed quality (default, enhanced, premium) with the same name
+  // AND language — only the best of those stays. The same name in another region (Spain's "Eddy" vs Mexico's
+  // "Eddy") is a different voice and stays; label(for:) shows its region.
   static func voices(for language: String) -> [AVSpeechSynthesisVoice] {
-    let all = AVSpeechSynthesisVoice.speechVoices()
-    let exact = all.filter { $0.language == language }
-    let base = String(language.prefix(2))
-    let pool = exact.isEmpty ? all.filter { $0.language.hasPrefix(base) } : exact
-    return pool.sorted { $0.quality.rawValue > $1.quality.rawValue }
+    let base = String(language.split(separator: "-").first ?? "")
+    let pool = AVSpeechSynthesisVoice.speechVoices()
+      .filter { $0.language == language || $0.language.split(separator: "-").first.map(String.init) == base }
+      .sorted { ($0.language == language ? 1 : 0, $0.quality.rawValue) > ($1.language == language ? 1 : 0, $1.quality.rawValue) }
+    var seen = Set<String>()
+    return pool.filter { seen.insert("\($0.name)|\($0.language)").inserted }
+  }
+
+  // MARK: - label(for:target:locale:)
+  // The name shown in Settings: the voice's name, plus its region when it's from another region than the language
+  // being learned, in the app's language — "Eddy (Mexico)" / "Eddy (Мексика)".
+  static func label(for voice: AVSpeechSynthesisVoice, target: String, locale: Locale) -> String {
+    guard voice.language != target,
+          let region = voice.language.split(separator: "-").last.map(String.init),
+          let name = locale.localizedString(forRegionCode: region) else { return voice.name }
+    return "\(voice.name) (\(name))"
   }
 
   // MARK: - voiceKey(for:)

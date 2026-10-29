@@ -29,6 +29,7 @@ struct FieldCard<Content: View>: View {
     VStack(alignment: .leading, spacing: 8) {
       Label(title, systemImage: icon)                       // heading above the box
         .font(.subheadline.weight(.semibold))
+        .singleLine()                                       // long translations shrink instead of wrapping
         .foregroundStyle(.white.opacity(0.7))
       content                                               // the box itself
         .padding(.horizontal, 14)

@@ -71,6 +71,47 @@ One switch decides which Firebase project a build uses: **Build Settings → Use
 3. Open the app again and leave it open for a minute; the report is sent on that launch.
 4. Debug builds only: Crashlytics → dSYMs shows "Missing (required)". Zip `LearnScrumble.app.dSYM` from DerivedData (`Build/Products/Debug-iphonesimulator`) and drag it onto that page. Release builds upload it by themselves.
 
+## Release: App Store Connect and TestFlight
+
+**The app in App Store Connect** (set up 29 October 2026): https://appstoreconnect.apple.com/apps/6828468301 —
+name LearnScrumble, bundle ID `com.MaxGabriel.LearnScrumble`, team `7XZJ4BCPR6` (Max Gabriel, individual), primary
+language English (U.S.).
+
+**Account status (Business page):**
+- Free Apps Agreement: Active → builds can be uploaded and tested in TestFlight.
+- Paid Apps Agreement: signed 29 October, **Pending User Info** until all of this is done; until it's Active the
+  $9.99 profession unlocks can't be bought, not even in TestFlight:
+  - Bank account (RBC, CAD): added, Apple is verifying it.
+  - U.S. tax form W-8BEN: individual, Canada, SIN as the foreign tax ID, treaty benefits for Canada.
+  - Canadian GST/HST Form 506: needs a **CRA Business Number + RT number** (register as a sole proprietor for
+    GST/HST at CRA Business Registration Online; RT is usually `RT0001`).
+- EU trader status (Digital Services Act): still to answer; traders' contact details are shown on the EU App Store.
+- App Store Small Business Program: apply after signing (15% commission instead of 30%).
+
+**Upload a build to TestFlight:**
+1. Xcode toolbar → destination **Any iOS Device (arm64)** → **Product → Archive** (Release = production Firebase,
+   App Attest, no Debug switches).
+2. Organizer → the archive → **Distribute App → App Store Connect** (not "TestFlight Internal Only": that build
+   can't go to external testers or the App Store) → **Distribute**, default options.
+3. Each upload needs a **higher build number**: target → General → Identity → **Build** (1, 2, 3…); the version (1.0)
+   can stay.
+4. App Store Connect → **TestFlight**: the build is "Processing" for 10–30 minutes. **Internal Testing** → a group →
+   add testers (people in Users and Access, no review) → add the build. **External Testing** → a group → public link
+   (Apple reviews the first build, about a day).
+5. Testers install Apple's **TestFlight** app, then LearnScrumble.
+
+**"Upload Symbols Failed … did not include a dSYM for …framework" after uploading:** warnings, not errors — the build
+is uploaded. Google ships some Firebase parts prebuilt without symbol files, so Apple's crash reports can't name the
+code *inside* those frameworks; our own code is symbolicated (and Crashlytics gets our dSYM). Since 29 October only
+`FirebaseAnalytics` and `GoogleAppMeasurement` (closed source, Google never publishes their dSYMs) are left: the app
+uses `FirebaseAnalyticsCore` (no advertising-ID / ad-conversion frameworks) and no longer links Firestore or Storage
+(all their reads and writes go through the Cloud Functions), which removed the other seven warnings.
+
+**Still to do before submitting** (details in `Docs/AppStoreReadiness.md`): the 32 profession products
+(`StoreKit/LearnScrumble.storekit` has the exact IDs), store listing and screenshots, App Privacy answers
+(`WebsiteContent/README.md`), age rating, notes for the reviewer, the website's legal placeholders, App Check
+enforcement after TestFlight shows verified requests.
+
 ## Git
 
 - Work on `main` while the app isn't in the App Store yet. Once it's live, use a branch per feature so `main` stays shippable.

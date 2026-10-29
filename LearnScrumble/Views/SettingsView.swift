@@ -37,6 +37,7 @@ struct SettingsView: View {
   @AppStorage(AnalyticsConsent.key) private var shareStatistics = false                           // optional analytics consent, same key as EntryView
   @Environment(\.scenePhase) private var scenePhase                // back from iOS Settings -> re-check the notification permission
   @Environment(\.openURL) private var openURL                      // opens the app's page in iOS Settings
+  @Environment(\.locale) private var locale                       // app language: region names next to voices
   
   @State private var showLockedAlert = false                       // "Premium feature" alert (learning block lock, currently unused)
   @State private var showResetAlert = false                        // "Reset progress?" confirmation
@@ -125,11 +126,13 @@ struct SettingsView: View {
       Text("Settings")
         .font(.largeTitle.bold())
         .foregroundStyle(.white)
+        .singleLine()
       Spacer()
       Button(action: onDone) {
         Text("Done")
           .font(.headline)
           .foregroundStyle(.white)
+          .singleLine()
           .padding(.horizontal, 20)
           .padding(.vertical, 10)
       }
@@ -184,23 +187,38 @@ struct SettingsView: View {
         HStack {
           Text("Voice")
             .foregroundStyle(.white)
+            .singleLine()
           Spacer()
-          if hasAccess {                                        // NEW — paid: real picker
-            Picker("Voice", selection: $selectedVoiceID) {
-              Text("Default").tag("")
-              ForEach(SpeechManager.voices(for: language), id: \.identifier) { voice in
-                Text(verbatim: voice.name).tag(voice.identifier)      // voice names are proper names, not translated
+          if hasAccess {                                        // paid: real picker
+            let voices = SpeechManager.voices(for: language)
+            Menu {                                              // own label instead of the system picker button,
+              Picker("Voice", selection: $selectedVoiceID) {    // which wrapped long names onto several lines
+                Text("Default").tag("")
+                ForEach(voices, id: \.identifier) { voice in
+                  Text(verbatim: SpeechManager.label(for: voice, target: language, locale: locale))   // "Eddy (Mexico)"
+                    .tag(voice.identifier)
+                }
               }
+            } label: {
+              HStack(spacing: 4) {
+                if let voice = voices.first(where: { $0.identifier == selectedVoiceID }) {
+                  Text(verbatim: SpeechManager.label(for: voice, target: language, locale: locale))
+                } else {
+                  Text("Default")
+                }
+                Image(systemName: "chevron.up.chevron.down")
+                  .font(.footnote.weight(.semibold))
+              }
+              .foregroundStyle(.white)
+              .singleLine()
             }
-            .pickerStyle(.menu)
-            .tint(.white)
-            .labelsHidden()
           } else {                                              // NEW — free: locked, tap shows the premium alert
             Button {
               showVoiceLockedAlert = true
             } label: {
               Label("Default", systemImage: "lock.fill")
                 .foregroundStyle(.white.opacity(0.7))
+                .singleLine()
             }
           }
         }
@@ -209,6 +227,7 @@ struct SettingsView: View {
         
         Text("Speech speed")
           .foregroundStyle(.white)
+          .singleLine()
         HStack(spacing: 12) {
           Image(systemName: "tortoise.fill")
           Slider(value: $speechRate, in: 0.3...0.6)
@@ -250,8 +269,18 @@ struct SettingsView: View {
   
   // MARK: - loadVoice
   // Reads the voice saved for the current target language into the picker ("" = Default when none saved).
+  // A saved voice that's no longer in the list (a lower-quality copy of a listed voice, see SpeechManager.voices)
+  // shows as the listed voice with the same name and language.
   private func loadVoice() {
-    selectedVoiceID = UserDefaults.standard.string(forKey: SpeechManager.voiceKey(for: requestModel.selectedLanguage.id)) ?? ""
+    let language = requestModel.selectedLanguage.id
+    let saved = UserDefaults.standard.string(forKey: SpeechManager.voiceKey(for: language)) ?? ""
+    let listed = SpeechManager.voices(for: language)
+    if saved.isEmpty || listed.contains(where: { $0.identifier == saved }) {
+      selectedVoiceID = saved
+    } else {
+      let voice = AVSpeechSynthesisVoice(identifier: saved)
+      selectedVoiceID = listed.first { $0.name == voice?.name && $0.language == voice?.language }?.identifier ?? ""
+    }
   }
   
   private var reminderSection: some View {                         // daily reminder: on/off, time, permission note
@@ -259,11 +288,13 @@ struct SettingsView: View {
       VStack(alignment: .leading, spacing: 14) {
         Toggle("Remind me every day", isOn: $reminderEnabled)
           .foregroundStyle(.white)
+          .singleLine()
         
         if reminderEnabled {                                       // time and details only while it's on
           divider
           DatePicker("Remind me at", selection: DailyReminder.timeBinding($reminderMinutes), displayedComponents: .hourAndMinute)
             .foregroundStyle(.white)
+            .singleLine()
             .environment(\.colorScheme, .dark)                     // white time pill on the black screen
           Text("We'll remind you once a day, only if you haven't played yet.")
             .font(.footnote)
@@ -340,7 +371,7 @@ struct SettingsView: View {
         linkRow("Contact support", icon: "envelope", url: AppLinks.supportMail)
         divider
         Toggle("Share usage statistics to help improve the app", isOn: $shareStatistics)   // Firebase Analytics on/off
-          .foregroundStyle(.white)
+          .foregroundStyle(.white)                                // a whole sentence: may wrap (one line cut off its meaning)
           .onChange(of: shareStatistics) { _, on in AnalyticsConsent.apply(on) }
         divider
         Text(AIConsent.message)                                   // what goes to OpenAI, agreed to on setup (AIConsent)
@@ -442,6 +473,7 @@ struct SettingsView: View {
     HStack {
       Label(title, systemImage: icon)
         .foregroundStyle(tint)
+        .singleLine()                                             // one line, shrinks for long translations
       Spacer()
       Image(systemName: "chevron.forward")
         .font(.footnote.weight(.semibold))

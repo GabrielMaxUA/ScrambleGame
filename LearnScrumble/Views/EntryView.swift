@@ -74,6 +74,7 @@ struct EntryView: View {
             VStack(alignment: .leading, spacing: 8) {
               DatePicker(reminderTimeLabel, selection: DailyReminder.timeBinding($reminderMinutes), displayedComponents: .hourAndMinute)
                 .foregroundStyle(.white)
+                .singleLine()
                 .environment(\.colorScheme, .dark)               // white time pill on the black screen
               Text(reminderReason)                              // the one-line reason, read before the iOS popup
                 .font(.footnote)
@@ -92,6 +93,7 @@ struct EntryView: View {
               } label: {
                 Label {
                   Text("I agree")
+                    .singleLine()
                 } icon: {
                   Image(systemName: agreed ? "checkmark.square.fill" : "square")
                 }
@@ -109,6 +111,7 @@ struct EntryView: View {
                     Text("Share usage statistics to help improve the app")
                       .font(.body)
                       .foregroundStyle(.white)
+                      .singleLine()
                     Text("Optional. You can change this anytime in Settings.")
                       .font(.footnote)
                       .foregroundStyle(.white.opacity(0.6))

@@ -37,6 +37,7 @@ struct ProfessionPicker: View {
       } label: {                                            // what the closed menu looks like
         HStack {
           Text(occupation?.displayName ?? "Select your profession")
+            .singleLine()                                   // long job names shrink instead of wrapping
           Spacer()
           Image(systemName: "chevron.up.chevron.down")
         }

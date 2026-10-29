@@ -8,10 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		3853E12D30634A2D00AE6251 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3853E12C30634A2D00AE6251 /* FirebaseCore */; };
-		3853E12F30634A2D00AE6251 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 3853E12E30634A2D00AE6251 /* FirebaseFirestore */; };
 		3853E1383064928300AE6251 /* SDWebImageWebPCoder in Frameworks */ = {isa = PBXBuildFile; productRef = 3853E1373064928300AE6251 /* SDWebImageWebPCoder */; };
-		3853E13D3064930300AE6251 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 3853E13C3064930300AE6251 /* FirebaseStorage */; };
-		3888EBCC3081A86900968885 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3888EBCB3081A86900968885 /* FirebaseAnalytics */; };
+		3888EBCC3081A86900968885 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3888EBCB3081A86900968885 /* FirebaseAnalyticsCore */; };
 		3888EBCE3081A89F00968885 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3888EBCD3081A89F00968885 /* FirebaseCrashlytics */; };
 		38C34BB33091727D00E583E1 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 38C34BB23091727D00E583E1 /* FirebaseAuth */; };
 		38C34BB53091822D00E583E1 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 38C34BB43091822D00E583E1 /* FirebaseFunctions */; };
@@ -36,11 +34,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				3853E12D30634A2D00AE6251 /* FirebaseCore in Frameworks */,
-				3853E13D3064930300AE6251 /* FirebaseStorage in Frameworks */,
-				3853E12F30634A2D00AE6251 /* FirebaseFirestore in Frameworks */,
 				38C34BB53091822D00E583E1 /* FirebaseFunctions in Frameworks */,
 				3888EBCE3081A89F00968885 /* FirebaseCrashlytics in Frameworks */,
-				3888EBCC3081A86900968885 /* FirebaseAnalytics in Frameworks */,
+				3888EBCC3081A86900968885 /* FirebaseAnalyticsCore in Frameworks */,
 				38C34BB33091727D00E583E1 /* FirebaseAuth in Frameworks */,
 				38C34BB93091888D00E583E1 /* FirebaseAppCheck in Frameworks */,
 				3853E1383064928300AE6251 /* SDWebImageWebPCoder in Frameworks */,
@@ -97,10 +93,8 @@
 			name = LearnScrumble;
 			packageProductDependencies = (
 				3853E12C30634A2D00AE6251 /* FirebaseCore */,
-				3853E12E30634A2D00AE6251 /* FirebaseFirestore */,
 				3853E1373064928300AE6251 /* SDWebImageWebPCoder */,
-				3853E13C3064930300AE6251 /* FirebaseStorage */,
-				3888EBCB3081A86900968885 /* FirebaseAnalytics */,
+				3888EBCB3081A86900968885 /* FirebaseAnalyticsCore */,
 				3888EBCD3081A89F00968885 /* FirebaseCrashlytics */,
 				38C34BB23091727D00E583E1 /* FirebaseAuth */,
 				38C34BB43091822D00E583E1 /* FirebaseFunctions */,
@@ -542,25 +536,15 @@
 			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
 		};
-		3853E12E30634A2D00AE6251 /* FirebaseFirestore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestore;
-		};
 		3853E1373064928300AE6251 /* SDWebImageWebPCoder */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3853E1363064928300AE6251 /* XCRemoteSwiftPackageReference "SDWebImageWebPCoder" */;
 			productName = SDWebImageWebPCoder;
 		};
-		3853E13C3064930300AE6251 /* FirebaseStorage */ = {
+		3888EBCB3081A86900968885 /* FirebaseAnalyticsCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseStorage;
-		};
-		3888EBCB3081A86900968885 /* FirebaseAnalytics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3853E12B30634A2D00AE6251 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAnalytics;
+			productName = FirebaseAnalyticsCore;
 		};
 		3888EBCD3081A89F00968885 /* FirebaseCrashlytics */ = {
 			isa = XCSwiftPackageProductDependency;

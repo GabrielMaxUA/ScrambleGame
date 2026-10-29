@@ -24,7 +24,7 @@ struct JobProgressCard: View {
           Label { Text(job.displayName) } icon: { Image(systemName: "briefcase") }
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(.white.opacity(0.7))
-            .lineLimit(1)
+            .singleLine()
         }
         Spacer(minLength: 8)
         if streak > 0 {
@@ -66,6 +66,7 @@ struct JobProgressCard: View {
         .monospacedDigit()
       Text(title)
         .font(.caption.weight(.semibold))
+        .singleLine()
         .foregroundStyle(.white.opacity(0.6))
     }
     .frame(maxWidth: .infinity)
