@@ -157,6 +157,22 @@ pallet jack, for a hand truck). In the file set `"apply": false` or change `"fix
 `node lib/tools/checkTranslations.js --project scrumblegame --apply`. Changes are logged in Firestore
 `translationFixes`. Options: `--word`, `--lang uk-UA`, `--limit`. Cost: one text request per 25 words.
 
+## Cleaning odd spaces (`src/tools/cleanSpaces.ts`)
+
+GPT sometimes puts invisible or odd characters into words: a non-breaking space between two words, a soft hyphen
+inside one (German "Brot\u00ADteller" for bread plate), a zero-width space, double spaces. In the game each became an
+empty tile. New words are cleaned when saved (`plainSpaces` in `openai.ts`, since 30 October 2026); this tool cleans
+the ones already in the bank with the same function. The Firebase console can't show these characters.
+
+```bash
+npm run build
+node lib/tools/cleanSpaces.js --project scrumblegame            # dry run: lists every bad value (shown as ⟨U+00AD⟩)
+node lib/tools/cleanSpaces.js --project scrumblegame --apply    # writes the cleaned values
+```
+
+On 30 October 2026 production had exactly one (bread plate, de-DE); dev had none. Persian/Indian joiners (ZWNJ/ZWJ)
+belong to the spelling and are kept. English names are only reported, never renamed.
+
 ## Notes
 
 - App Check is enforced (`enforceAppCheck: true` in `src/index.ts`, 29 Oct 2026, after the TestFlight build was verified

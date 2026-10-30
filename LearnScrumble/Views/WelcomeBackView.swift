@@ -10,9 +10,11 @@ import SwiftUI
 // MARK: - Flow of this file
 // The returning user's start screen (phase .welcomeBack): the user's "cabinet".
 //   Header: "Welcome back!", the streak (🔥 days in a row) and the owl (celebrates at 80% or more in the current language).
-//   Cards: CabinetVM.cards — one per profession + language being learned (CabinetCardView), the current one first.
-//   -> tap a card -> onCard -> RootView: CabinetVM.select makes it the current job + language, then
-//      bought -> MyWordsView ("Continue learning" / "Repeat all"); free words left -> a game; used up -> PaywallView
+//   Cards: CabinetVM.cards — one per profession + language being learned (CabinetCardView), stacked like a wallet:
+//   oldest at the top, each newer card overlapping the one above so only its top strip shows. One card is open
+//   (pulled out, full height, with its score and buttons); the current one when the screen appears.
+//   -> tap a card's strip -> it opens (the open one closes) -> onOpen -> CabinetVM.select: the current job + language
+//   -> its buttons -> RootView: Continue learning -> a game; My words -> MyWordsView; Unlock -> PaywallView
 //   -> gear (top) -> onSettings -> AppManager.openSettings() (languages and job can still be changed there)
 //   No card yet (no job picked) -> a note pointing to Settings.
 
@@ -20,7 +22,13 @@ struct WelcomeBackView: View {
   @Environment(\.topButtonsPadding) private var topButtons          // iPhone Duo: where the gear sits (RootView)
   let cabinet: CabinetVM                         // the cards and what a tap does
   let targetLanguage: String                     // current language being learned — the owl's mood
-  var onCard: (CabinetVM.Card) -> Void           // a card was tapped (RootView -> CabinetVM.select)
+  var onOpen: (CabinetVM.Card) -> Void           // a card was opened (RootView -> CabinetVM.select)
+  var onContinue: (CabinetVM.Card) -> Void       // its "Continue learning"
+  var onWordList: (CabinetVM.Card) -> Void       // its "My words"
+  var onUnlock: (CabinetVM.Card) -> Void         // its "Unlock"
+  @State private var openID: String?             // the open card; nil = the current one (or the newest)
+
+  private static let overlap: CGFloat = 22       // how much of a card's bottom the next card covers
   var onSettings: () -> Void                     // opens SettingsView (free for everyone)
 
   private var isCelebrating: Bool {              // the owl: 80% or more right in the current language
@@ -63,15 +71,39 @@ struct WelcomeBackView: View {
           .multilineTextAlignment(.center)
         Spacer()
       } else {
-        ScrollView {
-          LazyVStack(spacing: 12) {
-            ForEach(cards) { card in
-              CabinetCardView(card: card, freeWordsLeft: cabinet.freeWordsLeft) { onCard(card) }
+        let open = openID ?? (cards.first(where: \.isCurrent) ?? cards.last)?.id
+        ScrollViewReader { proxy in
+          ScrollView {
+            VStack(spacing: 0) {                     // later cards are drawn on top: newer overlaps older
+              ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
+                let isOpen = card.id == open
+                let isLast = index == cards.count - 1
+                CabinetCardView(card: card, isOpen: isOpen, freeWordsLeft: cabinet.freeWordsLeft,
+                                onOpen: {
+                                  withAnimation(.spring(duration: 0.35)) { openID = card.id }
+                                  onOpen(card)
+                                },
+                                onContinue: { onContinue(card) },
+                                onWordList: { onWordList(card) },
+                                onUnlock: { onUnlock(card) })
+                  .padding(.bottom, isLast ? 0 : (isOpen ? 14 : -Self.overlap))   // open: the next card waits below it
+                  .zIndex(Double(index))
+                  .id(card.id)
+              }
+            }
+            .padding(.top, 8)
+            .padding(.bottom, 4)
+          }
+          .scrollIndicators(.hidden)
+          .onAppear { if let open { proxy.scrollTo(open, anchor: .top) } }
+          .onChange(of: openID) { _, id in                // after the open animation, so the whole card is in view
+            guard let id else { return }
+            Task { @MainActor in
+              try? await Task.sleep(for: .milliseconds(350))
+              withAnimation { proxy.scrollTo(id, anchor: .top) }
             }
           }
-          .padding(.vertical, 4)
         }
-        .scrollIndicators(.hidden)
 
         Text("A word is learned once you get it right at least twice, and 3 times out of 4.")
           .font(.footnote)
@@ -101,5 +133,5 @@ struct WelcomeBackView: View {
 
 #Preview {
   WelcomeBackView(cabinet: CabinetVM(requestModel: RequestModel()), targetLanguage: "en-US",
-                  onCard: { _ in }, onSettings: {})
+                  onOpen: { _ in }, onContinue: { _ in }, onWordList: { _ in }, onUnlock: { _ in }, onSettings: {})
 }

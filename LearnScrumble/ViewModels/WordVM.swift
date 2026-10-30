@@ -91,9 +91,20 @@ class WordVM {
   var isRightToleft: Bool {                                      // target language written right-to-left -> MainView flips the answer row
     Languages(rawValue: targetLanguage)?.isRtL ?? false
   }
+  // MARK: - answerText
+  // The target word as it's spelled with tiles: invisible marks removed. GPT sometimes sends a soft hyphen (U+00AD,
+  // a hyphenation hint: "Brot\u{AD}teller"), a zero-width space (U+200B), a word joiner (U+2060) or a BOM (U+FEFF);
+  // each would become an empty-looking tile of its own. The joiners that belong to the spelling (ZWNJ/ZWJ in Persian
+  // or Indian scripts) stay: Swift keeps them inside the letter next to them, so they never make a tile.
+  private static let invisibleMarks: Set<Unicode.Scalar> = ["\u{AD}", "\u{200B}", "\u{2060}", "\u{FEFF}"]
+  private var answerText: String {
+    guard let word else { return "" }
+    return String(String.UnicodeScalarView(word.targetWord.unicodeScalars.filter { !Self.invisibleMarks.contains($0) }))
+  }
+
   var wordSegments: [String] {                                   // splits the target word into space-separated segments (for multi-word answers)
-    guard let word else { return [] }                             // no current word (e.g. end of questions) -> nothing to segment
-    return word.targetWord.split(whereSeparator: \.isWhitespace).map(String.init) // e.g. "cutting board" -> ["cutting", "board"]
+    guard word != nil else { return [] }                          // no current word (e.g. end of questions) -> nothing to segment
+    return answerText.split(whereSeparator: \.isWhitespace).map(String.init) // e.g. "cutting board" -> ["cutting", "board"]
   }                                                               // ANY space counts: GPT sometimes sends a non-breaking space (U+00A0)
                                                                   // that looks like " " but isn't — it must split, never become a tile
   
@@ -180,7 +191,7 @@ class WordVM {
   // MARK: - setupCurrentWord
   // Resets scrambled tiles + empty guess slots for whatever word is now current.
   // 1. No word (e.g. ran past the end of questions) -> clear slots and tiles, nothing else to do.
-  // 2. Letters = the target-language word with spaces stripped (they're not tiles, just layout gaps) — every kind of
+  // 2. Letters = the target-language word (answerText: no invisible marks) with spaces stripped (they're not tiles, just layout gaps) — every kind of
 //    space (isWhitespace: also the non-breaking space GPT sometimes sends), not only " ",
   //    each character lowercased.
   // 3. Every answer slot starts empty (one per letter).
@@ -196,7 +207,7 @@ class WordVM {
       Log.debug("⚪️ setupCurrentWord — no word at index \(currentIndex), clearing tiles", .game)
       return
     }
-    let letters = word.targetWord
+    let letters = answerText                                      // invisible marks already removed (see answerText)
       .filter { !$0.isWhitespace }                                // any space, not just " " (see wordSegments)
       .map { String($0).lowercased() }
 

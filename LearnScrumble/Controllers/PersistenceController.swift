@@ -91,17 +91,20 @@ final class PersistenceController {
 
     // MARK: - playedJobLanguages()
     // Every job + language being learned that has at least one saved word (records with the whole word only),
-    // e.g. [("Cook", "en-US"), ("Cook", "pl-PL"), ("Plumber", "en-US")]. One pair per card on WelcomeBackView (CabinetVM).
-    func playedJobLanguages() -> [(profession: String, targetLanguage: String)] {
+    // e.g. [("Cook", "en-US", …), ("Plumber", "pl-PL", …)]. One pair per card on WelcomeBackView (CabinetVM).
+    // `since` = the earliest answer of that pair (records keep only their last answer, so it's the oldest of those):
+    // CabinetVM uses it as the card's "added" date the first time it sees the pair.
+    func playedJobLanguages() -> [(profession: String, targetLanguage: String, since: Date)] {
         let descriptor = FetchDescriptor<SwiftDataWordModel>(predicate: #Predicate { $0.targetWord != "" && $0.profession != "" })
         let records = (try? context.fetch(descriptor)) ?? []
-        var seen = Set<String>()
-        var pairs: [(profession: String, targetLanguage: String)] = []
-        for record in records where seen.insert("\(record.profession)|\(record.targetLanguage)").inserted {
-            pairs.append((record.profession, record.targetLanguage))
+        var since: [String: (profession: String, targetLanguage: String, since: Date)] = [:]
+        for record in records {
+            let key = "\(record.profession)|\(record.targetLanguage)"
+            if let known = since[key], known.since <= record.lastSeen { continue }
+            since[key] = (record.profession, record.targetLanguage, record.lastSeen)
         }
-        Log.debug("🗂️ playedJobLanguages -> \(pairs.count) job/language pairs", .storage)
-        return pairs
+        Log.debug("🗂️ playedJobLanguages -> \(since.count) job/language pairs", .storage)
+        return Array(since.values)
     }
 
     // MARK: - jobProgress(profession:targetLanguage:)

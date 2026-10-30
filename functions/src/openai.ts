@@ -141,7 +141,10 @@ Return exactly this shape:
 // MARK: - plainSpaces
 // GPT sometimes puts a non-breaking or other odd space between two words. It looks like a space but the app would
 // treat it as a letter. Every run of spaces of any kind becomes one normal space; ends trimmed.
-export const plainSpaces = (text: string) => text.replace(/\s+/g, " ").trim();
+// Invisible marks are removed too: soft hyphen (U+00AD, "Brot\u00ADteller"), zero-width space (U+200B), word joiner
+// (U+2060) and BOM (U+FEFF) — each became an empty tile in the game. Joiners that belong to the spelling (ZWNJ/ZWJ,
+// e.g. Persian "پیش\u200Cبند") are kept.
+export const plainSpaces = (text: string) => text.replace(/[\u00AD\u200B\u2060\uFEFF]/g, "").replace(/\s+/g, " ").trim();
 
 // MARK: - isPlayable
 // A name that still fits the letter puzzle: at most 2 words and 24 letters (spaces not counted). GPT is asked for short

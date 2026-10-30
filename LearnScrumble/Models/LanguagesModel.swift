@@ -204,10 +204,13 @@ enum Languages: String, CaseIterable, Codable, Identifiable {
 
     // MARK: - name(in:)
     // The language's name in the given language (the app's language), e.g. "English (United States)" for an English UI,
-    // "английский (США)" for a Russian one. Used where the user reads about a language rather than picks it
+    // "Английский (США)" for a Russian one. Used where the user reads about a language rather than picks it
     // (WelcomeBackView's cards, MyWordsView). Falls back to displayName if iOS has no name for it.
+    // First letter capitalized: many languages write language names in lowercase ("іспанська (Чилі)"), which looks
+    // wrong as a title. Only the first letter, in that language's rules — the rest stays as iOS wrote it.
     func name(in locale: Locale) -> String {
-        locale.localizedString(forIdentifier: rawValue) ?? displayName
+        let name = locale.localizedString(forIdentifier: rawValue) ?? displayName
+        return name.prefix(1).uppercased(with: locale) + name.dropFirst()
     }
 
     // MARK: - Display

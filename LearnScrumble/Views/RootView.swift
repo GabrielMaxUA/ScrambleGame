@@ -61,12 +61,18 @@ struct RootView: View {
               WelcomeBackView(
                 cabinet: manager.cabinet,
                 targetLanguage: manager.requestModel.selectedLanguage.rawValue,
-                onCard: { card in                                // the card becomes the current job + language
-                  switch manager.cabinet.select(card) {
-                  case .wordList: manager.openWordList()         // bought: "My words" with Continue / Repeat all
-                  case .play: withConsent { Task { await manager.startGame() } }   // free words left
-                  case .paywall: showPaywall = true              // free words used up: unlock this job
-                  }
+                onOpen: { card in manager.cabinet.select(card) },          // an opened card becomes the current job + language
+                onContinue: { card in                            // "Continue learning": a game for that card
+                  manager.cabinet.select(card)
+                  withConsent { Task { await manager.startGame() } }
+                },
+                onWordList: { card in                            // "My words" (bought)
+                  manager.cabinet.select(card)
+                  manager.openWordList()
+                },
+                onUnlock: { card in                              // "Unlock": the unlock screen for that job
+                  manager.cabinet.select(card)
+                  showPaywall = true
                 },
                 onSettings: { manager.openSettings() })
             case .generating:                                    // words/images loading
