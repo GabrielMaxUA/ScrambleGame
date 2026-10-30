@@ -3,6 +3,8 @@
 **Based on:** the code and project settings on 14 October 2026, checked against the App Store Review Guidelines and App Store Connect's upload checks.
 **Status:** ✅ = done · ⬜ **to do** = not done yet · ❓ **need discussion** = waiting on a decision
 
+> **30 October 2026:** `AppFlowIdeas.md` and `ServerMigrationPlan.md` were removed (no longer needed). Mentions of them below are history; the files are in git history. Current list: `remaining.md`.
+
 ---
 
 ## 1. Blockers: the app won't be accepted without these

@@ -97,7 +97,7 @@ Everything runs on the Mac, in Terminal, from the **repository root** (the folde
 | App Check token (App Attest on iPhones, debug token in the simulator) | Firebase App Check, with every Firebase call; no personal data |
 | Purchases: one-time profession unlocks (non-consumable, $9.99) | Apple App Store (StoreKit 2, `Purchases.swift`); the app only reads which ones the user owns |
 
-**Update the policy before shipping** any of these (all planned in `Docs/AppFlowIdeas.md`): RevenueCat, business access codes, typed jobs coming back, the server enforcing the free words. *(Crashlytics, optional Analytics and the OpenAI consent were added to the policy on 15 October 2026; the Cloud Functions, anonymous sign-in, the daily count on the server and App Check on 27 October 2026; one-time unlocks, My words, the picture Report flag and the end of the time check and typed jobs on 28 October 2026;
+**Update the policy before shipping** any of these (ideas for later): RevenueCat, business access codes, typed jobs coming back, the server enforcing the free words. *(Crashlytics, optional Analytics and the OpenAI consent were added to the policy on 15 October 2026; the Cloud Functions, anonymous sign-in, the daily count on the server and App Check on 27 October 2026; one-time unlocks, My words, the picture Report flag and the end of the time check and typed jobs on 28 October 2026;
 Ontario/Canada law, the daily picture count and the alert emails on 29 October 2026.)*
 
 ## App Store privacy questions (suggestion)

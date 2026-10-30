@@ -8,7 +8,7 @@
 import Foundation
 
 // MARK: - Flow of this file
-// Counts which jobs people learn for, to decide which jobs to add to the menu (AppFlowIdeas §1).
+// Counts which jobs people learn for, to decide which jobs to add to the menu.
 // Firestore collection "professions", one document per job in English, e.g. professions/cook:
 //   name: "cook" · typed: 14 (typed under "Not listed?") · picked: 0 (chosen from the menu)
 //   firstSeen · lastSeen · status: "in menu" (already a menu job: nothing to review) or "new" (missing from the menu:

@@ -1,7 +1,7 @@
 # LearnScrumble — developer notes
 
 iOS app (SwiftUI, iOS 18+) that teaches the words people use at work, with words and pictures made by AI.
-Plans and status live in `Docs/` (`checklist.md`, `ServerMigrationPlan.md`, `AppStoreReadiness.md`, `AppFlowIdeas.md`).
+Plans and status live in `Docs/`: `remaining.md` (what's left before the App Store), `LegalReview.md`, `checklist.md`, `AppStoreReadiness.md`.
 The website is in `WebsiteContent/` (its own README).
 
 ## First setup on a new Mac

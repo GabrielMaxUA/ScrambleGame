@@ -6,6 +6,8 @@
 **Status:** revised 7 October to the direction "keep building toward a finished app". Ready to send after Konstantin's read-through.
 **Progress check (14 October, against the current code; updated 18, 27, 28 and 29 October):** ✅ = done · ❓ **need discussion** = waiting on a conversation or decision · ⬜ **to do** = not started yet
 
+> **30 October 2026:** `AppFlowIdeas.md` and `ServerMigrationPlan.md` were removed (no longer needed). Mentions of them below are history; the files are in git history. Current list: `remaining.md`.
+
 ---
 
 ## 1. What's working

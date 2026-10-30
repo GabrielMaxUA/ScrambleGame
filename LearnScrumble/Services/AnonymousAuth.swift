@@ -9,7 +9,7 @@ import FirebaseAuth
 
 // MARK: - Flow of this file
 // Silent anonymous sign-in: every install gets a random Firebase user ID, with no screen, no email, no password.
-// Nothing about the person is stored with it. It lets the server (Cloud Functions, ServerMigrationPlan Phase 3+)
+// Nothing about the person is stored with it. It lets the server (Cloud Functions)
 // tell installs apart for the daily limit and abuse protection, and lets security rules allow "signed-in app users only".
 //
 // Who calls what:

@@ -40,7 +40,7 @@ The privacy page now says these are in place, so they have to be:
 | changes the **free words**, the **price** or what an unlock includes | `terms.html` §4–5, `support.html`, `index.html`, `how-to-play.html` (last step) |
 | brings back **typed jobs** ("Not listed?") | `privacy.html` §2–3 (typed job, its English name, moderation — see the comment at the top), `support.html` "My job isn't in the list", `index.html`, `terms.html` §6 |
 | adds a **free trial** | `terms.html` §5 (trial line was removed on 18 October because there's no trial) |
-| ✅ moves **OpenAI calls to the server** / adds **anonymous sign-in** or **App Check** (`Docs/ServerMigrationPlan.md`) | *Done 27 October:* privacy §3–6 and §10, support FAQ, manifest (User ID), App Store answers in `README.md` (confirm "linked" vs "not linked" at sign-off) |
+| ✅ moves **OpenAI calls to the server** / adds **anonymous sign-in** or **App Check** (the server migration plan, removed 30 Oct 2026) | *Done 27 October:* privacy §3–6 and §10, support FAQ, manifest (User ID), App Store answers in `README.md` (confirm "linked" vs "not linked" at sign-off) |
 | starts **enforcing the free words on the server** | Privacy §3 (sign-in ID and daily count), terms §4 |
 | changes the **consent text** (`AIConsent.message`) | `support.html` "Why do I have to agree", privacy §3 "We ask first" |
 | sends **new data** anywhere, or adds an SDK | Privacy §3 + §4, manifest, App Store answers |

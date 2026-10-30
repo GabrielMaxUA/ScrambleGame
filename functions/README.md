@@ -2,7 +2,7 @@
 
 Server code for the app (TypeScript, Node 22, region `us-central1`). The app calls these instead of OpenAI,
 so the OpenAI key never ships inside the app and only the server writes to the shared word bank.
-Plan and progress: `Docs/ServerMigrationPlan.md` (Phases 4–8).
+What's left: `Docs/remaining.md` §3. (The server migration plan was finished and removed on 30 Oct 2026; see git history.)
 
 | Function | What it does | Replaces in the app |
 |---|---|---|
