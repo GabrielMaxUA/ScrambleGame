@@ -17,6 +17,12 @@ import SwiftUI
 //   -> gear (top) -> onSettings -> AppManager.openSettings()
 
 struct WelcomeBackView: View {
+  @Environment(\.topButtonsPadding) private var topButtons          // iPhone Duo: where the gear sits (RootView)
+  @Environment(\.layoutDirection) private var layoutDirection
+  private var gearCorner: Alignment {                                 // folded Duo: the physical top left (the camera is right)
+    guard topButtons?.isSideColumn == true else { return .topLeading }
+    return layoutDirection == .rightToLeft ? .topTrailing : .topLeading
+  }
   let targetLanguage: String                     // language being learned — scopes the stats
   let job: Occupation?                           // the current job — scopes the progress card and "My words"
   let hasAccess: Bool                            // the current job is unlocked
@@ -107,7 +113,7 @@ struct WelcomeBackView: View {
     .padding(.horizontal, 20)
     .padding(.bottom, 8)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .overlay(alignment: .topLeading) {                // NEW — same place as the in-game gear
+    .overlay {                                        // NEW — same place as the in-game gear
       Button(action: onSettings) {
         Image(systemName: "gear")
           .font(.title3)
@@ -116,16 +122,13 @@ struct WelcomeBackView: View {
       }
       .glassCompat(in: .circle, interactive: true)
       .accessibilityLabel(Text("Settings"))
-      .padding(.horizontal, 20)
-      .padding(.top, 8)
+      .padding(.horizontal, topButtons?.horizontal ?? 20)   // iPhone Duo: like the in-game gear
+      .padding(.top, topButtons?.top ?? 8)
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: gearCorner)
     }
     .background(Color.black.opacity(0.92))
-    .alert(alertType.title, isPresented: $showAlert) {   // locked list or free words used up
-      Button(alertType.confirmTitle) { onShowPaywall() }
-      Button("Cancel", role: .cancel) { }
-    } message: {
-      Text(alertType.message)
-    }
+    .foldAlert(alertType.title, isPresented: $showAlert, message: alertType.message,   // locked list or free words used up
+               confirmTitle: alertType.confirmTitle) { onShowPaywall() }
     .alertSound(isPresented: showAlert)
   }
 }

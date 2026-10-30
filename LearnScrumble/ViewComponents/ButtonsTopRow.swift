@@ -16,8 +16,26 @@ struct ButtonsTopRow: View {
     let onShowPaywall: () -> Void                      // "Unlock" in a paywall alert
     let onOpenSettings: () -> Void                     // was onExitToSettings
     let buttons: MenuButtonsEnum                       // which buttons to show
+    var sideColumn = false                             // folded iPhone Duo: gear top left, speaker in the clock column
     
     var body: some View {
+        Group {
+            if sideColumn { column } else { row }
+        }
+        .foldAlert(type.title, isPresented: $showAlert, message: type.message, confirmTitle: type.confirmTitle) {
+            switch type {                              // main button: do what the alert asked
+            case .settings: onOpenSettings()
+            case .wordListLocked, .settingsLocked, .freeWordsDone: onShowPaywall()
+            }
+        }
+        .alertSound(isPresented: showAlert)            // notification sound when the alert opens
+    }
+
+    // MARK: - row / column
+    // row: gear left, speaker right (phones, opened Duo). column (folded Duo, FoldLayout.swift
+    // TopButtonsPadding.sideColumn): gear in the top-left corner, speaker lower down in the clock column on the right,
+    // below the Wi-Fi ring; always the physical left / right (the camera and clock don't move in right-to-left).
+    private var row: some View {
         HStack {
             GlassContainer {                           // left group: their glass can blend on iOS 26
                 HStack {
@@ -28,24 +46,28 @@ struct ButtonsTopRow: View {
                 }//hs
             }//glass Container
             Spacer()
-            if let word {                              // speaker on the right, only while a word is on screen
-                glassButton("speaker.wave.2.fill") {
-                    speechManager.speak(word, language: requestModel.selectedLanguage.id)
-                }
+            speakerButton                              // speaker on the right, only while a word is on screen
+        }
+    }
+
+    private var column: some View {
+        HStack(alignment: .top) {
+            settingsButton
+            Spacer()
+            speakerButton
+                .padding(.top, TopButtonsPadding.sideColumnSpeakerTop - TopButtonsPadding.sideColumn.top)
+                .padding(.trailing, TopButtonsPadding.sideColumnSpeakerTrailing - TopButtonsPadding.sideColumn.horizontal)
+        }
+        .environment(\.layoutDirection, .leftToRight)
+    }
+
+    @ViewBuilder
+    private var speakerButton: some View {
+        if let word {
+            glassButton("speaker.wave.2.fill") {
+                speechManager.speak(word, language: requestModel.selectedLanguage.id)
             }
         }
-        .alert(type.title, isPresented: $showAlert) {
-            Button(type.confirmTitle) {                // main button: do what the alert asked
-                switch type {
-                case .settings: onOpenSettings()
-                case .wordListLocked, .settingsLocked, .freeWordsDone: onShowPaywall()
-                }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text(type.message)
-        }
-        .alertSound(isPresented: showAlert)            // notification sound when the alert opens
     }
     
     private var settingsButton: some View {

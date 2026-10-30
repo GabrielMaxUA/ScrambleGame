@@ -356,3 +356,12 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 - ✅ The 32 products in App Store Connect (descriptions: "Most-used work words, pictures and My words").
 - ⏸ Later: the server checks who owns a job (`remaining.md` §3).
 - ⬜ Deploy the latest functions and the website; build 3 to TestFlight; the rest of `remaining.md`.
+
+**iPhone Duo (30 October)** *(Xcode 27.1, iOS 27.1 simulator in Device Hub)*
+- ✅ Folded (outer screen 466 × 678): the normal phone layout.
+- ✅ Opened (inner screen 951 × 669 / 669 × 951): the game splits along the fold — the picture alone and bigger on one half; the typed answer with ↻, the slots and the letters on the other. Landscape: picture left, letters right; portrait: picture on top, level with the settings and sound buttons, letters below (`MainView.splitLayout`, `FoldLayout.swift`).
+- ✅ Opened: the app's alerts are our own card (`.foldAlert`) on the right half in landscape and the top half in portrait (iOS put system alerts anywhere, sometimes across the fold); the Correct/Wrong and error screens follow the same halves (`PopupHalf`). Phones keep the system alerts.
+- ✅ Opened: the round top buttons sit in from the big corners; in landscape level with the system clock and Wi-Fi ring.
+- ✅ Folded: the outer screen has the front camera, clock and Wi-Fi ring in a column on the right (safe area top 0): settings in the top-left corner, sound in that column below the Wi-Fi ring (`TopButtonsPadding.sideColumn`). Long and multi-word answers: the folded screen is about as wide as an iPhone 13 mini (≈ 340 pt for the game), so the same rules hold — slots never below 22 pt (they wrap), tiles never below 40 pt (more rows), the picture shrinks first.
+- ⬜ Check by eye: the partly opened pose, and the other screens on the opened Duo (welcome back, setup, Settings, My words, paywall still use the full width).
+- Note: a new simulator needs its App Check debug token registered (the Duo's was added on 29 October).

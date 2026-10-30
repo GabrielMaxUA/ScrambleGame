@@ -30,6 +30,11 @@ struct RootView: View {
     @State private var showConsent = false                            // ConsentSheet is on screen
     @State private var afterConsent: (() -> Void)?                    // what to start once they agree
     @State private var showPaywall = false                            // PaywallView is on screen
+    @State private var screenSize: CGSize = .zero                     // decides FoldLayout (opened iPhone Duo or not)
+    @State private var safeTop: CGFloat = 50                          // 0 on the folded Duo's outer screen (clock on the side)
+    private var topButtons: TopButtonsPadding? {                      // where the round top buttons sit (FoldLayout.swift)
+      FoldLayout.topButtonsPadding(FoldLayout.from(screenSize), safeTop: safeTop)
+    }
     var direction: Bool {                                             // true = native language reads left-to-right
       manager.layoutDirection == .leftToRight ? true : false
     }
@@ -65,14 +70,19 @@ struct RootView: View {
             case .generating:                                    // words/images loading
                 LoadingView(progress: manager.requestModel.progress)
             case .playing(let vm):                               // the game
-                MainView(vm: vm, manager: manager)
+                MainView(vm: vm, manager: manager, topInset: topButtons?.isSideColumn == true ? 78 : 72)   // folded Duo: below the gear (20 + 50 pt)
             case .failed(let error):                             // something broke — ErrorView picks the useful button
-              ErrorView(
-                error: error,
-                direction: direction,
-                onRetry: { await manager.retry() },
-                onExit: { manager.exitToWelcome()},
-                onChangeProfession: { manager.openSettings() })
+              ZStack {                                           // opened iPhone Duo: dims everything, the message on the right / top half
+                Color.black.ignoresSafeArea()
+                PopupHalf(layout: FoldLayout.from(screenSize)) {
+                  ErrorView(
+                    error: error,
+                    direction: direction,
+                    onRetry: { await manager.retry() },
+                    onExit: { manager.exitToWelcome()},
+                    onChangeProfession: { manager.openSettings() })
+                }
+              }
             case .offline:                                       // no internet — retries by itself when back online
               OfflineView(
                 direction: direction,
@@ -128,7 +138,19 @@ struct RootView: View {
             .transition(.opacity)
             .zIndex(5)
           }
+          if let alert = FoldAlertCenter.shared.current, let layout = FoldLayout.from(screenSize) {
+            FoldAlertCard(alert: alert, layout: layout)          // opened iPhone Duo: the app's alerts on the right / top half
+              .zIndex(10)
+          }
         }//zs
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { screenSize = $0 }
+        .background {                                            // the screen's real top inset (a view inside the safe area reads 0)
+          Color.clear
+            .ignoresSafeArea()
+            .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.top } action: { safeTop = $0 }
+        }
+        .environment(\.foldLayout, FoldLayout.from(screenSize)) // MainView, alerts and pop-ups follow the opened iPhone Duo
+        .environment(\.topButtonsPadding, topButtons)            // WelcomeBackView's gear, like the top row here
         .sheet(isPresented: $showConsent, onDismiss: { afterConsent = nil }) {   // one-time OpenAI consent for older users
           ConsentSheet(
             onAgree: {
@@ -188,8 +210,12 @@ struct RootView: View {
       word: word,
       onShowPaywall: { showPaywall = true },
       onOpenSettings: { manager.openSettings() },
-      buttons: buttons)
-        .padding(.horizontal)
+      buttons: buttons,
+      sideColumn: topButtons?.isSideColumn == true)
+        .padding(.horizontal, topButtons?.horizontal ?? 16)      // iPhone Duo: clear of its corners and edges
+        .padding(.top, topButtons?.top ?? 0)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .ignoresSafeArea(edges: topButtons?.isSideColumn == true ? .all : [])   // folded Duo: reaches the clock column
     }
 
   // MARK: - withConsent(_:)

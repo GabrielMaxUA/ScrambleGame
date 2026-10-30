@@ -97,23 +97,14 @@ struct SettingsView: View {
       }
       pickedProfession = requestModel.proffession
     }
-    .alert(MenuAlert.settingsLocked.title, isPresented: $showLockedAlert) {   // premium lock -> plans
-      Button(MenuAlert.settingsLocked.confirmTitle) { onShowPaywall() }
-      Button("Cancel", role: .cancel) { }
-    } message: {
-      Text(MenuAlert.settingsLocked.message)
+    .foldAlert(MenuAlert.settingsLocked.title, isPresented: $showLockedAlert,   // premium lock -> plans
+               message: MenuAlert.settingsLocked.message, confirmTitle: MenuAlert.settingsLocked.confirmTitle) { onShowPaywall() }
+    .foldAlert("Reset progress?", isPresented: $showResetAlert,
+               message: "All your answers and saved words in the language you are learning will be deleted. This can't be undone.",
+               confirmTitle: "Reset", confirmRole: .destructive) {      // deletes this target language's answers
+      PersistenceController.shared.resetProgress(targetLanguage: requestModel.selectedLanguage.rawValue)
     }
-    .alert("Reset progress?", isPresented: $showResetAlert) {
-      Button("Reset", role: .destructive) {                     // deletes this target language's answers
-        PersistenceController.shared.resetProgress(targetLanguage: requestModel.selectedLanguage.rawValue)
-      }
-      Button("Cancel", role: .cancel) { }
-    } message: {
-      Text("All your answers and saved words in the language you are learning will be deleted. This can't be undone.")
-    }
-    .alert(restoreMessage, isPresented: $showRestoreAlert) {
-      Button("OK") { }
-    }
+    .foldAlert(restoreMessage, isPresented: $showRestoreAlert, confirmTitle: "OK", hasCancel: false) { }
     .alertSound(isPresented: showLockedAlert)
     .alertSound(isPresented: showResetAlert)
     .alertSound(isPresented: showRestoreAlert)
@@ -258,12 +249,8 @@ struct SettingsView: View {
         UserDefaults.standard.set(id, forKey: key)
       }
     }
-    .alert(MenuAlert.settingsLocked.title, isPresented: $showVoiceLockedAlert) {   // NEW
-      Button(MenuAlert.settingsLocked.confirmTitle) { onShowPaywall() }
-      Button("Cancel", role: .cancel) { }
-    } message: {
-      Text(MenuAlert.settingsLocked.message)
-    }
+    .foldAlert(MenuAlert.settingsLocked.title, isPresented: $showVoiceLockedAlert,
+               message: MenuAlert.settingsLocked.message, confirmTitle: MenuAlert.settingsLocked.confirmTitle) { onShowPaywall() }
     .alertSound(isPresented: showVoiceLockedAlert)
   }
   

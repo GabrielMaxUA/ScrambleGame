@@ -112,12 +112,8 @@ struct ResultView: View {
         .padding(.bottom, 8)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black.opacity(0.92))
-        .alert(alertType.title, isPresented: $showAlert) {                    // one alert for both cases
-            Button(alertType.confirmTitle) { onShowPaywall() }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text(alertType.message)
-        }
+        .foldAlert(alertType.title, isPresented: $showAlert, message: alertType.message,   // one alert for both cases
+                   confirmTitle: alertType.confirmTitle) { onShowPaywall() }
         .alertSound(isPresented: showAlert)
     }
     

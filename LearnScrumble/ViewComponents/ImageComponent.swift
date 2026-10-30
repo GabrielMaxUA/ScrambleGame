@@ -23,6 +23,7 @@ struct ImageComponent: View {
     var onHintToggled: (Bool) -> Void = { _ in }   // tutorial only: tells OnboardingService the hint opened (true) / closed (false)
     var report: PictureReport = .idle           // where this word's picture report stands
     var onReport: (() -> Void)? = nil           // sends the report; nil = no flag (tutorial)
+    var maxSide: CGFloat = 280                  // the card's biggest size; larger on an opened iPhone Duo (MainView.splitLayout)
     @State private var showHint = false         // is the hint popover open
     @State private var confirmReport = false    // the "Report this picture?" alert is open
 
@@ -42,7 +43,7 @@ struct ImageComponent: View {
                     .accessibilityLabel("Picture unavailable")
             }
         }
-        .frame(maxWidth: 280, maxHeight: 280)
+        .frame(maxWidth: maxSide, maxHeight: maxSide)
         .aspectRatio(1, contentMode: .fit)                              // always a square card, shrinks on small screens
         .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 20))
         .overlay {
@@ -79,12 +80,9 @@ struct ImageComponent: View {
                     .padding(10)
             }
         }
-        .alert("Report this picture?", isPresented: $confirmReport) {
-            Button("Report") { onReport?() }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("If the picture doesn't show this word, we'll draw a new one for you and check it for everyone.")
-        }
+        .foldAlert("Report this picture?", isPresented: $confirmReport,
+                   message: "If the picture doesn't show this word, we'll draw a new one for you and check it for everyone.",
+                   confirmTitle: "Report") { onReport?() }
         .onChange(of: hint) { showHint = false }                        // close a leftover popover when the word changes
         .onChange(of: showHint) { _, shown in onHintToggled(shown) }    // tutorial: hint opened / closed
     }
