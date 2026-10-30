@@ -36,16 +36,17 @@ enum FoldLayout {
   //                           the top right (its centre is about 77 pt down; the buttons are 50 pt)
   //   opened, stacked      -> a row, in from the corners, just under the status bar
   //   folded Duo           -> its outer screen shows the front camera, the clock and the Wi-Fi ring in a column on the
-  //                           right, outside the app's safe area (safe area top 0) (.sideColumn): settings in the
-  //                           top-left corner, in from the edge; sound in that column at half the screen's height,
-  //                           well below the Wi-Fi ring so it isn't tapped by mistake (nothing can go above the
-  //                           clock: the camera is there). The game starts just below the gear.
+  //                           right, outside the app's safe area (safe area top 0) (.folded): a row like a phone's,
+  //                           in from the top edge, with smaller 40 pt buttons so the short screen keeps more room
+  //                           for the picture; the side column stays empty (no taps near the camera or the Wi-Fi
+  //                           ring, and none where the thumb rests). MainView shows the "unfold" card for answers
+  //                           that don't fit this screen.
   //   phones               -> nil: as before (16 / 0 in RootView's top row, 20 / 8 for WelcomeBackView's gear)
   static func topButtonsPadding(_ layout: FoldLayout?, safeTop: CGFloat) -> TopButtonsPadding? {
     switch layout {
     case .sideBySide: TopButtonsPadding(horizontal: 36, top: 52)
     case .stacked: TopButtonsPadding(horizontal: 36, top: 12)
-    case nil: safeTop < 20 ? .sideColumn : nil
+    case nil: safeTop < 20 ? .folded : nil
     }
   }
 }
@@ -53,15 +54,10 @@ enum FoldLayout {
 struct TopButtonsPadding: Equatable {
   var horizontal: CGFloat
   var top: CGFloat
-  var isSideColumn = false
+  var isFolded = false                                             // the folded Duo's outer screen
+  var buttonSize: CGFloat = 50                                     // round buttons; 40 on the folded Duo
 
-  // The folded Duo, measured on the iPhone Duo simulator (Xcode 27.1): the side column's centre is 48 pt from the right
-  // edge; the camera is at its top, the clock about 85–99 pt down, the Wi-Fi ring 110–151 pt. Settings: 28 pt in from
-  // the left, 20 pt down. Sound (50 pt): centred in the column (23 pt from the right) at half the 678 pt screen
-  // height (top 314 pt), far from the ring. Used with .ignoresSafeArea().
-  static let sideColumn = TopButtonsPadding(horizontal: 28, top: 20, isSideColumn: true)
-  static let sideColumnSpeakerTrailing: CGFloat = 23
-  static let sideColumnSpeakerTop: CGFloat = 314
+  static let folded = TopButtonsPadding(horizontal: 16, top: 12, isFolded: true, buttonSize: 40)
 }
 
 private struct FoldLayoutKey: EnvironmentKey {

@@ -29,7 +29,7 @@ struct MainView: View {
     var resultButtonTitle: LocalizedStringKey = "Next"                 // tutorial only: the right/wrong screen's button ("Let's go!")
     var resultNote: LocalizedStringKey? = nil                          // tutorial only: highlighted line on the right/wrong screen
     @Environment(\.foldLayout) private var foldLayout                 // opened iPhone Duo (RootView), for the result pop-up
-    @Environment(\.topButtonsPadding) private var topButtons          // .isSideColumn = the folded iPhone Duo (RootView)
+    @Environment(\.topButtonsPadding) private var topButtons          // .isFolded = the folded iPhone Duo (RootView)
     private let minTile: CGFloat = 40                                  // smallest tray tile (the size every tile used to be)
     private let maxTile: CGFloat = 52                                  // short words get bigger, easier tiles
     private let tightTile: CGFloat = 34                                // a long answer on a short screen: tiles may go down to this
@@ -59,7 +59,7 @@ struct MainView: View {
                     .padding(.horizontal, horizontalPadding)
                     .padding(.top, topInset)                             // room for RootView's top button row (or the tutorial header)
                     .padding(.bottom, 12)
-                } else if topButtons?.isSideColumn == true {
+                } else if topButtons?.isFolded == true {
                     unfoldCard                                           // folded iPhone Duo: this answer doesn't fit
                 } else {
                     VStack(spacing: 12) {                                // a phone can't unfold: smallest tiles, the picture gives way

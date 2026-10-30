@@ -16,12 +16,10 @@ struct ButtonsTopRow: View {
     let onShowPaywall: () -> Void                      // "Unlock" in a paywall alert
     let onOpenSettings: () -> Void                     // was onExitToSettings
     let buttons: MenuButtonsEnum                       // which buttons to show
-    var sideColumn = false                             // folded iPhone Duo: gear top left, speaker in the clock column
+    var buttonSize: CGFloat = 50                       // 40 on the folded iPhone Duo (FoldLayout.swift)
     
     var body: some View {
-        Group {
-            if sideColumn { column } else { row }
-        }
+        row
         .foldAlert(type.title, isPresented: $showAlert, message: type.message, confirmTitle: type.confirmTitle) {
             switch type {                              // main button: do what the alert asked
             case .settings: onOpenSettings()
@@ -31,10 +29,8 @@ struct ButtonsTopRow: View {
         .alertSound(isPresented: showAlert)            // notification sound when the alert opens
     }
 
-    // MARK: - row / column
-    // row: gear left, speaker right (phones, opened Duo). column (folded Duo, FoldLayout.swift
-    // TopButtonsPadding.sideColumn): gear in the top-left corner, speaker lower down in the clock column on the right,
-    // at half the screen height; always the physical left / right (the camera and clock don't move in right-to-left).
+    // MARK: - row
+    // Gear left, speaker right.
     private var row: some View {
         HStack {
             GlassContainer {                           // left group: their glass can blend on iOS 26
@@ -48,17 +44,6 @@ struct ButtonsTopRow: View {
             Spacer()
             speakerButton                              // speaker on the right, only while a word is on screen
         }
-    }
-
-    private var column: some View {
-        HStack(alignment: .top) {
-            settingsButton
-            Spacer()
-            speakerButton
-                .padding(.top, TopButtonsPadding.sideColumnSpeakerTop - TopButtonsPadding.sideColumn.top)
-                .padding(.trailing, TopButtonsPadding.sideColumnSpeakerTrailing - TopButtonsPadding.sideColumn.horizontal)
-        }
-        .environment(\.layoutDirection, .leftToRight)
     }
 
     @ViewBuilder
@@ -75,12 +60,12 @@ struct ButtonsTopRow: View {
     }
     
     // MARK: - glassButton
-    // One round 50×50 glass button with an SF Symbol icon; runs `action` on tap.
+    // One round glass button (50×50, 40×40 on the folded Duo) with an SF Symbol icon; runs `action` on tap.
     // Used for every button in this row.
     private func glassButton(_ icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .frame(width: 50, height: 50)
+                .frame(width: buttonSize, height: buttonSize)
                 .foregroundStyle(.white)
         }
         .glassCompat(in: .circle)

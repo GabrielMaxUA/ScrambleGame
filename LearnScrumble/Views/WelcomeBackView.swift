@@ -18,11 +18,6 @@ import SwiftUI
 
 struct WelcomeBackView: View {
   @Environment(\.topButtonsPadding) private var topButtons          // iPhone Duo: where the gear sits (RootView)
-  @Environment(\.layoutDirection) private var layoutDirection
-  private var gearCorner: Alignment {                                 // folded Duo: the physical top left (the camera is right)
-    guard topButtons?.isSideColumn == true else { return .topLeading }
-    return layoutDirection == .rightToLeft ? .topTrailing : .topLeading
-  }
   let targetLanguage: String                     // language being learned — scopes the stats
   let job: Occupation?                           // the current job — scopes the progress card and "My words"
   let hasAccess: Bool                            // the current job is unlocked
@@ -118,13 +113,13 @@ struct WelcomeBackView: View {
         Image(systemName: "gear")
           .font(.title3)
           .foregroundStyle(.white)
-          .frame(width: 44, height: 44)
+          .frame(width: topButtons?.isFolded == true ? 40 : 44, height: topButtons?.isFolded == true ? 40 : 44)   // folded Duo: smaller
       }
       .glassCompat(in: .circle, interactive: true)
       .accessibilityLabel(Text("Settings"))
       .padding(.horizontal, topButtons?.horizontal ?? 20)   // iPhone Duo: like the in-game gear
       .padding(.top, topButtons?.top ?? 8)
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: gearCorner)
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
     .background(Color.black.opacity(0.92))
     .foldAlert(alertType.title, isPresented: $showAlert, message: alertType.message,   // locked list or free words used up

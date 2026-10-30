@@ -70,7 +70,7 @@ struct RootView: View {
             case .generating:                                    // words/images loading
                 LoadingView(progress: manager.requestModel.progress)
             case .playing(let vm):                               // the game
-                MainView(vm: vm, manager: manager, topInset: topButtons?.isSideColumn == true ? 78 : 72)   // folded Duo: below the gear (20 + 50 pt)
+                MainView(vm: vm, manager: manager, topInset: topButtons?.isFolded == true ? 60 : 72)   // folded Duo: below the 40 pt buttons (12 + 40 + 8)
             case .failed(let error):                             // something broke — ErrorView picks the useful button
               ZStack {                                           // opened iPhone Duo: dims everything, the message on the right / top half
                 Color.black.ignoresSafeArea()
@@ -211,11 +211,9 @@ struct RootView: View {
       onShowPaywall: { showPaywall = true },
       onOpenSettings: { manager.openSettings() },
       buttons: buttons,
-      sideColumn: topButtons?.isSideColumn == true)
+      buttonSize: topButtons?.buttonSize ?? 50)
         .padding(.horizontal, topButtons?.horizontal ?? 16)      // iPhone Duo: clear of its corners and edges
         .padding(.top, topButtons?.top ?? 0)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .ignoresSafeArea(edges: topButtons?.isSideColumn == true ? .all : [])   // folded Duo: reaches the clock column
     }
 
   // MARK: - withConsent(_:)
