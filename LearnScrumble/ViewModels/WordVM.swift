@@ -265,6 +265,18 @@ class WordVM {
     onWordAnswered?()
   }
   
+  // MARK: - skipWord
+  // The folded iPhone Duo can't fit this word ("This word is long" card in MainView -> Skip this word): it leaves this
+  // session without being scored, recorded or counted toward the free words, and the next word takes its place (same
+  // position in the round). It isn't saved as played, so it can come back another time.
+  func skipWord() {
+    guard currentIndex < questions.count else { return }
+    Log.info("⏭️ skipWord — the word doesn't fit the folded screen, skipped", .game)   // no word: logs reach crash reports
+    questions.remove(at: currentIndex)
+    guessResult = nil
+    advance(to: currentIndex)
+  }
+
   // MARK: - nextWord
   // "Next" on AnswerResultView.
   // 1. Clears the verdict. Free daily limit reached (canContinue false) -> end the round here with a checkpoint.

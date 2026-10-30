@@ -88,6 +88,7 @@ Rules:
 - The "toolName" must name the item exactly as a ${profession} means it. If the plain word has another common meaning, or means a different thing in another job, make it specific to this job: for an auto mechanic "motor oil", not "oil"; for a cook "cooking oil", not "oil"; for a carpenter "spirit level", not "level"; for a plumber "plumbing pipe", not "pipe". Words with only one meaning stay plain ("hammer", "drill").
 - "originWord" must be the natural, commonly used word a ${profession} uses for this item in ${origin}.
 - "targetWord" must be the natural, commonly used word a ${profession} uses for this item in ${target}. Use the job's own term, not a word for the item's other meaning (for an auto mechanic in Ukrainian "моторна олива", not "олія", which is cooking oil).
+- Keep every name short, as workers really say it: at most 2 words in every language, and the shortest common term a worker uses rather than a long technical compound (German "Dichtmittel", not "Rohrleitungsdichtungsmittel"; "Akkuschrauber", not "Akku-Bohrschrauber-Set"). The words are played as a letter puzzle on a phone, so long names don't fit.
 - "imagePrompt" must be a short, UNAMBIGUOUS visual description of the SPECIFIC ${profession}-context object, disambiguated from any other common meaning of the word. For example, for "level" write "a carpenter's spirit level tool with a bubble vial, NOT a level in a video game"; for "pipe" write "a plumbing/construction pipe, a hollow cylindrical tube, NOT a smoking pipe". Always name the disambiguation explicitly when the word has another common meaning.
 - Do not include explanations, descriptions, categories, or definitions in toolName/originWord/targetWord.
 - Do not repeat items.
@@ -123,6 +124,10 @@ Return exactly this shape:
       const originWord = typeof w?.originWord === "string" ? w.originWord.trim() : "";
       const targetWord = typeof w?.targetWord === "string" ? w.targetWord.trim() : "";
       const imagePrompt = typeof w?.imagePrompt === "string" ? w.imagePrompt.trim() : toolName;
+      if (!isPlayable(targetWord) || (originWord && !isPlayable(originWord))) {
+        logger.info("wordList: skipped a name that's too long to play", { toolName, letters: targetWord.length });
+        return [];
+      }
       return toolName && targetWord && toolName.length <= 60 ? [{ toolName, originWord: originWord || targetWord, targetWord, imagePrompt }] : [];
     });
     const job = typeof parsed?.job === "string" ? parsed.job.trim().toLowerCase() : null;
@@ -132,6 +137,13 @@ Return exactly this shape:
     throw badResponse();
   }
 }
+
+// MARK: - isPlayable
+// A name that still fits the letter puzzle: at most 2 words and 24 letters (spaces not counted). GPT is asked for short
+// names (wordList, translate); longer new words are dropped here instead of reaching the bank. Words already in the
+// bank stay; the app handles a long one on a small screen (the folded iPhone Duo asks to unfold or skip).
+export const isPlayable = (name: string) =>
+  name.trim().split(/\s+/).length <= 2 && name.replace(/\s+/g, "").length <= 24;
 
 // MARK: - checkWords
 // The quality check for words GPT just suggested for a job (getWords, since 30 Oct 2026): keeps only items a person in
@@ -178,6 +190,7 @@ Items (English): ${toolNames.join(", ")}.
 Rules:
 - For each item and each language, give the natural, commonly used word for that item at work, matching the meaning a ${profession} would mean (for example "level" is the spirit level tool, not a game level).
 - Only the word itself: no explanations, articles only where the language always uses them, no alternatives.
+- The shortest common term a worker says, at most 2 words (German "Dichtmittel", not "Rohrleitungsdichtungsmittel"): the words are played as a letter puzzle on a phone.
 - Keep "toolName" exactly as given.
 - Respond ONLY with a JSON object, no markdown fences or additional text.
 Return exactly this shape:

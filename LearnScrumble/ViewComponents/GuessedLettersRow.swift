@@ -71,6 +71,20 @@ struct GuessedLettersRow: View {
     .foregroundStyle(isDimmed ? .white.opacity(0.05) : .white)     // almost hidden while the answer result shows
   }
   
+  // MARK: - height(segments:width:)
+  // The height these slots need at this width, without drawing them (MainView: does a long answer still fit on a
+  // short screen?). Each line is a slot tall × 1.5 (GuessedLetterView), plus the gaps between lines.
+  static func height(segments: [Range<Int>], width: CGFloat) -> CGFloat {
+    GuessedLettersRow(segments: segments, guessedWord: [], width: width, isDimmed: false, onDeselect: { _ in }).neededHeight
+  }
+
+  private var neededHeight: CGFloat {
+    let (slot, lines) = layout()
+    return lines.enumerated().reduce(0) { total, line in
+      total + slot * 1.5 + (line.offset == 0 ? 0 : slot * (line.element.startsNewWord ? wordLineGap : wrapLineGap))
+    }
+  }
+
   // MARK: - Layout math (all widths in "slot units", i.e. multiples of the slot size)
   
   // MARK: - units(_:)

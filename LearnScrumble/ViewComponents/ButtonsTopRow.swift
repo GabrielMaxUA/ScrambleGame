@@ -34,7 +34,7 @@ struct ButtonsTopRow: View {
     // MARK: - row / column
     // row: gear left, speaker right (phones, opened Duo). column (folded Duo, FoldLayout.swift
     // TopButtonsPadding.sideColumn): gear in the top-left corner, speaker lower down in the clock column on the right,
-    // below the Wi-Fi ring; always the physical left / right (the camera and clock don't move in right-to-left).
+    // at half the screen height; always the physical left / right (the camera and clock don't move in right-to-left).
     private var row: some View {
         HStack {
             GlassContainer {                           // left group: their glass can blend on iOS 26

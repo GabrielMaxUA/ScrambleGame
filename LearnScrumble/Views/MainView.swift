@@ -29,8 +29,11 @@ struct MainView: View {
     var resultButtonTitle: LocalizedStringKey = "Next"                 // tutorial only: the right/wrong screen's button ("Let's go!")
     var resultNote: LocalizedStringKey? = nil                          // tutorial only: highlighted line on the right/wrong screen
     @Environment(\.foldLayout) private var foldLayout                 // opened iPhone Duo (RootView), for the result pop-up
+    @Environment(\.topButtonsPadding) private var topButtons          // .isSideColumn = the folded iPhone Duo (RootView)
     private let minTile: CGFloat = 40                                  // smallest tray tile (the size every tile used to be)
     private let maxTile: CGFloat = 52                                  // short words get bigger, easier tiles
+    private let tightTile: CGFloat = 34                                // a long answer on a short screen: tiles may go down to this
+    private let minPicture: CGFloat = 120                              // the picture never shrinks below this while the answer fits
     private let spacing: CGFloat = 8                                   // gap between tiles and between tray rows
     private let horizontalPadding: CGFloat = 20                        // screen edge padding
     private let trayPadding: CGFloat = 12                              // padding inside the tray box
@@ -44,16 +47,31 @@ struct MainView: View {
                     LoadingView(progress: manager.requestModel.progress)                                        // next word not ready yet
                 } else if let fold = FoldLayout.from(geo.size) {
                     splitLayout(size: geo.size, fold: fold, answerDirection: answerDirection)   // iPhone Duo opened: one half each side of the fold
-                } else {
+                } else if let tiles = fittingTiles(height: geo.size.height, width: contentWidth) {
                     VStack(spacing: 20) {
                         picture()
+                            .frame(minHeight: minPicture)                // a long answer shrinks the tiles, not the picture to nothing
                         typedAnswer(answerDirection: answerDirection)
                         slots(width: contentWidth, answerDirection: answerDirection)
                         Spacer(minLength: 0)                             // directly in this stack: the picture keeps its share
-                        letterTray(width: contentWidth - trayPadding * 2)   // scrambled tiles at the bottom
+                        letterTray(width: contentWidth - trayPadding * 2, tiles: tiles)   // scrambled tiles at the bottom
                     }
                     .padding(.horizontal, horizontalPadding)
                     .padding(.top, topInset)                             // room for RootView's top button row (or the tutorial header)
+                    .padding(.bottom, 12)
+                } else if topButtons?.isSideColumn == true {
+                    unfoldCard                                           // folded iPhone Duo: this answer doesn't fit
+                } else {
+                    VStack(spacing: 12) {                                // a phone can't unfold: smallest tiles, the picture gives way
+                        picture()
+                        typedAnswer(answerDirection: answerDirection)
+                        slots(width: contentWidth, answerDirection: answerDirection)
+                        Spacer(minLength: 0)
+                        letterTray(width: contentWidth - trayPadding * 2,
+                                   tiles: tileLayout(width: contentWidth - trayPadding * 2, smallest: tightTile))
+                    }
+                    .padding(.horizontal, horizontalPadding)
+                    .padding(.top, topInset)
                     .padding(.bottom, 12)
                 }
             }
@@ -158,14 +176,70 @@ struct MainView: View {
         }
     }
 
+    // MARK: - fittingTiles(height:width:)
+    // Does this answer fit the screen's height with the picture at least minPicture? Adds up the fixed parts (top
+    // inset, picture minimum, typed answer, slots, gaps) and tries tile sizes from 40 pt down to 34 pt (smaller tiles
+    // = more per row = fewer rows). Returns the biggest tile layout that fits, or nil when even 34 pt tiles don't:
+    // then the folded iPhone Duo asks to unfold (unfoldCard) and a phone lets the picture shrink instead.
+    // Short words: the first try (40 pt, the normal layout) fits, so they look exactly as before.
+    private func fittingTiles(height: CGFloat, width: CGFloat) -> (size: CGFloat, perRow: Int)? {
+        let trayWidth = width - trayPadding * 2
+        let typedRow: CGFloat = 35                                       // ResultWordRow's height
+        let fixed = topInset + 12 + minPicture + typedRow + 20 * 4
+            + GuessedLettersRow.height(segments: vm.segmentRanges, width: width)
+        for smallest in stride(from: minTile, through: tightTile, by: -2) {
+            let tiles = tileLayout(width: trayWidth, smallest: smallest)
+            if fixed + trayHeight(tiles) <= height { return tiles }
+        }
+        return nil
+    }
+
+    private func trayHeight(_ tiles: (size: CGFloat, perRow: Int)) -> CGFloat {
+        let rows = Int((Double(max(vm.scrumbledWord.count, 1)) / Double(tiles.perRow)).rounded(.up))
+        return CGFloat(rows) * tiles.size + CGFloat(rows - 1) * spacing + trayPadding * 2
+    }
+
+    // MARK: - unfoldCard
+    // The folded iPhone Duo's outer screen is short: a long answer (e.g. a German three-word name) doesn't fit there.
+    // Instead of a squashed game: "This word is long. Unfold your phone to play it." Unfolding switches MainView to
+    // splitLayout, where it fits. "Skip this word" -> vm.skipWord(): the next word, nothing scored or counted.
+    private var unfoldCard: some View {
+        VStack(spacing: 16) {
+            Spacer()
+            Text(verbatim: "📖")
+                .font(.system(size: 56))
+                .accessibilityHidden(true)
+            Text("This word is long.")
+                .font(.title2.bold())
+            Text("Unfold your phone to play it.")
+                .font(.body)
+                .foregroundStyle(.white.opacity(0.75))
+            Button { vm.skipWord() } label: {
+                Text("Skip this word")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 14)
+            }
+            .glassCompat(in: .capsule, interactive: true)
+            .padding(.top, 8)
+            Spacer()
+        }
+        .foregroundStyle(.white)
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, horizontalPadding)
+        .padding(.top, topInset)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
     // MARK: - Letter tray
     // The box of scrambled letter tiles.
     // 1. tileLayout picks the tile size and how many tiles per row for this width.
     // 2. scrambledRows splits WordVM's scrambled letters into those rows.
     // 3. Each tile is a LetterBoxView; a tap -> vm.selectLetter -> the letter goes into the next empty slot.
     // While the answer result is showing, the tray fades to 30% and ignores taps.
-    private func letterTray(width: CGFloat) -> some View {
-        let tiles = tileLayout(width: width)
+    private func letterTray(width: CGFloat, tiles fitted: (size: CGFloat, perRow: Int)? = nil) -> some View {
+        let tiles = fitted ?? tileLayout(width: width)
         return VStack(spacing: spacing) {
             ForEach(Array(scrambledRows(perRow: tiles.perRow).enumerated()), id: \.offset) { _, row in
                 HStack(spacing: spacing) {
@@ -188,14 +262,15 @@ struct MainView: View {
         .disabled(vm.overlayShown)
     }
 
-    // MARK: - tileLayout(width:)
+    // MARK: - tileLayout(width:smallest:)
     // Fewest rows possible at the smallest tile, spread evenly, then the biggest tile that still fits that row.
     // e.g. 27 letters -> 4 rows of 7/7/7/6 at 40pt, 10 letters -> 2 rows of 5 at 52pt.
-    // Steps: how many 40pt tiles fit in a row -> rows needed -> letters per row (spread evenly)
+    // Steps: how many `smallest` tiles fit in a row -> rows needed -> letters per row (spread evenly)
     //        -> the tile size that fills that row, never above 52pt.
-    private func tileLayout(width: CGFloat) -> (size: CGFloat, perRow: Int) {
+    // `smallest` is 40 pt normally; fittingTiles lowers it (to 34 pt at most) for a long answer on a short screen.
+    private func tileLayout(width: CGFloat, smallest: CGFloat? = nil) -> (size: CGFloat, perRow: Int) {
         let count = max(vm.scrumbledWord.count, 1)
-        let maxPerRow = max(Int((width + spacing) / (minTile + spacing)), 1)
+        let maxPerRow = max(Int((width + spacing) / ((smallest ?? minTile) + spacing)), 1)
         let rows = Int((Double(count) / Double(maxPerRow)).rounded(.up))
         let perRow = Int((Double(count) / Double(rows)).rounded(.up))
         let size = min(maxTile, (width + spacing) / CGFloat(perRow) - spacing)
