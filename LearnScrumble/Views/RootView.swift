@@ -59,13 +59,15 @@ struct RootView: View {
               })
             case .welcomeBack:                                   // NEW — returning user's start screen
               WelcomeBackView(
+                cabinet: manager.cabinet,
                 targetLanguage: manager.requestModel.selectedLanguage.rawValue,
-                job: manager.currentJob,
-                hasAccess: manager.hasAccess,
-                canPlay: manager.canPlay,
-                onContinue: { withConsent { Task { await manager.startGame() } } },
-                onWordList: { manager.openWordList() },
-                onShowPaywall: { showPaywall = true },
+                onCard: { card in                                // the card becomes the current job + language
+                  switch manager.cabinet.select(card) {
+                  case .wordList: manager.openWordList()         // bought: "My words" with Continue / Repeat all
+                  case .play: withConsent { Task { await manager.startGame() } }   // free words left
+                  case .paywall: showPaywall = true              // free words used up: unlock this job
+                  }
+                },
                 onSettings: { manager.openSettings() })
             case .generating:                                    // words/images loading
                 LoadingView(progress: manager.requestModel.progress)
@@ -117,6 +119,7 @@ struct RootView: View {
               MyWordsView(
                 job: manager.currentJob,
                 targetLanguage: manager.requestModel.selectedLanguage.rawValue,
+                onContinue: { withConsent { Task { await manager.startGame() } } },
                 onRepeat: { manager.startReview() },
                 onBack: { manager.exitToWelcome() })
             }

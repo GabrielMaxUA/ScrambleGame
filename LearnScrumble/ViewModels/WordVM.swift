@@ -93,8 +93,9 @@ class WordVM {
   }
   var wordSegments: [String] {                                   // splits the target word into space-separated segments (for multi-word answers)
     guard let word else { return [] }                             // no current word (e.g. end of questions) -> nothing to segment
-    return word.targetWord.split(separator: " ").map(String.init) // e.g. "cutting board" -> ["cutting", "board"]
-  }
+    return word.targetWord.split(whereSeparator: \.isWhitespace).map(String.init) // e.g. "cutting board" -> ["cutting", "board"]
+  }                                                               // ANY space counts: GPT sometimes sends a non-breaking space (U+00A0)
+                                                                  // that looks like " " but isn't — it must split, never become a tile
   
   var segmentRanges: [Range<Int>] {                              // maps each word segment to its slice of letter-index positions
     var ranges: [Range<Int>] = []                                 // accumulates one range per segment
@@ -179,7 +180,8 @@ class WordVM {
   // MARK: - setupCurrentWord
   // Resets scrambled tiles + empty guess slots for whatever word is now current.
   // 1. No word (e.g. ran past the end of questions) -> clear slots and tiles, nothing else to do.
-  // 2. Letters = the target-language word with spaces stripped (they're not tiles, just layout gaps),
+  // 2. Letters = the target-language word with spaces stripped (they're not tiles, just layout gaps) — every kind of
+//    space (isWhitespace: also the non-breaking space GPT sometimes sends), not only " ",
   //    each character lowercased.
   // 3. Every answer slot starts empty (one per letter).
   // 4. Shuffle — only if there are at least two DIFFERENT letters, so another order exists ("mm" or "妈妈" skip this):
@@ -195,7 +197,7 @@ class WordVM {
       return
     }
     let letters = word.targetWord
-      .filter { $0 != " " }
+      .filter { !$0.isWhitespace }                                // any space, not just " " (see wordSegments)
       .map { String($0).lowercased() }
 
     let totalLetters = letters.count
@@ -254,7 +256,7 @@ class WordVM {
   // 5. onWordAnswered: counts it toward the free words, right or wrong (not wired for the review).
   func checkAnswer() {
     guard isComplete, let word else { return }
-    let isCorrect = resultWord == word.targetWord.lowercased()
+    let isCorrect = resultWord == wordSegments.joined(separator: " ").lowercased()   // same words, plain spaces (resultWord's form)
     guessResult = isCorrect ? .correct : .incorrect
     overlayShown = true
     Log.debug("✅❌ checkAnswer — guessed='\(resultWord)' target='\(word.targetWord)' -> \(isCorrect ? "CORRECT" : "INCORRECT")", .game)

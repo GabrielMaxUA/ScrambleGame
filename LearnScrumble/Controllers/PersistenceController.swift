@@ -20,7 +20,8 @@ import Foundation
 //                                         already practiced in this language" — sent to getWords as `exclude`
 //   jobWords(profession:targetLanguage:) <- MyWordsView's list and AppManager.startReview: every saved word of the job,
 //                                         weakest first
-//   jobProgress(profession:targetLanguage:) <- WelcomeBackView / ResultView: learned words, right and wrong answers
+//   playedJobLanguages()               <- CabinetVM: every job + language pair with saved words (one card each)
+//   jobProgress(profession:targetLanguage:) <- CabinetVM (WelcomeBackView's cards) / ResultView: learned words, right and wrong answers
 //   overallAccuracy(targetLanguage:)   <- WordVM.overallAccuracy (ResultView) and WelcomeBackView's stats
 //   resetProgress(targetLanguage:)     <- SettingsView "reset progress" for the current target language
 //   deleteAllProgress()                <- not called right now (AppManager's deleteAllData is commented out)
@@ -86,6 +87,21 @@ final class PersistenceController {
             .sorted { ($0.accuracy, $0.lastSeen) < ($1.accuracy, $1.lastSeen) }
         Log.debug("📚 jobWords — lang=\(targetLanguage) -> \(records.count) words", .storage)
         return records
+    }
+
+    // MARK: - playedJobLanguages()
+    // Every job + language being learned that has at least one saved word (records with the whole word only),
+    // e.g. [("Cook", "en-US"), ("Cook", "pl-PL"), ("Plumber", "en-US")]. One pair per card on WelcomeBackView (CabinetVM).
+    func playedJobLanguages() -> [(profession: String, targetLanguage: String)] {
+        let descriptor = FetchDescriptor<SwiftDataWordModel>(predicate: #Predicate { $0.targetWord != "" && $0.profession != "" })
+        let records = (try? context.fetch(descriptor)) ?? []
+        var seen = Set<String>()
+        var pairs: [(profession: String, targetLanguage: String)] = []
+        for record in records where seen.insert("\(record.profession)|\(record.targetLanguage)").inserted {
+            pairs.append((record.profession, record.targetLanguage))
+        }
+        Log.debug("🗂️ playedJobLanguages -> \(pairs.count) job/language pairs", .storage)
+        return pairs
     }
 
     // MARK: - jobProgress(profession:targetLanguage:)

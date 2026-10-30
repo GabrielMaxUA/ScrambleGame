@@ -8,107 +8,81 @@
 import SwiftUI
 
 // MARK: - Flow of this file
-// The returning user's start screen (phase .welcomeBack).
-//   Reads PersistenceController.jobProgress (JobProgressCard: learned, right, wrong), Streak (🔥 days in a row)
-//   and overall accuracy (the owl celebrates at 80% or more).
-//   -> "Continue learning": unlocked or free words left (canPlay) -> onContinue -> AppManager.startGame();
-//      free words used up -> alert -> "Unlock" -> onShowPaywall (PaywallView)
-//   -> "My words" (once a word of this job was played): unlocked -> onWordList -> MyWordsView; otherwise the alert
-//   -> gear (top) -> onSettings -> AppManager.openSettings()
+// The returning user's start screen (phase .welcomeBack): the user's "cabinet".
+//   Header: "Welcome back!", the streak (🔥 days in a row) and the owl (celebrates at 80% or more in the current language).
+//   Cards: CabinetVM.cards — one per profession + language being learned (CabinetCardView), the current one first.
+//   -> tap a card -> onCard -> RootView: CabinetVM.select makes it the current job + language, then
+//      bought -> MyWordsView ("Continue learning" / "Repeat all"); free words left -> a game; used up -> PaywallView
+//   -> gear (top) -> onSettings -> AppManager.openSettings() (languages and job can still be changed there)
+//   No card yet (no job picked) -> a note pointing to Settings.
 
 struct WelcomeBackView: View {
   @Environment(\.topButtonsPadding) private var topButtons          // iPhone Duo: where the gear sits (RootView)
-  let targetLanguage: String                     // language being learned — scopes the stats
-  let job: Occupation?                           // the current job — scopes the progress card and "My words"
-  let hasAccess: Bool                            // the current job is unlocked
-  let canPlay: Bool                              // unlocked, or free words left (AppManager.canPlay)
-  var onContinue: () -> Void                     // start a game with the saved languages and profession
-  var onWordList: () -> Void                     // "My words" (unlocked)
-  var onShowPaywall: () -> Void                  // "Unlock" in the alert
+  let cabinet: CabinetVM                         // the cards and what a tap does
+  let targetLanguage: String                     // current language being learned — the owl's mood
+  var onCard: (CabinetVM.Card) -> Void           // a card was tapped (RootView -> CabinetVM.select)
   var onSettings: () -> Void                     // opens SettingsView (free for everyone)
-  @State private var showAlert = false                    // is the free-words / locked-list alert open
-  @State private var alertType: MenuAlert = .wordListLocked   // which of the two alerts
-  
-  private var overallScore: Double? {            // nil when nothing has been answered yet, so the tile shows "—"
+
+  private var isCelebrating: Bool {              // the owl: 80% or more right in the current language
     let stat = PersistenceController.shared.overallAccuracy(targetLanguage: targetLanguage)
-    guard stat.total > 0 else { return nil }
-    return Double(stat.correct) / Double(stat.total)
+    return stat.total > 0 && Double(stat.correct) / Double(stat.total) >= 0.8
   }
-  
-  private var progress: JobProgress {           // this job's numbers in this language (zeros when no job is picked)
-    PersistenceController.shared.jobProgress(profession: job?.rawValue ?? "", targetLanguage: targetLanguage)
-  }
-  
+
   var body: some View {
-    let score = overallScore                     // read once per redraw (it's a SwiftData fetch)
-    let progress = progress
-    
-    VStack(spacing: 24) {
-      Spacer(minLength: 40)
-      
+    let cards = cabinet.cards                    // read once per redraw (SwiftData fetches)
+    let streak = Streak.shared.current
+
+    VStack(spacing: 16) {
       VStack(spacing: 8) {
+        LineOwl(isCelebrating: isCelebrating)
         Text("Welcome back!")
           .font(.largeTitle.bold())
           .foregroundStyle(.white)
         Text("Ready for more words?")
           .font(.title3)
           .foregroundStyle(.white.opacity(0.7))
+        if streak > 0 {
+          Label { Text(streak, format: .number) } icon: { Image(systemName: "flame.fill") }
+            .font(.subheadline.weight(.bold))
+            .foregroundStyle(.orange)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(.orange.opacity(0.15), in: .capsule)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("Days in a row: \(streak)"))
+        }
       }
       .multilineTextAlignment(.center)
-      
-      Spacer()
-      
-      VStack(spacing: 8) {                             // the progress card + what "learned" means
-        JobProgressCard(job: job, progress: progress, streak: Streak.shared.current)
-          .overlay(alignment: .top) {
-            LineOwl(isCelebrating: (score ?? 0) >= 0.8)   // nil (no history) counts as 0: owl sits still
-              .alignmentGuide(.top) { $0[.bottom] - 4 }  // feet rest on the card
+      .padding(.top, 48)                         // below the gear
+
+      if cards.isEmpty {
+        Spacer()
+        Text("Pick your profession in Settings to start learning.")
+          .font(.title3)
+          .foregroundStyle(.white.opacity(0.7))
+          .multilineTextAlignment(.center)
+        Spacer()
+      } else {
+        ScrollView {
+          LazyVStack(spacing: 12) {
+            ForEach(cards) { card in
+              CabinetCardView(card: card, freeWordsLeft: cabinet.freeWordsLeft) { onCard(card) }
+            }
           }
+          .padding(.vertical, 4)
+        }
+        .scrollIndicators(.hidden)
+
         Text("A word is learned once you get it right at least twice, and 3 times out of 4.")
           .font(.footnote)
           .foregroundStyle(.white.opacity(0.6))
           .multilineTextAlignment(.center)
       }
-      .padding(.top, 80)                               // room for the owl
-      
-      Spacer()
-      
-      VStack(spacing: 12) {
-        Button {                                       // free words left or unlocked: play; otherwise: alert
-          if canPlay {
-            onContinue()
-          } else {
-            alertType = .freeWordsDone
-            showAlert = true
-          }
-        } label: {
-          Label("Continue learning", systemImage: canPlay ? "arrow.right" : "lock.fill")   // lock once the free words are used
-            .font(.headline)
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-        }
-        .glassCompat(in: .capsule, interactive: true)
-        
-        if progress.played > 0 {
-          Button {                                     // unlocked: the list; otherwise: the unlock alert
-            if hasAccess { onWordList() } else { alertType = .wordListLocked; showAlert = true }
-          } label: {
-            Label("My words", systemImage: hasAccess ? "list.bullet.rectangle" : "lock.fill")
-              .font(.headline)
-              .foregroundStyle(.white)
-              .frame(maxWidth: .infinity)
-              .padding(.vertical, 14)
-          }
-          .glassCompat(in: .capsule, interactive: true)
-        }
-        // NEW — the bottom Settings text button was removed; it's the gear at the top now
-      }
     }
     .padding(.horizontal, 20)
     .padding(.bottom, 8)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .overlay {                                        // NEW — same place as the in-game gear
+    .overlay {                                        // same place as the in-game gear
       Button(action: onSettings) {
         Image(systemName: "gear")
           .font(.title3)
@@ -122,14 +96,10 @@ struct WelcomeBackView: View {
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
     .background(Color.black.opacity(0.92))
-    .foldAlert(alertType.title, isPresented: $showAlert, message: alertType.message,   // locked list or free words used up
-               confirmTitle: alertType.confirmTitle) { onShowPaywall() }
-    .alertSound(isPresented: showAlert)
   }
 }
 
 #Preview {
-  WelcomeBackView(targetLanguage: "uk-UA", job: .plumber, hasAccess: false,
-                  canPlay: false,                                  // shows the locked "Continue learning"
-                  onContinue: {}, onWordList: {}, onShowPaywall: {}, onSettings: {})
+  WelcomeBackView(cabinet: CabinetVM(requestModel: RequestModel()), targetLanguage: "en-US",
+                  onCard: { _ in }, onSettings: {})
 }

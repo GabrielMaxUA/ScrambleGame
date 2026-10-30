@@ -202,6 +202,14 @@ enum Languages: String, CaseIterable, Codable, Identifiable {
 
     case vietnamese = "vi-VN"
 
+    // MARK: - name(in:)
+    // The language's name in the given language (the app's language), e.g. "English (United States)" for an English UI,
+    // "английский (США)" for a Russian one. Used where the user reads about a language rather than picks it
+    // (WelcomeBackView's cards, MyWordsView). Falls back to displayName if iOS has no name for it.
+    func name(in locale: Locale) -> String {
+        locale.localizedString(forIdentifier: rawValue) ?? displayName
+    }
+
     // MARK: - Display
 
   var displayName: String {                                     // name in the language itself — readable for its speakers whatever the UI language

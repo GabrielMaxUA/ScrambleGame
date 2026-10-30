@@ -121,8 +121,8 @@ Return exactly this shape:
     const rawWords: unknown[] = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.words) ? parsed.words : [];
     const words = rawWords.flatMap((w: any) => {
       const toolName = typeof w?.toolName === "string" ? w.toolName.trim().toLowerCase() : "";
-      const originWord = typeof w?.originWord === "string" ? w.originWord.trim() : "";
-      const targetWord = typeof w?.targetWord === "string" ? w.targetWord.trim() : "";
+      const originWord = typeof w?.originWord === "string" ? plainSpaces(w.originWord) : "";
+      const targetWord = typeof w?.targetWord === "string" ? plainSpaces(w.targetWord) : "";
       const imagePrompt = typeof w?.imagePrompt === "string" ? w.imagePrompt.trim() : toolName;
       if (!isPlayable(targetWord) || (originWord && !isPlayable(originWord))) {
         logger.info("wordList: skipped a name that's too long to play", { toolName, letters: targetWord.length });
@@ -137,6 +137,11 @@ Return exactly this shape:
     throw badResponse();
   }
 }
+
+// MARK: - plainSpaces
+// GPT sometimes puts a non-breaking or other odd space between two words. It looks like a space but the app would
+// treat it as a letter. Every run of spaces of any kind becomes one normal space; ends trimmed.
+export const plainSpaces = (text: string) => text.replace(/\s+/g, " ").trim();
 
 // MARK: - isPlayable
 // A name that still fits the letter puzzle: at most 2 words and 24 letters (spaces not counted). GPT is asked for short
@@ -218,7 +223,7 @@ Return exactly this shape:
       const words: Record<string, string> = {};
       for (const lang of langs) {
         const word = item?.translations?.[lang];
-        if (typeof word === "string" && word.trim() && word.length <= 60) words[lang] = word.trim();
+        if (typeof word === "string" && word.trim() && word.length <= 60) words[lang] = plainSpaces(word);
       }
       result.set(name, words);
     }

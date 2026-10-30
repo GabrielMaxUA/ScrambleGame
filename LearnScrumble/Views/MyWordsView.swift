@@ -12,12 +12,16 @@ import SwiftUI
 // weakest first, with its picture and how often it was answered right and wrong.
 //   Reads PersistenceController.jobWords — everything is on the phone, so it works offline and opens instantly.
 //   -> tap a row -> SpeechManager reads the word aloud
+//   -> "Continue learning" -> onContinue -> AppManager.startGame(): new words for this job and language
 //   -> "Repeat all" -> onRepeat -> AppManager.startReview(): the same list as a game, in rounds of 10
 //   -> back (top) -> onBack -> AppManager.exitToWelcome()
+// Opened from a card on WelcomeBackView (CabinetVM) or from ResultView; the title shows the job and the language.
 
 struct MyWordsView: View {
+  @Environment(\.locale) private var locale              // the app's language, for the language's name
   let job: Occupation?                                   // the job whose words are listed
   let targetLanguage: String                             // the language being learned (Languages.rawValue)
+  var onContinue: () -> Void                             // new words for this job and language
   var onRepeat: () -> Void                               // start the review
   var onBack: () -> Void                                 // back to WelcomeBackView
   @State private var speechManager = SpeechManager()     // reads a word when its row is tapped
@@ -39,6 +43,11 @@ struct MyWordsView: View {
             .font(.title3)
             .foregroundStyle(.white.opacity(0.7))
         }
+        if let language = Languages(rawValue: targetLanguage) {
+          Text(verbatim: language.name(in: locale))
+            .font(.subheadline)
+            .foregroundStyle(.white.opacity(0.6))
+        }
       }
       .multilineTextAlignment(.center)
       .padding(.top, 8)
@@ -50,6 +59,7 @@ struct MyWordsView: View {
           .foregroundStyle(.white.opacity(0.7))
           .multilineTextAlignment(.center)
         Spacer()
+        continueButton
       } else {
         Text("Hardest words first. Tap a word to hear it.")
           .font(.footnote)
@@ -70,6 +80,8 @@ struct MyWordsView: View {
           .padding(.bottom, 8)
         }
         .scrollIndicators(.hidden)
+
+        continueButton
 
         Button(action: onRepeat) {
           Label("Repeat all (\(words.count))", systemImage: "arrow.counterclockwise")
@@ -98,6 +110,19 @@ struct MyWordsView: View {
       .padding(.top, 8)
     }
     .background(Color.black.opacity(0.92))
+  }
+
+  // MARK: - continueButton
+  // "Continue learning": new words for this job and language (a normal game).
+  private var continueButton: some View {
+    Button(action: onContinue) {
+      Label("Continue learning", systemImage: "arrow.right")
+        .font(.headline)
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+    }
+    .glassCompat(in: .capsule, interactive: true)
   }
 
   // MARK: - row(_:)
@@ -164,5 +189,5 @@ struct MyWordsView: View {
 }
 
 #Preview {
-  MyWordsView(job: .plumber, targetLanguage: "uk-UA", onRepeat: {}, onBack: {})
+  MyWordsView(job: .plumber, targetLanguage: "uk-UA", onContinue: {}, onRepeat: {}, onBack: {})
 }

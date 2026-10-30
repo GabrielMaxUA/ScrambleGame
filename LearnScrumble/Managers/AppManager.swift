@@ -37,6 +37,7 @@ final class AppManager {
   private var isStarting = false                                   // true while startGame() runs — blocks a second load (auto-retry + tap)
   var phase: GamePhase = .onboarding                               // drives what RootView renders — the single UI state machine for the app
   let requestModel: RequestModel                                   // shared generation/data layer, same instance across the whole app lifetime
+  let cabinet: CabinetVM                                           // WelcomeBackView's cards (profession + language) and their taps
   private weak var activeVM: WordVM?                                // weak on purpose — `phase`'s associated value is the real owner, this is just a way for callbacks to reach it
   var nativeLanguage: Languages { requestModel.nativeLanguage }    // the user's own language — the whole UI is shown in it
   var locale: Locale { nativeLanguage.locale }                     // RootView puts it in the environment
@@ -53,6 +54,7 @@ final class AppManager {
   // RootView switches it to .welcomeBack at launch for a returning user.
   init(requestModel: RequestModel) {
     self.requestModel = requestModel
+    self.cabinet = CabinetVM(requestModel: requestModel)
     Log.info("🟢 AppManager.init", .app)
   }
   
