@@ -47597,331 +47597,331 @@
         }
       }
     },
-    "To create your words and pictures, your job, your two languages and the words you've already practised are sent to OpenAI." : {
+    "To create your words and pictures, your job, your two languages and the words you've already practised are sent to OpenAI. This data is processed in the United States." : {
       "comment" : "Consent text (App Review 5.1.2): shown on the setup screen, in the one-time consent sheet and in Settings.",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "لإنشاء كلماتك وصورك، يتم إرسال مهنتك ولغتيك والكلمات التي تدرّبت عليها من قبل إلى OpenAI."
+            "value" : "لإنشاء كلماتك وصورك، يتم إرسال مهنتك ولغتيك والكلمات التي تدرّبت عليها من قبل إلى OpenAI. تتم معالجة هذه البيانات في الولايات المتحدة."
           }
         },
         "bg" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "За да създадем думите и картинките ти, професията ти, двата ти езика и думите, които вече си упражнявал, се изпращат до OpenAI."
+            "value" : "За да създадем думите и картинките ти, професията ти, двата ти езика и думите, които вече си упражнявал, се изпращат до OpenAI. Тези данни се обработват в САЩ."
           }
         },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "আপনার শব্দ ও ছবি তৈরি করতে আপনার পেশা, আপনার দুটি ভাষা এবং আপনি আগে যেসব শব্দ অনুশীলন করেছেন সেগুলো OpenAI-তে পাঠানো হয়।"
+            "value" : "আপনার শব্দ ও ছবি তৈরি করতে আপনার পেশা, আপনার দুটি ভাষা এবং আপনি আগে যেসব শব্দ অনুশীলন করেছেন সেগুলো OpenAI-তে পাঠানো হয়। এই তথ্য মার্কিন যুক্তরাষ্ট্রে প্রক্রিয়া করা হয়।"
           }
         },
         "ca" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Per crear les teves paraules i imatges, la teva feina, les teves dues llengües i les paraules que ja has practicat s'envien a OpenAI."
+            "value" : "Per crear les teves paraules i imatges, la teva feina, les teves dues llengües i les paraules que ja has practicat s'envien a OpenAI. Aquestes dades es processen als Estats Units."
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abychom vytvořili tvoje slova a obrázky, tvoje profese, tvoje dva jazyky a slova, která už jsi procvičil, se odesílají do OpenAI."
+            "value" : "Abychom vytvořili tvoje slova a obrázky, tvoje profese, tvoje dva jazyky a slova, která už jsi procvičil, se odesílají do OpenAI. Tato data se zpracovávají ve Spojených státech."
           }
         },
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "For at lave dine ord og billeder sendes dit job, dine to sprog og de ord, du allerede har øvet, til OpenAI."
+            "value" : "For at lave dine ord og billeder sendes dit job, dine to sprog og de ord, du allerede har øvet, til OpenAI. Disse data behandles i USA."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Damit wir deine Wörter und Bilder erstellen können, werden dein Beruf, deine beiden Sprachen und die Wörter, die du schon geübt hast, an OpenAI gesendet."
+            "value" : "Damit wir deine Wörter und Bilder erstellen können, werden dein Beruf, deine beiden Sprachen und die Wörter, die du schon geübt hast, an OpenAI gesendet. Diese Daten werden in den USA verarbeitet."
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Για να δημιουργηθούν οι λέξεις και οι εικόνες σου, το επάγγελμά σου, οι δύο γλώσσες σου και οι λέξεις που έχεις ήδη εξασκήσει στέλνονται στην OpenAI."
+            "value" : "Για να δημιουργηθούν οι λέξεις και οι εικόνες σου, το επάγγελμά σου, οι δύο γλώσσες σου και οι λέξεις που έχεις ήδη εξασκήσει στέλνονται στην OpenAI. Αυτά τα δεδομένα επεξεργάζονται στις Ηνωμένες Πολιτείες."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "To create your words and pictures, your job, your two languages and the words you've already practised are sent to OpenAI."
+            "value" : "To create your words and pictures, your job, your two languages and the words you've already practised are sent to OpenAI. This data is processed in the United States."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Para crear tus palabras e imágenes, tu profesión, tus dos idiomas y las palabras que ya has practicado se envían a OpenAI."
+            "value" : "Para crear tus palabras e imágenes, tu profesión, tus dos idiomas y las palabras que ya has practicado se envían a OpenAI. Estos datos se procesan en Estados Unidos."
           }
         },
         "eu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zure hitzak eta irudiak sortzeko, zure lanbidea, zure bi hizkuntzak eta dagoeneko landu dituzun hitzak OpenAIri bidaltzen zaizkio."
+            "value" : "Zure hitzak eta irudiak sortzeko, zure lanbidea, zure bi hizkuntzak eta dagoeneko landu dituzun hitzak OpenAIri bidaltzen zaizkio. Datu hauek Estatu Batuetan prozesatzen dira."
           }
         },
         "fa" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "برای ساختن واژه‌ها و تصاویر شما، شغل شما، دو زبان شما و واژه‌هایی که قبلاً تمرین کرده‌اید به OpenAI فرستاده می‌شوند."
+            "value" : "برای ساختن واژه‌ها و تصاویر شما، شغل شما، دو زبان شما و واژه‌هایی که قبلاً تمرین کرده‌اید به OpenAI فرستاده می‌شوند. این داده‌ها در ایالات متحده پردازش می‌شوند."
           }
         },
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jotta voimme luoda sanasi ja kuvasi, ammattisi, kaksi kieltäsi ja jo harjoittelemasi sanat lähetetään OpenAI:lle."
+            "value" : "Jotta voimme luoda sanasi ja kuvasi, ammattisi, kaksi kieltäsi ja jo harjoittelemasi sanat lähetetään OpenAI:lle. Nämä tiedot käsitellään Yhdysvalloissa."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pour créer tes mots et tes images, ton métier, tes deux langues et les mots que tu as déjà pratiqués sont envoyés à OpenAI."
+            "value" : "Pour créer tes mots et tes images, ton métier, tes deux langues et les mots que tu as déjà pratiqués sont envoyés à OpenAI. Ces données sont traitées aux États-Unis."
           }
         },
         "gl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Para crear as túas palabras e imaxes, o teu traballo, as túas dúas linguas e as palabras que xa practicaches envíanse a OpenAI."
+            "value" : "Para crear as túas palabras e imaxes, o teu traballo, as túas dúas linguas e as palabras que xa practicaches envíanse a OpenAI. Estes datos trátanse nos Estados Unidos."
           }
         },
         "gu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "તમારા શબ્દો અને ચિત્રો બનાવવા માટે, તમારો વ્યવસાય, તમારી બે ભાષાઓ અને તમે અગાઉ અભ્યાસ કરેલા શબ્દો OpenAI ને મોકલવામાં આવે છે."
+            "value" : "તમારા શબ્દો અને ચિત્રો બનાવવા માટે, તમારો વ્યવસાય, તમારી બે ભાષાઓ અને તમે અગાઉ અભ્યાસ કરેલા શબ્દો OpenAI ને મોકલવામાં આવે છે. આ માહિતી યુનાઇટેડ સ્ટેટ્સમાં પ્રોસેસ થાય છે."
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "כדי ליצור את המילים והתמונות שלך, המקצוע שלך, שתי השפות שלך והמילים שכבר תרגלת נשלחים ל-OpenAI."
+            "value" : "כדי ליצור את המילים והתמונות שלך, המקצוע שלך, שתי השפות שלך והמילים שכבר תרגלת נשלחים ל-OpenAI. הנתונים האלה מעובדים בארצות הברית."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "आपके शब्द और चित्र बनाने के लिए, आपका पेशा, आपकी दोनों भाषाएँ और वे शब्द जिनका आप पहले अभ्यास कर चुके हैं, OpenAI को भेजे जाते हैं।"
+            "value" : "आपके शब्द और चित्र बनाने के लिए, आपका पेशा, आपकी दोनों भाषाएँ और वे शब्द जिनका आप पहले अभ्यास कर चुके हैं, OpenAI को भेजे जाते हैं। यह डेटा संयुक्त राज्य अमेरिका में प्रोसेस किया जाता है।"
           }
         },
         "hr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kako bismo izradili tvoje riječi i slike, tvoje zanimanje, tvoja dva jezika i riječi koje si već vježbao šalju se OpenAI-ju."
+            "value" : "Kako bismo izradili tvoje riječi i slike, tvoje zanimanje, tvoja dva jezika i riječi koje si već vježbao šalju se OpenAI-ju. Ti se podaci obrađuju u Sjedinjenim Američkim Državama."
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A szavaid és képeid elkészítéséhez a foglalkozásodat, a két nyelvedet és a már gyakorolt szavaidat elküldjük az OpenAI-nak."
+            "value" : "A szavaid és képeid elkészítéséhez a foglalkozásodat, a két nyelvedet és a már gyakorolt szavaidat elküldjük az OpenAI-nak. Ezeket az adatokat az Egyesült Államokban dolgozzák fel."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Untuk membuat kata dan gambarmu, pekerjaanmu, dua bahasamu, dan kata-kata yang sudah kamu latih dikirim ke OpenAI."
+            "value" : "Untuk membuat kata dan gambarmu, pekerjaanmu, dua bahasamu, dan kata-kata yang sudah kamu latih dikirim ke OpenAI. Data ini diproses di Amerika Serikat."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Per creare le tue parole e immagini, il tuo lavoro, le tue due lingue e le parole che hai già praticato vengono inviati a OpenAI."
+            "value" : "Per creare le tue parole e immagini, il tuo lavoro, le tue due lingue e le parole che hai già praticato vengono inviati a OpenAI. Questi dati vengono elaborati negli Stati Uniti."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "単語と画像を作成するため、あなたの職業、2つの言語、これまでに練習した単語がOpenAIに送信されます。"
+            "value" : "単語と画像を作成するため、あなたの職業、2つの言語、これまでに練習した単語がOpenAIに送信されます。これらのデータは米国で処理されます。"
           }
         },
         "kk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сөздерің мен суреттеріңді жасау үшін кәсібің, екі тілің және бұрын жаттыққан сөздерің OpenAI-ға жіберіледі."
+            "value" : "Сөздерің мен суреттеріңді жасау үшін кәсібің, екі тілің және бұрын жаттыққан сөздерің OpenAI-ға жіберіледі. Бұл деректер Америка Құрама Штаттарында өңделеді."
           }
         },
         "kn" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ನಿಮ್ಮ ಪದಗಳು ಮತ್ತು ಚಿತ್ರಗಳನ್ನು ರಚಿಸಲು, ನಿಮ್ಮ ವೃತ್ತಿ, ನಿಮ್ಮ ಎರಡು ಭಾಷೆಗಳು ಮತ್ತು ನೀವು ಈಗಾಗಲೇ ಅಭ್ಯಾಸ ಮಾಡಿದ ಪದಗಳನ್ನು OpenAI ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ."
+            "value" : "ನಿಮ್ಮ ಪದಗಳು ಮತ್ತು ಚಿತ್ರಗಳನ್ನು ರಚಿಸಲು, ನಿಮ್ಮ ವೃತ್ತಿ, ನಿಮ್ಮ ಎರಡು ಭಾಷೆಗಳು ಮತ್ತು ನೀವು ಈಗಾಗಲೇ ಅಭ್ಯಾಸ ಮಾಡಿದ ಪದಗಳನ್ನು OpenAI ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ. ಈ ಡೇಟಾವನ್ನು ಅಮೆರಿಕ ಸಂಯುಕ್ತ ಸಂಸ್ಥಾನದಲ್ಲಿ ಸಂಸ್ಕರಿಸಲಾಗುತ್ತದೆ."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "단어와 그림을 만들기 위해 직업, 두 언어, 이미 연습한 단어가 OpenAI로 전송돼요."
+            "value" : "단어와 그림을 만들기 위해 직업, 두 언어, 이미 연습한 단어가 OpenAI로 전송돼요. 이 데이터는 미국에서 처리됩니다."
           }
         },
         "lt" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kad sukurtume tavo žodžius ir paveikslėlius, tavo profesija, dvi kalbos ir jau praktikuoti žodžiai siunčiami į OpenAI."
+            "value" : "Kad sukurtume tavo žodžius ir paveikslėlius, tavo profesija, dvi kalbos ir jau praktikuoti žodžiai siunčiami į OpenAI. Šie duomenys tvarkomi Jungtinėse Valstijose."
           }
         },
         "ml" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "നിങ്ങളുടെ വാക്കുകളും ചിത്രങ്ങളും സൃഷ്ടിക്കാൻ, നിങ്ങളുടെ തൊഴിലും രണ്ട് ഭാഷകളും നിങ്ങൾ ഇതിനകം പരിശീലിച്ച വാക്കുകളും OpenAI-ലേക്ക് അയയ്ക്കുന്നു."
+            "value" : "നിങ്ങളുടെ വാക്കുകളും ചിത്രങ്ങളും സൃഷ്ടിക്കാൻ, നിങ്ങളുടെ തൊഴിലും രണ്ട് ഭാഷകളും നിങ്ങൾ ഇതിനകം പരിശീലിച്ച വാക്കുകളും OpenAI-ലേക്ക് അയയ്ക്കുന്നു. ഈ ഡാറ്റ അമേരിക്കൻ ഐക്യനാടുകളിൽ പ്രോസസ്സ് ചെയ്യുന്നു."
           }
         },
         "mr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "तुमचे शब्द आणि चित्रे तयार करण्यासाठी तुमचा व्यवसाय, तुमच्या दोन भाषा आणि तुम्ही आधीच सराव केलेले शब्द OpenAI ला पाठवले जातात."
+            "value" : "तुमचे शब्द आणि चित्रे तयार करण्यासाठी तुमचा व्यवसाय, तुमच्या दोन भाषा आणि तुम्ही आधीच सराव केलेले शब्द OpenAI ला पाठवले जातात. हा डेटा अमेरिकेत प्रक्रिया केला जातो."
           }
         },
         "ms" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Untuk mencipta perkataan dan gambar anda, pekerjaan anda, dua bahasa anda dan perkataan yang telah anda latih dihantar kepada OpenAI."
+            "value" : "Untuk mencipta perkataan dan gambar anda, pekerjaan anda, dua bahasa anda dan perkataan yang telah anda latih dihantar kepada OpenAI. Data ini diproses di Amerika Syarikat."
           }
         },
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "For å lage ordene og bildene dine sendes yrket ditt, de to språkene dine og ordene du allerede har øvd på, til OpenAI."
+            "value" : "For å lage ordene og bildene dine sendes yrket ditt, de to språkene dine og ordene du allerede har øvd på, til OpenAI. Disse dataene behandles i USA."
           }
         },
         "ne" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "तपाईंका शब्द र चित्रहरू बनाउन, तपाईंको पेशा, तपाईंका दुई भाषाहरू र तपाईंले पहिले नै अभ्यास गरेका शब्दहरू OpenAI मा पठाइन्छन्।"
+            "value" : "तपाईंका शब्द र चित्रहरू बनाउन, तपाईंको पेशा, तपाईंका दुई भाषाहरू र तपाईंले पहिले नै अभ्यास गरेका शब्दहरू OpenAI मा पठाइन्छन्। यो डेटा संयुक्त राज्य अमेरिकामा प्रशोधन गरिन्छ।"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Om je woorden en afbeeldingen te maken, worden je beroep, je twee talen en de woorden die je al hebt geoefend naar OpenAI gestuurd."
+            "value" : "Om je woorden en afbeeldingen te maken, worden je beroep, je twee talen en de woorden die je al hebt geoefend naar OpenAI gestuurd. Deze gegevens worden verwerkt in de Verenigde Staten."
           }
         },
         "or" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ଆପଣଙ୍କ ଶବ୍ଦ ଓ ଚିତ୍ର ତିଆରି କରିବା ପାଇଁ, ଆପଣଙ୍କ ବୃତ୍ତି, ଆପଣଙ୍କ ଦୁଇଟି ଭାଷା ଓ ଆପଣ ପୂର୍ବରୁ ଅଭ୍ୟାସ କରିଥିବା ଶବ୍ଦ OpenAI କୁ ପଠାଯାଏ।"
+            "value" : "ଆପଣଙ୍କ ଶବ୍ଦ ଓ ଚିତ୍ର ତିଆରି କରିବା ପାଇଁ, ଆପଣଙ୍କ ବୃତ୍ତି, ଆପଣଙ୍କ ଦୁଇଟି ଭାଷା ଓ ଆପଣ ପୂର୍ବରୁ ଅଭ୍ୟାସ କରିଥିବା ଶବ୍ଦ OpenAI କୁ ପଠାଯାଏ। ଏହି ତଥ୍ୟ ଯୁକ୍ତରାଷ୍ଟ୍ର ଆମେରିକାରେ ପ୍ରକ୍ରିୟାକରଣ କରାଯାଏ।"
           }
         },
         "pa" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ਤੁਹਾਡੇ ਸ਼ਬਦ ਅਤੇ ਤਸਵੀਰਾਂ ਬਣਾਉਣ ਲਈ, ਤੁਹਾਡਾ ਕਿੱਤਾ, ਤੁਹਾਡੀਆਂ ਦੋ ਭਾਸ਼ਾਵਾਂ ਅਤੇ ਉਹ ਸ਼ਬਦ ਜਿਨ੍ਹਾਂ ਦਾ ਤੁਸੀਂ ਪਹਿਲਾਂ ਅਭਿਆਸ ਕਰ ਚੁੱਕੇ ਹੋ, OpenAI ਨੂੰ ਭੇਜੇ ਜਾਂਦੇ ਹਨ।"
+            "value" : "ਤੁਹਾਡੇ ਸ਼ਬਦ ਅਤੇ ਤਸਵੀਰਾਂ ਬਣਾਉਣ ਲਈ, ਤੁਹਾਡਾ ਕਿੱਤਾ, ਤੁਹਾਡੀਆਂ ਦੋ ਭਾਸ਼ਾਵਾਂ ਅਤੇ ਉਹ ਸ਼ਬਦ ਜਿਨ੍ਹਾਂ ਦਾ ਤੁਸੀਂ ਪਹਿਲਾਂ ਅਭਿਆਸ ਕਰ ਚੁੱਕੇ ਹੋ, OpenAI ਨੂੰ ਭੇਜੇ ਜਾਂਦੇ ਹਨ। ਇਹ ਡਾਟਾ ਸੰਯੁਕਤ ਰਾਜ ਅਮਰੀਕਾ ਵਿੱਚ ਪ੍ਰੋਸੈਸ ਕੀਤਾ ਜਾਂਦਾ ਹੈ।"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aby stworzyć twoje słowa i obrazki, twój zawód, twoje dwa języki i słowa, które już ćwiczyłeś, są wysyłane do OpenAI."
+            "value" : "Aby stworzyć twoje słowa i obrazki, twój zawód, twoje dwa języki i słowa, które już ćwiczyłeś, są wysyłane do OpenAI. Te dane są przetwarzane w Stanach Zjednoczonych."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Para criar suas palavras e imagens, sua profissão, seus dois idiomas e as palavras que você já praticou são enviados à OpenAI."
+            "value" : "Para criar suas palavras e imagens, sua profissão, seus dois idiomas e as palavras que você já praticou são enviados à OpenAI. Esses dados são processados nos Estados Unidos."
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Para criar as suas palavras e imagens, a sua profissão, os seus dois idiomas e as palavras que já praticou são enviados para a OpenAI."
+            "value" : "Para criar as suas palavras e imagens, a sua profissão, os seus dois idiomas e as palavras que já praticou são enviados para a OpenAI. Estes dados são tratados nos Estados Unidos."
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ca să creăm cuvintele și imaginile tale, meseria ta, cele două limbi ale tale și cuvintele pe care le-ai exersat deja sunt trimise către OpenAI."
+            "value" : "Ca să creăm cuvintele și imaginile tale, meseria ta, cele două limbi ale tale și cuvintele pe care le-ai exersat deja sunt trimise către OpenAI. Aceste date sunt prelucrate în Statele Unite."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Чтобы создать твои слова и картинки, твоя профессия, два твоих языка и слова, которые ты уже тренировал, отправляются в OpenAI."
+            "value" : "Чтобы создать твои слова и картинки, твоя профессия, два твоих языка и слова, которые ты уже тренировал, отправляются в OpenAI. Эти данные обрабатываются в США."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aby sme vytvorili tvoje slová a obrázky, tvoja profesia, tvoje dva jazyky a slová, ktoré si už precvičil, sa odosielajú do OpenAI."
+            "value" : "Aby sme vytvorili tvoje slová a obrázky, tvoja profesia, tvoje dva jazyky a slová, ktoré si už precvičil, sa odosielajú do OpenAI. Tieto údaje sa spracúvajú v Spojených štátoch."
           }
         },
         "sl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Da ustvarimo tvoje besede in slike, se tvoj poklic, tvoja dva jezika in besede, ki si jih že vadil, pošljejo OpenAI."
+            "value" : "Da ustvarimo tvoje besede in slike, se tvoj poklic, tvoja dva jezika in besede, ki si jih že vadil, pošljejo OpenAI. Ti podatki se obdelujejo v Združenih državah Amerike."
           }
         },
         "sq" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Për të krijuar fjalët dhe figurat e tua, profesioni yt, dy gjuhët e tua dhe fjalët që ke ushtruar tashmë dërgohen te OpenAI."
+            "value" : "Për të krijuar fjalët dhe figurat e tua, profesioni yt, dy gjuhët e tua dhe fjalët që ke ushtruar tashmë dërgohen te OpenAI. Këto të dhëna përpunohen në Shtetet e Bashkuara."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "För att skapa dina ord och bilder skickas ditt yrke, dina två språk och orden du redan har övat på till OpenAI."
+            "value" : "För att skapa dina ord och bilder skickas ditt yrke, dina två språk och orden du redan har övat på till OpenAI. Dessa uppgifter behandlas i USA."
           }
         },
         "ta" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "உங்கள் சொற்களையும் படங்களையும் உருவாக்க, உங்கள் தொழிலும், உங்கள் இரண்டு மொழிகளும், நீங்கள் ஏற்கனவே பயிற்சி செய்த சொற்களும் OpenAI-க்கு அனுப்பப்படுகின்றன."
+            "value" : "உங்கள் சொற்களையும் படங்களையும் உருவாக்க, உங்கள் தொழிலும், உங்கள் இரண்டு மொழிகளும், நீங்கள் ஏற்கனவே பயிற்சி செய்த சொற்களும் OpenAI-க்கு அனுப்பப்படுகின்றன. இந்தத் தரவு அமெரிக்காவில் செயலாக்கப்படுகிறது."
           }
         },
         "te" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "మీ పదాలు మరియు చిత్రాలను సృష్టించడానికి, మీ వృత్తి, మీ రెండు భాషలు మరియు మీరు ఇప్పటికే సాధన చేసిన పదాలు OpenAIకి పంపబడతాయి."
+            "value" : "మీ పదాలు మరియు చిత్రాలను సృష్టించడానికి, మీ వృత్తి, మీ రెండు భాషలు మరియు మీరు ఇప్పటికే సాధన చేసిన పదాలు OpenAIకి పంపబడతాయి. ఈ డేటా అమెరికా సంయుక్త రాష్ట్రాలలో ప్రాసెస్ చేయబడుతుంది."
           }
         },
         "th" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "เพื่อสร้างคำศัพท์และรูปภาพของคุณ อาชีพ สองภาษาของคุณ และคำที่คุณฝึกไปแล้วจะถูกส่งไปยัง OpenAI"
+            "value" : "เพื่อสร้างคำศัพท์และรูปภาพของคุณ อาชีพ สองภาษาของคุณ และคำที่คุณฝึกไปแล้วจะถูกส่งไปยัง OpenAI ข้อมูลนี้ได้รับการประมวลผลในสหรัฐอเมริกา"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kelimelerini ve resimlerini oluşturmak için mesleğin, iki dilin ve daha önce çalıştığın kelimeler OpenAI'ye gönderilir."
+            "value" : "Kelimelerini ve resimlerini oluşturmak için mesleğin, iki dilin ve daha önce çalıştığın kelimeler OpenAI'ye gönderilir. Bu veriler Amerika Birleşik Devletleri'nde işlenir."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Щоб створити твої слова й картинки, твоя професія, дві твої мови та слова, які ти вже тренував, надсилаються в OpenAI."
+            "value" : "Щоб створити твої слова й картинки, твоя професія, дві твої мови та слова, які ти вже тренував, надсилаються в OpenAI. Ці дані обробляються в США."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Để tạo từ vựng và hình ảnh của bạn, nghề nghiệp, hai ngôn ngữ của bạn và những từ bạn đã luyện tập sẽ được gửi đến OpenAI."
+            "value" : "Để tạo từ vựng và hình ảnh của bạn, nghề nghiệp, hai ngôn ngữ của bạn và những từ bạn đã luyện tập sẽ được gửi đến OpenAI. Dữ liệu này được xử lý tại Hoa Kỳ."
           }
         },
         "wuu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "为了生成你的单词和图片，你的职业、两种语言以及你已练习过的单词会发送给 OpenAI。"
+            "value" : "为了生成你的单词和图片，你的职业、两种语言以及你已练习过的单词会发送给 OpenAI。这些数据在美国处理。"
           }
         },
         "yue" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "為了產生你的單字和圖片，你的職業、兩種語言以及你已練習過的單字會傳送給 OpenAI。"
+            "value" : "為了產生你的單字和圖片，你的職業、兩種語言以及你已練習過的單字會傳送給 OpenAI。這些資料在美國處理。"
           }
         },
         "zh" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "为了生成你的单词和图片，你的职业、两种语言以及你已练习过的单词会发送给 OpenAI。"
+            "value" : "为了生成你的单词和图片，你的职业、两种语言以及你已练习过的单词会发送给 OpenAI。这些数据在美国处理。"
           }
         },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "為了產生你的單字和圖片，你的職業、兩種語言以及你已練習過的單字會傳送給 OpenAI。"
+            "value" : "為了產生你的單字和圖片，你的職業、兩種語言以及你已練習過的單字會傳送給 OpenAI。這些資料在美國處理。"
           }
         }
       }
@@ -48914,326 +48914,325 @@
         }
       }
     },
-    "Unlimited words and pictures for this profession" : {
-      "comment" : "A description of the unlock benefit.",
-      "isCommentAutoGenerated" : true,
+    "The most-used workplace words for this profession" : {
+      "comment" : "Paywall benefit line (replaces 'unlimited words').",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "كلمات وصور غير محدودة لهذه المهنة"
+            "value" : "أكثر كلمات العمل استخدامًا في هذه المهنة"
           }
         },
         "bg" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Неограничени думи и картинки за тази професия"
+            "value" : "Най-използваните работни думи за тази професия"
           }
         },
         "bn" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "এই পেশার জন্য সীমাহীন শব্দ ও ছবি"
+            "value" : "এই পেশার সবচেয়ে ব্যবহৃত কাজের শব্দ"
           }
         },
         "ca" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paraules i imatges il·limitades per a aquesta professió"
+            "value" : "Les paraules de feina més utilitzades d'aquesta professió"
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Neomezená slova a obrázky pro tuto profesi"
+            "value" : "Nejpoužívanější pracovní slova této profese"
           }
         },
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ubegrænsede ord og billeder til dette erhverv"
+            "value" : "De mest brugte arbejdsord for dette erhverv"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Unbegrenzt Wörter und Bilder für diesen Beruf"
+            "value" : "Die meistgenutzten Arbeitswörter für diesen Beruf"
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Απεριόριστες λέξεις και εικόνες για αυτό το επάγγελμα"
+            "value" : "Οι πιο συχνές λέξεις της δουλειάς για αυτό το επάγγελμα"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Palabras e imágenes ilimitadas para esta profesión"
+            "value" : "Las palabras de trabajo más usadas de esta profesión"
           }
         },
         "eu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hitz eta irudi mugagabeak lanbide honetarako"
+            "value" : "Lanbide honetako lan-hitz erabilienak"
           }
         },
         "fa" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "کلمات و تصاویر نامحدود برای این حرفه"
+            "value" : "پرکاربردترین واژه‌های کاری این حرفه"
           }
         },
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rajattomasti sanoja ja kuvia tähän ammattiin"
+            "value" : "Tämän ammatin käytetyimmät työsanat"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mots et images illimités pour ce métier"
+            "value" : "Les mots de travail les plus utilisés de ce métier"
           }
         },
         "gl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Palabras e imaxes ilimitadas para esta profesión"
+            "value" : "As palabras de traballo máis usadas desta profesión"
           }
         },
         "gu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "આ વ્યવસાય માટે અમર્યાદિત શબ્દો અને ચિત્રો"
+            "value" : "આ વ્યવસાયના સૌથી વધુ વપરાતા કામના શબ્દો"
           }
         },
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "מילים ותמונות ללא הגבלה למקצוע הזה"
+            "value" : "מילות העבודה הנפוצות ביותר במקצוע הזה"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "इस पेशे के लिए असीमित शब्द और तस्वीरें"
+            "value" : "इस पेशे के सबसे ज़्यादा इस्तेमाल होने वाले काम के शब्द"
           }
         },
         "hr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Neograničene riječi i slike za ovo zanimanje"
+            "value" : "Najčešće korištene radne riječi ovog zanimanja"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Korlátlan szó és kép ehhez a szakmához"
+            "value" : "A szakma leggyakoribb munkahelyi szavai"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kata dan gambar tanpa batas untuk profesi ini"
+            "value" : "Kosakata kerja yang paling sering dipakai untuk profesi ini"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Parole e immagini illimitate per questa professione"
+            "value" : "Le parole di lavoro più usate di questa professione"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "この職業の単語と画像が無制限に"
+            "value" : "この職業でよく使う仕事の単語"
           }
         },
         "kk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Осы мамандық үшін шексіз сөздер мен суреттер"
+            "value" : "Бұл мамандықтың ең көп қолданылатын жұмыс сөздері"
           }
         },
         "kn" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ಈ ವೃತ್ತಿಗೆ ಅಪರಿಮಿತ ಪದಗಳು ಮತ್ತು ಚಿತ್ರಗಳು"
+            "value" : "ಈ ವೃತ್ತಿಯಲ್ಲಿ ಹೆಚ್ಚು ಬಳಸುವ ಕೆಲಸದ ಪದಗಳು"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "이 직업의 단어와 그림 무제한"
+            "value" : "이 직업에서 가장 많이 쓰는 업무 단어"
           }
         },
         "lt" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Neriboti žodžiai ir paveikslėliai šiai profesijai"
+            "value" : "Dažniausiai vartojami šios profesijos darbo žodžiai"
           }
         },
         "ml" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ഈ തൊഴിലിനായി പരിധിയില്ലാത്ത വാക്കുകളും ചിത്രങ്ങളും"
+            "value" : "ഈ തൊഴിലിൽ ഏറ്റവും കൂടുതൽ ഉപയോഗിക്കുന്ന ജോലി വാക്കുകൾ"
           }
         },
         "mr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "या व्यवसायासाठी अमर्याद शब्द आणि चित्रे"
+            "value" : "या व्यवसायातील सर्वाधिक वापरले जाणारे कामाचे शब्द"
           }
         },
         "ms" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Perkataan dan gambar tanpa had untuk profesion ini"
+            "value" : "Perkataan kerja paling kerap digunakan untuk profesion ini"
           }
         },
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ubegrenset med ord og bilder for dette yrket"
+            "value" : "De mest brukte arbeidsordene for dette yrket"
           }
         },
         "ne" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "यो पेशाका लागि असीमित शब्द र चित्रहरू"
+            "value" : "यो पेशामा सबैभन्दा बढी प्रयोग हुने कामका शब्दहरू"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Onbeperkt woorden en afbeeldingen voor dit beroep"
+            "value" : "De meestgebruikte woorden op het werk voor dit beroep"
           }
         },
         "or" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ଏହି ବୃତ୍ତି ପାଇଁ ଅସୀମିତ ଶବ୍ଦ ଓ ଚିତ୍ର"
+            "value" : "ଏହି ବୃତ୍ତିରେ ସବୁଠାରୁ ଅଧିକ ବ୍ୟବହୃତ କାମର ଶବ୍ଦ"
           }
         },
         "pa" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ਇਸ ਪੇਸ਼ੇ ਲਈ ਅਸੀਮਤ ਸ਼ਬਦ ਅਤੇ ਤਸਵੀਰਾਂ"
+            "value" : "ਇਸ ਪੇਸ਼ੇ ਵਿੱਚ ਸਭ ਤੋਂ ਵੱਧ ਵਰਤੇ ਜਾਣ ਵਾਲੇ ਕੰਮ ਦੇ ਸ਼ਬਦ"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nieograniczone słowa i obrazki dla tego zawodu"
+            "value" : "Najczęściej używane słowa w pracy w tym zawodzie"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Palavras e imagens ilimitadas para esta profissão"
+            "value" : "As palavras de trabalho mais usadas nesta profissão"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Palavras e imagens ilimitadas para esta profissão"
+            "value" : "As palavras de trabalho mais usadas nesta profissão"
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cuvinte și imagini nelimitate pentru această meserie"
+            "value" : "Cele mai folosite cuvinte de lucru pentru această profesie"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Безлимитные слова и картинки для этой профессии"
+            "value" : "Самые употребительные рабочие слова этой профессии"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Neobmedzené slová a obrázky pre túto profesiu"
+            "value" : "Najpoužívanejšie pracovné slová tejto profesie"
           }
         },
         "sl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Neomejeno besed in slik za ta poklic"
+            "value" : "Najpogostejše delovne besede tega poklica"
           }
         },
         "sq" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fjalë dhe figura pa kufi për këtë profesion"
+            "value" : "Fjalët e punës më të përdorura të këtij profesioni"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Obegränsat med ord och bilder för det här yrket"
+            "value" : "De vanligaste arbetsorden för det här yrket"
           }
         },
         "ta" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "இந்தத் தொழிலுக்கு வரம்பற்ற சொற்களும் படங்களும்"
+            "value" : "இந்தத் தொழிலில் அதிகம் பயன்படும் வேலைச் சொற்கள்"
           }
         },
         "te" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ఈ వృత్తికి అపరిమిత పదాలు మరియు చిత్రాలు"
+            "value" : "ఈ వృత్తిలో ఎక్కువగా వాడే పని పదాలు"
           }
         },
         "th" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "คำและรูปไม่จำกัดสำหรับอาชีพนี้"
+            "value" : "คำศัพท์ที่ใช้บ่อยที่สุดในงานของอาชีพนี้"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu meslek için sınırsız kelime ve resim"
+            "value" : "Bu meslekte en çok kullanılan iş kelimeleri"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Необмежені слова й картинки для цієї професії"
+            "value" : "Найуживаніші робочі слова цієї професії"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Từ và hình không giới hạn cho nghề này"
+            "value" : "Những từ dùng nhiều nhất trong công việc của nghề này"
           }
         },
         "wuu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此职业的单词和图片无限量"
+            "value" : "此职业最常用的工作词汇"
           }
         },
         "yue" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此職業的單字和圖片無限量"
+            "value" : "此職業最常用的工作詞彙"
           }
         },
         "zh" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此职业的单词和图片无限量"
+            "value" : "此职业最常用的工作词汇"
           }
         },
         "zh-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此職業的單字和圖片無限量"
+            "value" : "此職業最常用的工作詞彙"
           }
         }
       }
@@ -58076,6 +58075,1944 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你的單字清單（包括你玩過的每個單字和答對次數）隨職業解鎖一起提供。一次付費，無需訂閱。"
+          }
+        }
+      }
+    },
+    "🎉 You've played every word for this profession! Keep practising them in My words, or try another profession." : {
+      "comment" : "Error screen: the player has played every word of the profession's vocabulary. 'My words' is the feature name.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 لقد لعبت كل كلمات هذه المهنة! واصل التدرّب عليها في كلماتي، أو جرّب مهنة أخرى."
+          }
+        },
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Изигра всички думи за тази професия! Продължи да ги упражняваш в Моите думи или опитай друга професия."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 এই পেশার সব শব্দ তুমি খেলে ফেলেছ! আমার শব্দ-এ অনুশীলন চালিয়ে যাও, অথবা অন্য পেশা চেষ্টা করো।"
+          }
+        },
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Has jugat totes les paraules d'aquesta professió! Continua practicant-les a Les meves paraules o prova una altra professió."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Zahrál sis všechna slova této profese! Procvičuj je dál v sekci Moje slova, nebo zkus jinou profesi."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Du har spillet alle ord for dette erhverv! Bliv ved med at øve dem i Mine ord, eller prøv et andet erhverv."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Du hast alle Wörter dieses Berufs gespielt! Übe sie weiter in Meine Wörter oder probiere einen anderen Beruf."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Έπαιξες όλες τις λέξεις αυτού του επαγγέλματος! Συνέχισε την εξάσκηση στις Οι λέξεις μου ή δοκίμασε άλλο επάγγελμα."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 ¡Has jugado todas las palabras de esta profesión! Sigue practicándolas en Mis palabras o prueba otra profesión."
+          }
+        },
+        "eu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Lanbide honetako hitz guztiak jokatu dituzu! Jarraitu praktikatzen Nire hitzak atalean, edo probatu beste lanbide bat."
+          }
+        },
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 همهٔ واژه‌های این حرفه را بازی کردی! در کلمات من تمرینشان را ادامه بده یا حرفهٔ دیگری را امتحان کن."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Olet pelannut kaikki tämän ammatin sanat! Harjoittele niitä lisää kohdassa Omat sanat tai kokeile toista ammattia."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Tu as joué tous les mots de ce métier ! Continue à les pratiquer dans Mes mots, ou essaie un autre métier."
+          }
+        },
+        "gl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Xogaches todas as palabras desta profesión! Segue practicándoas en As miñas palabras ou proba outra profesión."
+          }
+        },
+        "gu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 તમે આ વ્યવસાયના બધા શબ્દો રમી લીધા! મારા શબ્દોમાં તેમનો અભ્યાસ ચાલુ રાખો, અથવા બીજો વ્યવસાય અજમાવો."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 שיחקת בכל המילים של המקצוע הזה! המשך לתרגל אותן בהמילים שלי, או נסה מקצוע אחר."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 तुमने इस पेशे के सारे शब्द खेल लिए! मेरे शब्द में इनका अभ्यास जारी रखो, या कोई दूसरा पेशा आज़माओ।"
+          }
+        },
+        "hr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Odigrao si sve riječi ovog zanimanja! Nastavi ih vježbati u Moje riječi ili isprobaj drugo zanimanje."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 A szakma összes szavát lejátszottad! Gyakorold őket tovább a(z) Szavaim részben, vagy próbálj ki egy másik szakmát."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Kamu sudah memainkan semua kata untuk profesi ini! Terus latih di Kata saya, atau coba profesi lain."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Hai giocato tutte le parole di questa professione! Continua a esercitarti in Le mie parole o prova un'altra professione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 この職業の単語をすべてプレイしました！マイ単語で練習を続けるか、別の職業を試してみましょう。"
+          }
+        },
+        "kk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Сен бұл мамандықтың барлық сөздерін ойнап шықтың! Оларды Менің сөздерім бөлімінде жаттықтыра бер немесе басқа мамандықты байқап көр."
+          }
+        },
+        "kn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 ಈ ವೃತ್ತಿಯ ಎಲ್ಲಾ ಪದಗಳನ್ನು ನೀವು ಆಡಿದ್ದೀರಿ! ನನ್ನ ಪದಗಳು ನಲ್ಲಿ ಅಭ್ಯಾಸ ಮುಂದುವರಿಸಿ, ಅಥವಾ ಬೇರೆ ವೃತ್ತಿಯನ್ನು ಪ್ರಯತ್ನಿಸಿ."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 이 직업의 단어를 모두 플레이했어요! 내 단어에서 계속 연습하거나 다른 직업을 시도해 보세요."
+          }
+        },
+        "lt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Sužaidei visus šios profesijos žodžius! Toliau juos lavink skiltyje Mano žodžiai arba išbandyk kitą profesiją."
+          }
+        },
+        "ml" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 ഈ തൊഴിലിലെ എല്ലാ വാക്കുകളും നിങ്ങൾ കളിച്ചു! എന്റെ വാക്കുകൾ ൽ പരിശീലനം തുടരുക, അല്ലെങ്കിൽ മറ്റൊരു തൊഴിൽ പരീക്ഷിക്കുക."
+          }
+        },
+        "mr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 तुम्ही या व्यवसायातील सर्व शब्द खेळलात! माझे शब्द मध्ये सराव सुरू ठेवा, किंवा दुसरा व्यवसाय करून पाहा."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Anda telah memainkan semua perkataan untuk profesion ini! Teruskan berlatih di Perkataan saya, atau cuba profesion lain."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Du har spilt alle ordene for dette yrket! Fortsett å øve på dem i Mine ord, eller prøv et annet yrke."
+          }
+        },
+        "ne" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 तपाईंले यो पेशाका सबै शब्द खेल्नुभयो! मेरा शब्दहरू मा अभ्यास जारी राख्नुहोस्, वा अर्को पेशा प्रयास गर्नुहोस्।"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Je hebt alle woorden voor dit beroep gespeeld! Blijf ze oefenen in Mijn woorden, of probeer een ander beroep."
+          }
+        },
+        "or" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 ଆପଣ ଏହି ବୃତ୍ତିର ସମସ୍ତ ଶବ୍ଦ ଖେଳିସାରିଛନ୍ତି! ମୋ ଶବ୍ଦରେ ଅଭ୍ୟାସ ଜାରି ରଖନ୍ତୁ, କିମ୍ବା ଅନ୍ୟ ଏକ ବୃତ୍ତି ଚେଷ୍ଟା କରନ୍ତୁ।"
+          }
+        },
+        "pa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 ਤੁਸੀਂ ਇਸ ਪੇਸ਼ੇ ਦੇ ਸਾਰੇ ਸ਼ਬਦ ਖੇਡ ਲਏ ਹਨ! ਮੇਰੇ ਸ਼ਬਦ ਵਿੱਚ ਅਭਿਆਸ ਜਾਰੀ ਰੱਖੋ, ਜਾਂ ਕੋਈ ਹੋਰ ਪੇਸ਼ਾ ਅਜ਼ਮਾਓ।"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Zagrałeś wszystkie słowa z tego zawodu! Ćwicz je dalej w sekcji Moje słowa albo spróbuj innego zawodu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Você jogou todas as palavras desta profissão! Continue praticando em Minhas palavras ou experimente outra profissão."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Jogaste todas as palavras desta profissão! Continua a praticá-las em As minhas palavras ou experimenta outra profissão."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Ai jucat toate cuvintele acestei profesii! Continuă să le exersezi în Cuvintele mele sau încearcă altă profesie."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Ты сыграл все слова этой профессии! Продолжай тренировать их в разделе «Мои слова» или попробуй другую профессию."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Zahral si všetky slová tejto profesie! Precvičuj ich ďalej v sekcii Moje slová alebo skús inú profesiu."
+          }
+        },
+        "sl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Odigral si vse besede tega poklica! Še naprej jih vadi v razdelku Moje besede ali poskusi drug poklic."
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Ke luajtur të gjitha fjalët e këtij profesioni! Vazhdo t'i ushtrosh te Fjalët e mia, ose provo një profesion tjetër."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Du har spelat alla ord för det här yrket! Fortsätt öva på dem i Mina ord, eller prova ett annat yrke."
+          }
+        },
+        "ta" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 இந்தத் தொழிலின் எல்லாச் சொற்களையும் விளையாடிவிட்டீர்கள்! என் சொற்கள் பகுதியில் பயிற்சியைத் தொடருங்கள், அல்லது வேறு தொழிலை முயற்சிக்கவும்."
+          }
+        },
+        "te" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 ఈ వృత్తిలోని అన్ని పదాలను మీరు ఆడేశారు! నా పదాలులో సాధన కొనసాగించండి, లేదా మరో వృత్తిని ప్రయత్నించండి."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 คุณเล่นคำศัพท์ของอาชีพนี้ครบทุกคำแล้ว! ฝึกต่อได้ใน คำศัพท์ของฉัน หรือลองอาชีพอื่นดู"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Bu mesleğin tüm kelimelerini oynadın! Kelimelerim bölümünde çalışmaya devam et ya da başka bir meslek dene."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Ти зіграв усі слова цієї професії! Тренуй їх далі в розділі «Мої слова» або спробуй іншу професію."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Bạn đã chơi hết mọi từ của nghề này! Tiếp tục luyện tập trong Từ của tôi, hoặc thử một nghề khác."
+          }
+        },
+        "wuu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 你已经玩完此职业的全部单词！继续在“我个单词”里练习，或者试试别的职业。"
+          }
+        },
+        "yue" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 你已經玩完此職業的全部單字！繼續在「我嘅生字」裡練習，或者試試別的職業。"
+          }
+        },
+        "zh" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 你已经玩完此职业的全部单词！继续在“我的单词”里练习，或者试试别的职业。"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 你已經玩完此職業的全部單字！繼續在「我的單字」裡練習，或試試別的職業。"
+          }
+        }
+      }
+    },
+    "You've reached today's limit of new pictures. Practise your words in My words, or come back tomorrow." : {
+      "comment" : "Error screen: the daily limit of 100 new pictures per user is reached. 'My words' is the feature name.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لقد وصلت إلى حدّ الصور الجديدة لهذا اليوم. تدرّب على كلماتك في كلماتي، أو عُد غدًا."
+          }
+        },
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Достигна днешния лимит за нови картинки. Упражнявай думите си в Моите думи или се върни утре."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আজকের নতুন ছবির সীমায় তুমি পৌঁছে গেছ। আমার শব্দ-এ তোমার শব্দ অনুশীলন করো, অথবা কাল আবার এসো।"
+          }
+        },
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Has arribat al límit d'imatges noves d'avui. Practica les teves paraules a Les meves paraules o torna demà."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dosáhl jsi dnešního limitu nových obrázků. Procvičuj svá slova v sekci Moje slova, nebo se vrať zítra."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du har nået dagens grænse for nye billeder. Øv dine ord i Mine ord, eller kom tilbage i morgen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du hast das heutige Limit für neue Bilder erreicht. Übe deine Wörter in Meine Wörter oder komm morgen wieder."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Έφτασες το σημερινό όριο νέων εικόνων. Εξασκήσου στις λέξεις σου στις Οι λέξεις μου ή έλα ξανά αύριο."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Has alcanzado el límite de imágenes nuevas de hoy. Practica tus palabras en Mis palabras o vuelve mañana."
+          }
+        },
+        "eu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gaurko irudi berrien muga gainditu duzu. Landu zure hitzak Nire hitzak atalean, edo itzuli bihar."
+          }
+        },
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "به سقف تصاویر جدید امروز رسیدی. واژه‌هایت را در کلمات من تمرین کن یا فردا برگرد."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Olet saavuttanut tämän päivän uusien kuvien rajan. Harjoittele sanojasi kohdassa Omat sanat tai palaa huomenna."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu as atteint la limite d'images nouvelles pour aujourd'hui. Pratique tes mots dans Mes mots, ou reviens demain."
+          }
+        },
+        "gl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chegaches ao límite de imaxes novas de hoxe. Practica as túas palabras en As miñas palabras ou volve mañá."
+          }
+        },
+        "gu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "આજની નવી તસવીરોની મર્યાદા પૂરી થઈ ગઈ છે. મારા શબ્દોમાં તમારા શબ્દોનો અભ્યાસ કરો, અથવા કાલે પાછા આવો."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הגעת למגבלת התמונות החדשות של היום. תרגל את המילים שלך בהמילים שלי, או חזור מחר."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "तुम आज की नई तस्वीरों की सीमा तक पहुँच गए हो। मेरे शब्द में अपने शब्दों का अभ्यास करो, या कल फिर आओ।"
+          }
+        },
+        "hr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dosegnuo si današnje ograničenje novih slika. Vježbaj svoje riječi u Moje riječi ili se vrati sutra."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elérted a mai új képek korlátját. Gyakorold a szavaidat a(z) Szavaim részben, vagy gyere vissza holnap."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kamu sudah mencapai batas gambar baru hari ini. Latih kata-katamu di Kata saya, atau kembali besok."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hai raggiunto il limite di immagini nuove di oggi. Esercitati con le tue parole in Le mie parole o torna domani."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日の新しい画像の上限に達しました。マイ単語で単語を練習するか、明日またどうぞ。"
+          }
+        },
+        "kk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бүгінгі жаңа суреттер шегіне жеттің. Сөздеріңді Менің сөздерім бөлімінде жаттықтыр немесе ертең қайта кел."
+          }
+        },
+        "kn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ಇಂದಿನ ಹೊಸ ಚಿತ್ರಗಳ ಮಿತಿಯನ್ನು ತಲುಪಿದ್ದೀರಿ. ನನ್ನ ಪದಗಳು ನಲ್ಲಿ ನಿಮ್ಮ ಪದಗಳನ್ನು ಅಭ್ಯಾಸ ಮಾಡಿ, ಅಥವಾ ನಾಳೆ ಮತ್ತೆ ಬನ್ನಿ."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오늘의 새 그림 한도에 도달했어요. 내 단어에서 단어를 연습하거나 내일 다시 오세요."
+          }
+        },
+        "lt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasiekei šiandienos naujų paveikslėlių ribą. Lavink savo žodžius skiltyje Mano žodžiai arba sugrįžk rytoj."
+          }
+        },
+        "ml" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ഇന്നത്തെ പുതിയ ചിത്രങ്ങളുടെ പരിധിയിൽ നിങ്ങൾ എത്തി. എന്റെ വാക്കുകൾ ൽ നിങ്ങളുടെ വാക്കുകൾ പരിശീലിക്കുക, അല്ലെങ്കിൽ നാളെ വീണ്ടും വരിക."
+          }
+        },
+        "mr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आजच्या नवीन चित्रांची मर्यादा पूर्ण झाली आहे. माझे शब्द मध्ये तुमच्या शब्दांचा सराव करा, किंवा उद्या परत या."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anda telah mencapai had gambar baharu hari ini. Latih perkataan anda di Perkataan saya, atau kembali esok."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du har nådd dagens grense for nye bilder. Øv på ordene dine i Mine ord, eller kom tilbake i morgen."
+          }
+        },
+        "ne" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "तपाईं आजको नयाँ तस्बिरको सीमामा पुग्नुभयो। मेरा शब्दहरू मा आफ्ना शब्दहरू अभ्यास गर्नुहोस्, वा भोलि फेरि आउनुहोस्।"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je hebt de limiet voor nieuwe afbeeldingen van vandaag bereikt. Oefen je woorden in Mijn woorden, of kom morgen terug."
+          }
+        },
+        "or" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ଆପଣ ଆଜିର ନୂଆ ଛବି ସୀମାରେ ପହଞ୍ଚିଛନ୍ତି। ମୋ ଶବ୍ଦରେ ଆପଣଙ୍କ ଶବ୍ଦ ଅଭ୍ୟାସ କରନ୍ତୁ, କିମ୍ବା କାଲି ପୁଣି ଆସନ୍ତୁ।"
+          }
+        },
+        "pa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ਤੁਸੀਂ ਅੱਜ ਦੀਆਂ ਨਵੀਆਂ ਤਸਵੀਰਾਂ ਦੀ ਹੱਦ ਤੱਕ ਪਹੁੰਚ ਗਏ ਹੋ। ਮੇਰੇ ਸ਼ਬਦ ਵਿੱਚ ਆਪਣੇ ਸ਼ਬਦਾਂ ਦਾ ਅਭਿਆਸ ਕਰੋ, ਜਾਂ ਕੱਲ੍ਹ ਮੁੜ ਆਓ।"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Osiągnąłeś dzisiejszy limit nowych obrazków. Ćwicz swoje słowa w sekcji Moje słowa albo wróć jutro."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Você atingiu o limite de imagens novas de hoje. Pratique suas palavras em Minhas palavras ou volte amanhã."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atingiste o limite de imagens novas de hoje. Pratica as tuas palavras em As minhas palavras ou volta amanhã."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ai atins limita de imagini noi de azi. Exersează-ți cuvintele în Cuvintele mele sau revino mâine."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ты достиг сегодняшнего лимита новых картинок. Тренируй свои слова в разделе «Мои слова» или возвращайся завтра."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dosiahol si dnešný limit nových obrázkov. Precvičuj svoje slová v sekcii Moje slová alebo sa vráť zajtra."
+          }
+        },
+        "sl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dosegel si današnjo omejitev novih slik. Vadi svoje besede v razdelku Moje besede ali se vrni jutri."
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ke arritur kufirin e sotëm të figurave të reja. Ushtro fjalët e tua te Fjalët e mia, ose kthehu nesër."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du har nått dagens gräns för nya bilder. Öva på dina ord i Mina ord, eller kom tillbaka i morgon."
+          }
+        },
+        "ta" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "இன்றைய புதிய படங்களின் வரம்பை அடைந்துவிட்டீர்கள். என் சொற்கள் பகுதியில் உங்கள் சொற்களைப் பயிற்சி செய்யுங்கள், அல்லது நாளை மீண்டும் வாருங்கள்."
+          }
+        },
+        "te" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ఈ రోజు కొత్త చిత్రాల పరిమితిని చేరుకున్నారు. నా పదాలులో మీ పదాలను సాధన చేయండి, లేదా రేపు మళ్ళీ రండి."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "คุณใช้รูปภาพใหม่ครบโควตาของวันนี้แล้ว ฝึกคำศัพท์ของคุณใน คำศัพท์ของฉัน หรือกลับมาใหม่พรุ่งนี้"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bugünkü yeni resim sınırına ulaştın. Kelimelerini Kelimelerim bölümünde çalış ya da yarın tekrar gel."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ти досяг сьогоднішнього ліміту нових картинок. Тренуй свої слова в розділі «Мої слова» або повертайся завтра."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bạn đã đạt giới hạn hình ảnh mới của hôm nay. Luyện các từ của bạn trong Từ của tôi, hoặc quay lại vào ngày mai."
+          }
+        },
+        "wuu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你已达到今天的新图片上限。在“我个单词”里练习你的单词，或者明天再来。"
+          }
+        },
+        "yue" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你已達到今天的新圖片上限。在「我嘅生字」裡練習你的單字，或者明天再來。"
+          }
+        },
+        "zh" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你已达到今天的新图片上限。在“我的单词”里练习你的单词，或者明天再来。"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你已達到今天的新圖片上限。在「我的單字」裡練習你的單字，或明天再來。"
+          }
+        }
+      }
+    },
+    "Each profession has its own vocabulary, usually a few hundred words. Up to 100 new pictures a day." : {
+      "comment" : "Paywall small print above the Unlock button: the vocabulary is finite, and the daily picture limit.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لكل مهنة مفرداتها الخاصة، عادةً بضع مئات من الكلمات. حتى 100 صورة جديدة في اليوم."
+          }
+        },
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Всяка професия има свой речник, обикновено няколкостотин думи. До 100 нови картинки на ден."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "প্রতিটি পেশার নিজস্ব শব্দভান্ডার আছে, সাধারণত কয়েকশো শব্দ। দিনে সর্বোচ্চ ১০০টি নতুন ছবি।"
+          }
+        },
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada professió té el seu propi vocabulari, normalment unes quantes centenars de paraules. Fins a 100 imatges noves al dia."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Každá profese má vlastní slovní zásobu, obvykle několik set slov. Až 100 nových obrázků denně."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hvert erhverv har sit eget ordforråd, som regel et par hundrede ord. Op til 100 nye billeder om dagen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeder Beruf hat seinen eigenen Wortschatz, meist einige hundert Wörter. Bis zu 100 neue Bilder pro Tag."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Κάθε επάγγελμα έχει το δικό του λεξιλόγιο, συνήθως μερικές εκατοντάδες λέξεις. Έως 100 νέες εικόνες την ημέρα."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada profesión tiene su propio vocabulario, normalmente unos cientos de palabras. Hasta 100 imágenes nuevas al día."
+          }
+        },
+        "eu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lanbide bakoitzak bere hiztegia du, normalean ehunka hitz batzuk. Egunean 100 irudi berri gehienez."
+          }
+        },
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هر حرفه واژگان خودش را دارد، معمولاً چند صد واژه. تا ۱۰۰ تصویر جدید در روز."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jokaisella ammatilla on oma sanastonsa, yleensä muutamia satoja sanoja. Enintään 100 uutta kuvaa päivässä."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque métier a son propre vocabulaire, généralement quelques centaines de mots. Jusqu'à 100 nouvelles images par jour."
+          }
+        },
+        "gl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada profesión ten o seu propio vocabulario, normalmente uns centos de palabras. Ata 100 imaxes novas ao día."
+          }
+        },
+        "gu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "દરેક વ્યવસાયનો પોતાનો શબ્દભંડોળ હોય છે, સામાન્ય રીતે થોડાક સો શબ્દો. દિવસમાં 100 સુધી નવી તસવીરો."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "לכל מקצוע יש אוצר מילים משלו, בדרך כלל כמה מאות מילים. עד 100 תמונות חדשות ביום."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हर पेशे की अपनी शब्दावली होती है, आमतौर पर कुछ सौ शब्द। दिन में 100 तक नई तस्वीरें।"
+          }
+        },
+        "hr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Svako zanimanje ima svoj vokabular, obično nekoliko stotina riječi. Do 100 novih slika dnevno."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minden szakmának saját szókincse van, általában néhány száz szó. Naponta legfeljebb 100 új kép."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setiap profesi punya kosakatanya sendiri, biasanya beberapa ratus kata. Hingga 100 gambar baru per hari."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni professione ha il suo vocabolario, di solito qualche centinaio di parole. Fino a 100 nuove immagini al giorno."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "職業ごとに語彙があり、通常は数百語です。新しい画像は1日100枚まで。"
+          }
+        },
+        "kk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Әр мамандықтың өз сөздігі бар, әдетте бірнеше жүз сөз. Күніне 100-ге дейін жаңа сурет."
+          }
+        },
+        "kn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ಪ್ರತಿ ವೃತ್ತಿಗೆ ತನ್ನದೇ ಪದಸಂಪತ್ತು ಇದೆ, ಸಾಮಾನ್ಯವಾಗಿ ಕೆಲವು ನೂರು ಪದಗಳು. ದಿನಕ್ಕೆ 100 ರವರೆಗೆ ಹೊಸ ಚಿತ್ರಗಳು."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "직업마다 고유한 어휘가 있으며 보통 수백 개 단어입니다. 새 그림은 하루 최대 100개."
+          }
+        },
+        "lt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiekviena profesija turi savo žodyną, paprastai kelis šimtus žodžių. Iki 100 naujų paveikslėlių per dieną."
+          }
+        },
+        "ml" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ഓരോ തൊഴിലിനും സ്വന്തം പദസമ്പത്തുണ്ട്, സാധാരണയായി ഏതാനും നൂറ് വാക്കുകൾ. ദിവസം 100 വരെ പുതിയ ചിത്രങ്ങൾ."
+          }
+        },
+        "mr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्रत्येक व्यवसायाची स्वतःची शब्दसंपदा असते, साधारणपणे काहीशे शब्द. दिवसाला 100 पर्यंत नवीन चित्रे."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setiap profesion mempunyai kosa katanya sendiri, biasanya beberapa ratus perkataan. Sehingga 100 gambar baharu sehari."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hvert yrke har sitt eget ordforråd, vanligvis noen hundre ord. Opptil 100 nye bilder om dagen."
+          }
+        },
+        "ne" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हरेक पेशाको आफ्नै शब्दभण्डार हुन्छ, सामान्यतया केही सय शब्द। दिनमा १०० सम्म नयाँ तस्बिर।"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elk beroep heeft zijn eigen woordenschat, meestal een paar honderd woorden. Tot 100 nieuwe afbeeldingen per dag."
+          }
+        },
+        "or" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ପ୍ରତ୍ୟେକ ବୃତ୍ତିର ନିଜସ୍ୱ ଶବ୍ଦଭଣ୍ଡାର ଅଛି, ସାଧାରଣତଃ କିଛି ଶହ ଶବ୍ଦ। ଦିନକୁ 100 ପର୍ଯ୍ୟନ୍ତ ନୂଆ ଛବି।"
+          }
+        },
+        "pa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ਹਰ ਪੇਸ਼ੇ ਦੀ ਆਪਣੀ ਸ਼ਬਦਾਵਲੀ ਹੁੰਦੀ ਹੈ, ਆਮ ਤੌਰ 'ਤੇ ਕੁਝ ਸੌ ਸ਼ਬਦ। ਦਿਨ ਵਿੱਚ 100 ਤੱਕ ਨਵੀਆਂ ਤਸਵੀਰਾਂ।"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Każdy zawód ma własne słownictwo, zwykle kilkaset słów. Do 100 nowych obrazków dziennie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada profissão tem seu próprio vocabulário, geralmente algumas centenas de palavras. Até 100 imagens novas por dia."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada profissão tem o seu próprio vocabulário, normalmente algumas centenas de palavras. Até 100 imagens novas por dia."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fiecare profesie are propriul vocabular, de obicei câteva sute de cuvinte. Până la 100 de imagini noi pe zi."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У каждой профессии свой словарь, обычно несколько сотен слов. До 100 новых картинок в день."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Každá profesia má vlastnú slovnú zásobu, zvyčajne niekoľko stoviek slov. Až 100 nových obrázkov denne."
+          }
+        },
+        "sl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vsak poklic ima svoje besedišče, običajno nekaj sto besed. Do 100 novih slik na dan."
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çdo profesion ka fjalorin e vet, zakonisht disa qindra fjalë. Deri në 100 figura të reja në ditë."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varje yrke har sitt eget ordförråd, oftast några hundra ord. Upp till 100 nya bilder per dag."
+          }
+        },
+        "ta" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ஒவ்வொரு தொழிலுக்கும் தனிச் சொல்வளம் உண்டு, பொதுவாகச் சில நூறு சொற்கள். நாளொன்றுக்கு 100 புதிய படங்கள் வரை."
+          }
+        },
+        "te" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ప్రతి వృత్తికి దాని సొంత పదసంపద ఉంటుంది, సాధారణంగా కొన్ని వందల పదాలు. రోజుకు 100 వరకు కొత్త చిత్రాలు."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "แต่ละอาชีพมีคำศัพท์ของตัวเอง โดยทั่วไปไม่กี่ร้อยคำ รูปภาพใหม่ได้สูงสุด 100 รูปต่อวัน"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her mesleğin kendi kelime hazinesi vardır, genellikle birkaç yüz kelime. Günde en fazla 100 yeni resim."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кожна професія має свій словник, зазвичай кілька сотень слів. До 100 нових картинок на день."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mỗi nghề có bộ từ vựng riêng, thường vài trăm từ. Tối đa 100 hình ảnh mới mỗi ngày."
+          }
+        },
+        "wuu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每个职业都有自己的词汇，通常有几百个单词。每天最多 100 张新图片。"
+          }
+        },
+        "yue" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每個職業都有自己的詞彙，通常有幾百個單字。每天最多 100 張新圖片。"
+          }
+        },
+        "zh" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每个职业都有自己的词汇，通常有几百个单词。每天最多 100 张新图片。"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每個職業都有自己的詞彙，通常有幾百個單字。每天最多 100 張新圖片。"
+          }
+        }
+      }
+    },
+    "Up to 100 new pictures a day." : {
+      "comment" : "Setup screen small print under the AI note: the daily limit of new pictures (terms §5).",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حتى 100 صورة جديدة في اليوم."
+          }
+        },
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "До 100 нови картинки на ден."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "দিনে সর্বোচ্চ ১০০টি নতুন ছবি।"
+          }
+        },
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fins a 100 imatges noves al dia."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Až 100 nových obrázků denně."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Op til 100 nye billeder om dagen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bis zu 100 neue Bilder pro Tag."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Έως 100 νέες εικόνες την ημέρα."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasta 100 imágenes nuevas al día."
+          }
+        },
+        "eu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egunean 100 irudi berri gehienez."
+          }
+        },
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تا ۱۰۰ تصویر جدید در روز."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enintään 100 uutta kuvaa päivässä."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jusqu'à 100 nouvelles images par jour."
+          }
+        },
+        "gl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ata 100 imaxes novas ao día."
+          }
+        },
+        "gu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "દિવસમાં 100 સુધી નવી તસવીરો."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "עד 100 תמונות חדשות ביום."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दिन में 100 तक नई तस्वीरें।"
+          }
+        },
+        "hr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do 100 novih slika dnevno."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naponta legfeljebb 100 új kép."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hingga 100 gambar baru per hari."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fino a 100 nuove immagini al giorno."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しい画像は1日100枚まで。"
+          }
+        },
+        "kk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Күніне 100-ге дейін жаңа сурет."
+          }
+        },
+        "kn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ದಿನಕ್ಕೆ 100 ರವರೆಗೆ ಹೊಸ ಚಿತ್ರಗಳು."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새 그림은 하루 최대 100개."
+          }
+        },
+        "lt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iki 100 naujų paveikslėlių per dieną."
+          }
+        },
+        "ml" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ദിവസം 100 വരെ പുതിയ ചിത്രങ്ങൾ."
+          }
+        },
+        "mr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दिवसाला 100 पर्यंत नवीन चित्रे."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sehingga 100 gambar baharu sehari."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opptil 100 nye bilder om dagen."
+          }
+        },
+        "ne" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दिनमा १०० सम्म नयाँ तस्बिर।"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tot 100 nieuwe afbeeldingen per dag."
+          }
+        },
+        "or" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ଦିନକୁ 100 ପର୍ଯ୍ୟନ୍ତ ନୂଆ ଛବି।"
+          }
+        },
+        "pa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ਦਿਨ ਵਿੱਚ 100 ਤੱਕ ਨਵੀਆਂ ਤਸਵੀਰਾਂ।"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do 100 nowych obrazków dziennie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Até 100 imagens novas por dia."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Até 100 imagens novas por dia."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Până la 100 de imagini noi pe zi."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "До 100 новых картинок в день."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Až 100 nových obrázkov denne."
+          }
+        },
+        "sl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do 100 novih slik na dan."
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deri në 100 figura të reja në ditë."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upp till 100 nya bilder per dag."
+          }
+        },
+        "ta" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "நாளொன்றுக்கு 100 புதிய படங்கள் வரை."
+          }
+        },
+        "te" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "రోజుకు 100 వరకు కొత్త చిత్రాలు."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "รูปภาพใหม่ได้สูงสุด 100 รูปต่อวัน"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Günde en fazla 100 yeni resim."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "До 100 нових картинок на день."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tối đa 100 hình ảnh mới mỗi ngày."
+          }
+        },
+        "wuu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每天最多 100 张新图片。"
+          }
+        },
+        "yue" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每天最多 100 張新圖片。"
+          }
+        },
+        "zh" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每天最多 100 张新图片。"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每天最多 100 張新圖片。"
+          }
+        }
+      }
+    },
+    "Unlocked!" : {
+      "comment" : "Confirmation title right after buying or restoring a profession.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم الفتح!"
+          }
+        },
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отключено!"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আনলক হয়েছে!"
+          }
+        },
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desbloquejat!"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odemčeno!"
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Låst op!"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Freigeschaltet!"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ξεκλειδώθηκε!"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Desbloqueado!"
+          }
+        },
+        "eu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desblokeatuta!"
+          }
+        },
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "باز شد!"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avattu!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Débloqué !"
+          }
+        },
+        "gl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desbloqueado!"
+          }
+        },
+        "gu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "અનલૉક થયું!"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "נפתח!"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अनलॉक हो गया!"
+          }
+        },
+        "hr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otključano!"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feloldva!"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terbuka!"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sbloccato!"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ロック解除！"
+          }
+        },
+        "kk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ашылды!"
+          }
+        },
+        "kn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ಅನ್‌ಲಾಕ್ ಆಯಿತು!"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "잠금 해제!"
+          }
+        },
+        "lt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atrakinta!"
+          }
+        },
+        "ml" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "അൺലോക്ക് ചെയ്തു!"
+          }
+        },
+        "mr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अनलॉक झाले!"
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dibuka!"
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Låst opp!"
+          }
+        },
+        "ne" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अनलक भयो!"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontgrendeld!"
+          }
+        },
+        "or" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ଅନଲକ୍ ହେଲା!"
+          }
+        },
+        "pa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ਅਨਲੌਕ ਹੋ ਗਿਆ!"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odblokowano!"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desbloqueado!"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desbloqueado!"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deblocat!"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыто!"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odomknuté!"
+          }
+        },
+        "sl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odklenjeno!"
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "U zhbllokua!"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upplåst!"
+          }
+        },
+        "ta" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "திறக்கப்பட்டது!"
+          }
+        },
+        "te" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "అన్‌లాక్ అయింది!"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ปลดล็อกแล้ว!"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kilit açıldı!"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розблоковано!"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã mở khóa!"
+          }
+        },
+        "wuu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已解锁！"
+          }
+        },
+        "yue" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已解鎖！"
+          }
+        },
+        "zh" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已解锁！"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已解鎖！"
+          }
+        }
+      }
+    },
+    "You now have this profession's most-used workplace words and My words. Up to 100 new pictures a day — words already in our library don't count." : {
+      "comment" : "Confirmation text right after buying: what's included and the daily picture limit (terms §5). 'My words' is the feature name.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أصبحت لديك الآن أكثر كلمات العمل استخدامًا في هذه المهنة وكلماتي. حتى 100 صورة جديدة في اليوم — الكلمات الموجودة في مكتبتنا لا تُحتسب."
+          }
+        },
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вече имаш най-използваните работни думи за тази професия и „Моите думи“. До 100 нови картинки на ден — думите, които вече са в нашата библиотека, не се броят."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এখন তোমার কাছে এই পেশার সবচেয়ে ব্যবহৃত কাজের শব্দ আর আমার শব্দ আছে। দিনে সর্বোচ্চ ১০০টি নতুন ছবি — আমাদের লাইব্রেরিতে আগে থেকে থাকা শব্দ গোনা হয় না।"
+          }
+        },
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ara tens les paraules de feina més utilitzades d'aquesta professió i Les meves paraules. Fins a 100 imatges noves al dia — les paraules que ja són a la nostra biblioteca no compten."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teď máš nejpoužívanější pracovní slova této profese a sekci Moje slova. Až 100 nových obrázků denně — slova, která už jsou v naší knihovně, se nepočítají."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu har du de mest brugte arbejdsord for dette erhverv og Mine ord. Op til 100 nye billeder om dagen — ord, der allerede er i vores bibliotek, tæller ikke."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du hast jetzt die meistgenutzten Arbeitswörter dieses Berufs und Meine Wörter. Bis zu 100 neue Bilder pro Tag — Wörter, die schon in unserer Bibliothek sind, zählen nicht."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Τώρα έχεις τις πιο συχνές λέξεις της δουλειάς για αυτό το επάγγελμα και τις Οι λέξεις μου. Έως 100 νέες εικόνες την ημέρα — οι λέξεις που υπάρχουν ήδη στη βιβλιοθήκη μας δεν μετράνε."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ahora tienes las palabras de trabajo más usadas de esta profesión y Mis palabras. Hasta 100 imágenes nuevas al día — las palabras que ya están en nuestra biblioteca no cuentan."
+          }
+        },
+        "eu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orain lanbide honetako lan-hitz erabilienak eta Nire hitzak dituzu. Egunean 100 irudi berri gehienez — gure liburutegian dauden hitzak ez dira zenbatzen."
+          }
+        },
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اکنون پرکاربردترین واژه‌های کاری این حرفه و کلمات من را داری. تا ۱۰۰ تصویر جدید در روز — واژه‌هایی که از قبل در کتابخانهٔ ما هستند حساب نمی‌شوند."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sinulla on nyt tämän ammatin käytetyimmät työsanat ja Omat sanat. Enintään 100 uutta kuvaa päivässä — kirjastossamme jo olevia sanoja ei lasketa."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu as maintenant les mots de travail les plus utilisés de ce métier et Mes mots. Jusqu'à 100 nouvelles images par jour — les mots déjà présents dans notre bibliothèque ne comptent pas."
+          }
+        },
+        "gl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agora tes as palabras de traballo máis usadas desta profesión e As miñas palabras. Ata 100 imaxes novas ao día — as palabras que xa están na nosa biblioteca non contan."
+          }
+        },
+        "gu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "હવે તમારી પાસે આ વ્યવસાયના સૌથી વધુ વપરાતા કામના શબ્દો અને મારા શબ્દો છે. દિવસમાં 100 સુધી નવી તસવીરો — અમારી લાઇબ્રેરીમાં પહેલેથી રહેલા શબ્દો ગણાતા નથી."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "עכשיו יש לך את מילות העבודה הנפוצות ביותר במקצוע הזה ואת המילים שלי. עד 100 תמונות חדשות ביום — מילים שכבר נמצאות בספרייה שלנו לא נספרות."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अब तुम्हारे पास इस पेशे के सबसे ज़्यादा इस्तेमाल होने वाले काम के शब्द और मेरे शब्द हैं। दिन में 100 तक नई तस्वीरें — जो शब्द पहले से हमारी लाइब्रेरी में हैं, वे नहीं गिने जाते।"
+          }
+        },
+        "hr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sada imaš najčešće korištene radne riječi ovog zanimanja i Moje riječi. Do 100 novih slika dnevno — riječi koje su već u našoj knjižnici se ne broje."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Most már megvannak a szakma leggyakoribb munkahelyi szavai és a(z) Szavaim. Naponta legfeljebb 100 új kép — a könyvtárunkban már meglévő szavak nem számítanak bele."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sekarang kamu punya kosakata kerja yang paling sering dipakai untuk profesi ini dan Kata saya. Hingga 100 gambar baru per hari — kata yang sudah ada di perpustakaan kami tidak dihitung."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ora hai le parole di lavoro più usate di questa professione e Le mie parole. Fino a 100 nuove immagini al giorno — le parole già presenti nella nostra libreria non contano."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この職業でよく使う仕事の単語とマイ単語が使えるようになりました。新しい画像は1日100枚まで。ライブラリにすでにある単語は数えません。"
+          }
+        },
+        "kk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Енді сенде бұл мамандықтың ең көп қолданылатын жұмыс сөздері және «Менің сөздерім» бар. Күніне 100-ге дейін жаңа сурет — кітапханамызда бар сөздер есептелмейді."
+          }
+        },
+        "kn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ಈಗ ನಿಮ್ಮ ಬಳಿ ಈ ವೃತ್ತಿಯಲ್ಲಿ ಹೆಚ್ಚು ಬಳಸುವ ಕೆಲಸದ ಪದಗಳು ಮತ್ತು ನನ್ನ ಪದಗಳು ಇವೆ. ದಿನಕ್ಕೆ 100 ರವರೆಗೆ ಹೊಸ ಚಿತ್ರಗಳು — ನಮ್ಮ ಗ್ರಂಥಾಲಯದಲ್ಲಿ ಈಗಾಗಲೇ ಇರುವ ಪದಗಳನ್ನು ಎಣಿಸುವುದಿಲ್ಲ."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이제 이 직업에서 가장 많이 쓰는 업무 단어와 내 단어를 이용할 수 있어요. 새 그림은 하루 최대 100개이며, 이미 라이브러리에 있는 단어는 세지 않아요."
+          }
+        },
+        "lt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dabar turi dažniausiai vartojamus šios profesijos darbo žodžius ir skiltį „Mano žodžiai“. Iki 100 naujų paveikslėlių per dieną — žodžiai, kurie jau yra mūsų bibliotekoje, neskaičiuojami."
+          }
+        },
+        "ml" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ഇപ്പോൾ ഈ തൊഴിലിൽ ഏറ്റവും കൂടുതൽ ഉപയോഗിക്കുന്ന ജോലി വാക്കുകളും എന്റെ വാക്കുകൾ ഉം നിങ്ങൾക്കുണ്ട്. ദിവസം 100 വരെ പുതിയ ചിത്രങ്ങൾ — ഞങ്ങളുടെ ലൈബ്രറിയിൽ ഇതിനകം ഉള്ള വാക്കുകൾ എണ്ണില്ല."
+          }
+        },
+        "mr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आता तुमच्याकडे या व्यवसायातील सर्वाधिक वापरले जाणारे कामाचे शब्द आणि माझे शब्द आहेत. दिवसाला 100 पर्यंत नवीन चित्रे — आमच्या ग्रंथालयात आधीपासून असलेले शब्द मोजले जात नाहीत."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kini anda ada perkataan kerja paling kerap digunakan untuk profesion ini dan Perkataan saya. Sehingga 100 gambar baharu sehari — perkataan yang sudah ada dalam perpustakaan kami tidak dikira."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nå har du de mest brukte arbeidsordene for dette yrket og Mine ord. Opptil 100 nye bilder om dagen — ord som allerede er i biblioteket vårt, teller ikke."
+          }
+        },
+        "ne" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अब तपाईंसँग यो पेशामा सबैभन्दा बढी प्रयोग हुने कामका शब्दहरू र मेरा शब्दहरू छन्। दिनमा १०० सम्म नयाँ तस्बिर — हाम्रो पुस्तकालयमा पहिले नै भएका शब्दहरू गनिँदैनन्।"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je hebt nu de meestgebruikte woorden op het werk voor dit beroep en Mijn woorden. Tot 100 nieuwe afbeeldingen per dag — woorden die al in onze bibliotheek staan, tellen niet mee."
+          }
+        },
+        "or" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ଏବେ ଆପଣଙ୍କ ପାଖରେ ଏହି ବୃତ୍ତିରେ ସବୁଠାରୁ ଅଧିକ ବ୍ୟବହୃତ କାମର ଶବ୍ଦ ଏବଂ ମୋ ଶବ୍ଦ ଅଛି। ଦିନକୁ 100 ପର୍ଯ୍ୟନ୍ତ ନୂଆ ଛବି — ଆମ ଲାଇବ୍ରେରୀରେ ଆଗରୁ ଥିବା ଶବ୍ଦ ଗଣାଯାଏ ନାହିଁ।"
+          }
+        },
+        "pa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ਹੁਣ ਤੁਹਾਡੇ ਕੋਲ ਇਸ ਪੇਸ਼ੇ ਵਿੱਚ ਸਭ ਤੋਂ ਵੱਧ ਵਰਤੇ ਜਾਣ ਵਾਲੇ ਕੰਮ ਦੇ ਸ਼ਬਦ ਅਤੇ ਮੇਰੇ ਸ਼ਬਦ ਹਨ। ਦਿਨ ਵਿੱਚ 100 ਤੱਕ ਨਵੀਆਂ ਤਸਵੀਰਾਂ — ਸਾਡੀ ਲਾਇਬ੍ਰੇਰੀ ਵਿੱਚ ਪਹਿਲਾਂ ਤੋਂ ਮੌਜੂਦ ਸ਼ਬਦ ਨਹੀਂ ਗਿਣੇ ਜਾਂਦੇ।"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masz teraz najczęściej używane słowa w pracy w tym zawodzie i sekcję Moje słowa. Do 100 nowych obrazków dziennie — słowa, które już są w naszej bibliotece, się nie liczą."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agora você tem as palavras de trabalho mais usadas desta profissão e Minhas palavras. Até 100 imagens novas por dia — palavras que já estão na nossa biblioteca não contam."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agora tens as palavras de trabalho mais usadas desta profissão e As minhas palavras. Até 100 imagens novas por dia — as palavras que já estão na nossa biblioteca não contam."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acum ai cele mai folosite cuvinte de lucru ale acestei profesii și Cuvintele mele. Până la 100 de imagini noi pe zi — cuvintele care sunt deja în biblioteca noastră nu se pun la socoteală."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Теперь у тебя есть самые употребительные рабочие слова этой профессии и раздел «Мои слова». До 100 новых картинок в день — слова, которые уже есть в нашей библиотеке, не считаются."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teraz máš najpoužívanejšie pracovné slová tejto profesie a sekciu Moje slová. Až 100 nových obrázkov denne — slová, ktoré už sú v našej knižnici, sa nepočítajú."
+          }
+        },
+        "sl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zdaj imaš najpogostejše delovne besede tega poklica in razdelek Moje besede. Do 100 novih slik na dan — besede, ki so že v naši knjižnici, se ne štejejo."
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tani ke fjalët e punës më të përdorura të këtij profesioni dhe Fjalët e mia. Deri në 100 figura të reja në ditë — fjalët që janë tashmë në bibliotekën tonë nuk llogariten."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu har du de vanligaste arbetsorden för det här yrket och Mina ord. Upp till 100 nya bilder per dag — ord som redan finns i vårt bibliotek räknas inte."
+          }
+        },
+        "ta" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "இப்போது இந்தத் தொழிலில் அதிகம் பயன்படும் வேலைச் சொற்களும் என் சொற்கள் பகுதியும் உங்களிடம் உள்ளன. நாளொன்றுக்கு 100 புதிய படங்கள் வரை — எங்கள் நூலகத்தில் ஏற்கனவே உள்ள சொற்கள் கணக்கில் வராது."
+          }
+        },
+        "te" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ఇప్పుడు ఈ వృత్తిలో ఎక్కువగా వాడే పని పదాలు మరియు నా పదాలు మీ దగ్గర ఉన్నాయి. రోజుకు 100 వరకు కొత్త చిత్రాలు — మా లైబ్రరీలో ఇప్పటికే ఉన్న పదాలు లెక్కలోకి రావు."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ตอนนี้คุณมีคำศัพท์ที่ใช้บ่อยที่สุดในงานของอาชีพนี้และคำศัพท์ของฉันแล้ว รูปภาพใหม่ได้สูงสุด 100 รูปต่อวัน คำที่มีอยู่แล้วในคลังของเราไม่นับรวม"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Artık bu meslekte en çok kullanılan iş kelimeleri ve Kelimelerim senin. Günde en fazla 100 yeni resim — kütüphanemizde zaten olan kelimeler sayılmaz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тепер у тебе є найуживаніші робочі слова цієї професії та розділ «Мої слова». До 100 нових картинок на день — слова, які вже є в нашій бібліотеці, не рахуються."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giờ bạn đã có những từ dùng nhiều nhất trong công việc của nghề này và Từ của tôi. Tối đa 100 hình ảnh mới mỗi ngày — những từ đã có trong thư viện của chúng tôi không được tính."
+          }
+        },
+        "wuu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "现在你拥有此职业最常用的工作词汇和“我个单词”。每天最多 100 张新图片——我们词库里已有的单词不计入。"
+          }
+        },
+        "yue" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在你擁有此職業最常用的工作詞彙和「我嘅生字」。每天最多 100 張新圖片——我們詞庫裡已有的單字不計入。"
+          }
+        },
+        "zh" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "现在你拥有此职业最常用的工作词汇和“我的单词”。每天最多 100 张新图片——我们词库里已有的单词不计入。"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在你擁有此職業最常用的工作詞彙和「我的單字」。每天最多 100 張新圖片——我們詞庫裡已有的單字不計入。"
           }
         }
       }

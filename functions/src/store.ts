@@ -11,6 +11,10 @@
 //       status: "new" | "approve" | "reject" (set by you) | "approved" | "rejected", notified, approvedAt? }
 //     reports/{id}/reporters/{code}  one per reporting user (one-way hash of the anonymous ID), to count people
 //   reportUsage/{uid} reports sent per anonymous user per day — capped (REPORTS_PER_DAY in index.ts)
+//   pictureUsage/{uid} new pictures drawn per anonymous user per day — capped (PICTURES_PER_DAY in index.ts)
+//   jobs/{key}        a menu job's vocabulary (getWords): { status: "open" | "complete", words, reason, completedAt }.
+//                     No document = open. "complete" = no new GPT words for this job any more (set status "open" in
+//                     the console to let it grow again)
 //   Storage: tools/<id>.webp in the project's word-picture bucket; replaced pictures are kept in rejected/,
 //            pictures drawn for a report (only the reporter sees them until approved) in reports/<id>/
 
@@ -199,6 +203,41 @@ export async function countReport(uid: string): Promise<number> {
     return total;
   });
 }
+
+// MARK: - jobComplete / completeJob
+// Whether a job's vocabulary is complete, and marking it so (reason: "exhausted" = GPT says no common items are
+// left, "no new words" = GPT keeps repeating, "limit" = MAX_WORDS_PER_JOB reached).
+export async function isJobComplete(key: string): Promise<boolean> {
+  const snap = await db.collection("jobs").doc(docID(key)).get();
+  return snap.exists && snap.get("status") === "complete";
+}
+
+export async function completeJob(key: string, words: number, reason: string): Promise<void> {
+  await db.collection("jobs").doc(docID(key)).set(
+    { job: key, status: "complete", words, reason, completedAt: FieldValue.serverTimestamp() }, { merge: true });
+}
+
+// MARK: - countPicture / picturesToday
+// New pictures drawn today for this anonymous user (getPicture). countPicture adds one and returns today's total
+// (after it); picturesToday only reads. UTC day, overwritten every day — like reportUsage.
+export async function countPicture(uid: string): Promise<number> {
+  const ref = db.collection("pictureUsage").doc(uid);
+  const day = new Date().toISOString().slice(0, 10);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const total = (snap.exists && snap.get("day") === day ? (snap.get("pictures") as number) : 0) + 1;
+    tx.set(ref, { day, pictures: total, updated: FieldValue.serverTimestamp() });
+    return total;
+  });
+}
+
+export async function picturesToday(uid: string): Promise<number> {
+  const snap = await db.collection("pictureUsage").doc(uid).get();
+  return snap.exists && snap.get("day") === new Date().toISOString().slice(0, 10) ? (snap.get("pictures") as number) : 0;
+}
+
+// One-way code of the anonymous ID for logs and alerts (the same kind reports use for reporters), never the ID itself.
+export const userCode = (uid: string) => createHash("sha256").update(uid).digest("hex").slice(0, 12);
 
 // MARK: - saveReportPicture
 // The picture drawn for a report: only for the user who reported, NOT on the word (the bank picture stays).

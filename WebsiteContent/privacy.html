@@ -21,6 +21,9 @@
       - RevenueCat (purchase data shared with RevenueCat)
       - Business access codes (a link between a worker and a company)
     Every yellow highlighted [placeholder] must be filled in, and the text checked by a lawyer.
+    29 October 2026: rewritten for the developer in Ontario, Canada: PIPEDA (accountability, consent, access within
+    30 days, safeguards, breach records), Québec's Law 25 (person in charge of privacy, information before data leaves
+    Québec), the U.S. storage notice, the Privacy Commissioner of Canada and the CAI for complaints. EU/UK rights kept.
   -->
   <a class="skip-link" href="#main">Skip to content</a>
 
@@ -46,7 +49,7 @@
       <p class="muted">Effective date: <span class="fill">[DD Month YYYY]</span></p>
 
       <div class="note good">
-        <strong>In short:</strong> LearnScrumble has no account and doesn't ask for your name, email or phone number. Your settings, progress and the words you've learned stay on your iPhone. To create new words and pictures, the app sends your job, your two languages and the words you've already practised to our server, which asks OpenAI — <strong>only after you agree to it in the app</strong> — and keeps new words and pictures in a common word library on Google Firebase, without anything that identifies you. The app signs in to our server with a random ID, not with your name or email. If you report a wrong picture, only the word and your job are sent. If the app crashes or something goes wrong, a short technical report is sent so we can fix the problem. Usage statistics are sent only if you switch them on. We don't show ads, don't track you across apps and don't sell data.
+        <strong>In short:</strong> LearnScrumble has no account and doesn't ask for your name, email or phone number. Your settings, progress and the words you've learned stay on your iPhone. To create new words and pictures, the app sends your job, your two languages and the words you've already practised to our server, which asks OpenAI — <strong>only after you agree to it in the app</strong> — and keeps new words and pictures in a common word library on Google Firebase, without anything that identifies you. The app signs in to our server with a random ID, not with your name or email. If you report a wrong picture, only the word and your job are sent. If the app crashes or something goes wrong, a short technical report is sent so we can fix the problem. Usage statistics are sent only if you switch them on. We don't show ads, don't track you across apps and don't sell data. LearnScrumble is run from Ontario, Canada; the services we use store and process data in the <strong>United States</strong> (see <a href="#transfers">section 7</a>).
       </div>
 
       <h2>Contents</h2>
@@ -59,13 +62,15 @@
         <li><a href="#retention">How long data is kept</a></li>
         <li><a href="#transfers">International transfers</a></li>
         <li><a href="#rights">Your rights</a></li>
+        <li><a href="#security">Security and data breaches</a></li>
         <li><a href="#children">Children</a></li>
         <li><a href="#changes">Changes to this policy</a></li>
         <li><a href="#contact">Contact</a></li>
       </ol>
 
       <h2 id="who">1. Who is responsible</h2>
-      <p>The controller of your data for the LearnScrumble app is <span class="fill">[Developer or company name]</span>, <span class="fill">[full postal address]</span>, <span class="fill">[company registration number, if any]</span>. Contact: <a href="mailto:support@learnscrumble.com">support@learnscrumble.com</a>.</p>
+      <p>LearnScrumble is provided by <span class="fill">[Developer or company name]</span>, <span class="fill">[Postal address]</span>, Ontario, Canada ("we", "us"). We are responsible for your personal information under Canada's <em>Personal Information Protection and Electronic Documents Act</em> (PIPEDA), and we are the "controller" under the EU and UK General Data Protection Regulation (GDPR).</p>
+      <p><strong>Person in charge of privacy</strong> (privacy officer; for Québec, the person in charge of the protection of personal information): <span class="fill">[Your name]</span>, owner, <a href="mailto:support@learnscrumble.com">support@learnscrumble.com</a>. This person makes sure we follow this policy and answers privacy questions, requests and complaints.</p>
 
       <h2 id="on-device">2. Data stored on your iPhone</h2>
       <p>This data is created by you while using the app. It stays on your device and is <strong>not sent to us</strong>.</p>
@@ -136,9 +141,9 @@
       <h3>Google Firebase and OpenAI — reporting a wrong picture</h3>
       <p>If a picture doesn't show its word, you can tap the flag on the picture and confirm. The app then sends our server the word's English name, your job's English name and the link of the picture you saw. The server asks OpenAI to describe the object again for your job and draw a new picture, which is sent to your iPhone and kept there with the word — only you see it. The report is added to a list of reported pictures (word, jobs, number of reports, the picture you saw, the new picture and its description, times), and we receive a daily email with the new reports. After checking, we may use the new picture in the shared word library for everyone. To count how many different people reported a word, the server keeps a one-way code made from your random sign-in ID (it can't be turned back into the ID); nothing else about you is stored with a report. To stop misuse, the server also counts how many pictures each random sign-in ID reported today (overwritten every day).</p>
 
-      <h3>Google Firebase — random sign-in ID and daily report count</h3>
+      <h3>Google Firebase — random sign-in ID and daily counts</h3>
       <p>So that only the LearnScrumble app can use our server, the app signs in to Firebase Authentication (Google) <strong>anonymously</strong>, without any screen: Firebase gives the app a random ID. It isn't linked to your name, email, phone number or Apple ID. Firebase deletes each anonymous ID 30 days after it was created, and the app then gets a new one.</p>
-      <p>With that ID our server keeps one small record: today's date and how many pictures you've reported today, overwritten every day. It limits reports to protect the service from abuse; it doesn't contain your job, your words or your answers.</p>
+      <p>With that ID our server keeps two small records: today's date with how many pictures you've reported today, and today's date with how many new pictures were drawn for you today. Both are overwritten every day. They limit reports (10 a day) and new pictures (100 a day, see the <a href="terms.html#subscriptions">Terms</a>) to protect the service from misuse; they don't contain your job, your words or your answers. If someone reaches the picture limit, our server emails us a one-way code made from the random ID (it can't be turned back into the ID), so we can spot misuse.</p>
       <h3>Apple and Firebase App Check — proving requests come from the real app</h3>
       <p>Each request to our server carries a short-lived token from Firebase App Check (Google). On a real iPhone, the token comes from Apple's App Attest, which confirms that the request comes from a genuine copy of LearnScrumble on a genuine Apple device. It contains no personal information and isn't used to identify you.</p>
 
@@ -179,10 +184,13 @@
         <li>We don't sell or rent data to anyone.</li>
       </ul>
 
-      <h2 id="why">5. Why we use data (legal bases)</h2>
+      <h2 id="why">5. Why we use data (consent and legal bases)</h2>
+      <p>We collect only what the app needs for the purposes below and don't use data for anything else without asking you again.</p>
+      <p><strong>In Canada</strong> we rely on your consent. We ask for it <strong>expressly</strong> before your job and languages are sent to OpenAI ("I agree") and before usage statistics are sent (off until you switch it on). For what the app needs to work and stay secure — the random sign-in ID, App Check, crash and error reports, the free-word counter and the daily report and picture counts — your consent is implied when you use the app after reading this policy; none of it is sensitive or identifies you by name. You can withdraw your consent at any time: switch statistics off in Settings, or stop using the app and delete it. Without the consent to send your job to OpenAI the app can't create words.</p>
+      <p><strong>In the EU/EEA and the UK</strong> the legal bases are:</p>
       <ul>
         <li><strong>To provide the app you asked for</strong> — creating words and pictures for your job and languages, remembering your settings and progress (performance of a contract, Art. 6(1)(b) GDPR).</li>
-        <li><strong>To keep the free words fair and the service working and secure</strong> — the free-word counter, the daily report count, the random sign-in ID and App Check (legitimate interests, Art. 6(1)(f) GDPR).</li>
+        <li><strong>To keep the free words fair and the service working and secure</strong> — the free-word counter, the daily report and picture counts, the random sign-in ID and App Check (legitimate interests, Art. 6(1)(f) GDPR).</li>
         <li><strong>To fix wrong pictures</strong> you report (legitimate interests, Art. 6(1)(f) GDPR). A report holds only a one-way code of your random sign-in ID, to count reporters.</li>
         <li><strong>To improve the job menu</strong> by counting jobs in English, without anything that identifies you (legitimate interests, Art. 6(1)(f) GDPR).</li>
         <li><strong>To build the shared word library</strong> so words and pictures are reused for all learners (legitimate interests, Art. 6(1)(f) GDPR). It contains no personal data.</li>
@@ -195,7 +203,7 @@
       <ul>
         <li><strong>On your iPhone:</strong> until you reset your progress or delete the app. The free-word counter stays in the Keychain until the iPhone is erased.</li>
         <li><strong>Shared word library:</strong> for as long as the service runs; it contains no personal data.</li>
-        <li><strong>Random sign-in ID:</strong> deleted by Firebase 30 days after it was created. <strong>Daily report count on the server</strong>: today's date and the number of pictures reported only, overwritten every day.</li>
+        <li><strong>Random sign-in ID:</strong> deleted by Firebase 30 days after it was created. <strong>Daily counts on the server</strong>: today's date with the number of pictures reported and of new pictures drawn only, overwritten every day. Alert emails about the picture limit (with the one-way code) are kept in our mailbox for up to 12 months.</li>
         <li><strong>Reported pictures:</strong> the list of reports, the pictures drawn for them and the replaced pictures for as long as the service runs; the one-way reporter codes are kept with them. The daily report emails are kept in our mailbox.</li>
         <li><strong>OpenAI:</strong> according to OpenAI's API data policy (see above).</li>
         <li><strong>Crash reports and usage statistics:</strong> for the periods given in <a href="#sent">section 3</a>.</li>
@@ -203,20 +211,35 @@
       </ul>
 
       <h2 id="transfers">7. International transfers</h2>
-      <p>OpenAI and Google may process data in the United States. These transfers are protected as follows: <strong>Google</strong> is certified under the EU–U.S. Data Privacy Framework (with its UK Extension and the Swiss–U.S. framework) and also offers the European Commission's Standard Contractual Clauses in its Firebase data processing terms. <strong>OpenAI</strong> relies on the European Commission's Standard Contractual Clauses (with the UK Addendum for UK data) in its Data Processing Addendum.</p>
+      <p>We are in Ontario, Canada, but the service providers we use — Google (Firebase) and OpenAI — store and process data in the <strong>United States</strong>, and may use other countries for support or backups. While it is there, the data is subject to the laws of those countries and may be accessed by their courts, law enforcement and national security authorities. We choose providers that protect data under written agreements (their data processing terms) and send them only what is listed in <a href="#sent">section 3</a>. If you live in Québec: your information is communicated outside Québec, to these providers in the United States, for the purposes in this policy.</p>
+      <p>For people in the EU/EEA and the UK these transfers are protected as follows: <strong>Google</strong> is certified under the EU–U.S. Data Privacy Framework (with its UK Extension and the Swiss–U.S. framework) and also offers the European Commission's Standard Contractual Clauses in its Firebase data processing terms. <strong>OpenAI</strong> relies on the European Commission's Standard Contractual Clauses (with the UK Addendum for UK data) in its Data Processing Addendum.</p>
 
       <h2 id="rights">8. Your rights</h2>
-      <p>If you are in the EU/EEA or the UK you have the right to access, correct, delete and restrict processing of your personal data, to object to processing based on legitimate interests, to data portability, and to withdraw consent at any time. Because the app has no account and keeps your data on your iPhone, most of it is already under your control (see <a href="#on-device">section 2</a>). For anything else, contact us.</p>
-      <p>You can also complain to a data protection authority — in Poland the President of the Personal Data Protection Office (UODO, <a href="https://uodo.gov.pl">uodo.gov.pl</a>), or the authority where you live or work.</p>
+      <p>Because the app has no account and keeps your data on your iPhone, most of it is already under your control (see <a href="#on-device">section 2</a>). For anything else, write to the person in charge of privacy (<a href="#who">section 1</a>). We answer within <strong>30 days</strong>, free of charge. We may ask a question to make sure a request really comes from you. Because we don't know your name, we usually can't link the little data on our server to you: it's tied only to a random sign-in ID that Firebase deletes after 30 days, or to nothing at all.</p>
+      <ul>
+        <li><strong>Everyone, including in Canada:</strong> you can ask what personal information we hold about you, how it's used and who it was shared with, ask us to correct it, and withdraw your consent (see <a href="#why">section 5</a>). If we can't give access, we tell you why.</li>
+        <li><strong>Québec:</strong> also the right to have your information deleted or de-indexed where the law allows, and to receive it in a structured, commonly used technological format.</li>
+        <li><strong>EU/EEA and UK:</strong> also the rights to erasure, to restrict processing, to object to processing based on legitimate interests, and to data portability.</li>
+      </ul>
+      <p><strong>Complaints.</strong> Please contact us first — we want to fix it. You can also complain to:</p>
+      <ul>
+        <li>the Office of the Privacy Commissioner of Canada (<a href="https://www.priv.gc.ca">priv.gc.ca</a>);</li>
+        <li>in Québec, the Commission d'accès à l'information du Québec (<a href="https://www.cai.gouv.qc.ca">cai.gouv.qc.ca</a>);</li>
+        <li>in the EU/EEA or the UK, the data protection authority where you live or work.</li>
+      </ul>
 
-      <h2 id="children">9. Children</h2>
-      <p>LearnScrumble is made for adults learning the language of their workplace. It is not directed at children under <span class="fill">[16]</span>.</p>
+      <h2 id="security">9. Security and data breaches</h2>
+      <p>We protect data with safeguards suited to how sensitive it is: all connections are encrypted (HTTPS); only our server can write to the word library, and phones can't read or change the database directly; the OpenAI key is kept in Google's Secret Manager, never in the app; only the genuine app can call our server (App Check); and access to our Firebase, Google Cloud and OpenAI accounts is limited to the people who run LearnScrumble. No method is perfectly secure, but we keep data to the minimum described here.</p>
+      <p>If a breach of security safeguards involving your personal information creates a real risk of significant harm, we will tell you and the Office of the Privacy Commissioner of Canada (and, for Québec residents, the Commission d'accès à l'information) as soon as possible, as the law requires. We keep a record of every breach.</p>
 
-      <h2 id="changes">10. Changes to this policy</h2>
-      <p>If we change what the app collects — for example if accounts or business access codes are added — we'll update this page and the effective date before the change reaches the app.</p>
+      <h2 id="children">10. Children</h2>
+      <p>LearnScrumble is made for adults learning the language of their workplace. It is not directed at children under 16, and we don't knowingly collect personal information from them. If you are a parent or guardian and think a child has used the app, write to us and we'll help remove any data we can link to them.</p>
 
-      <h2 id="contact">11. Contact</h2>
-      <p>Questions about privacy: <a href="mailto:support@learnscrumble.com">support@learnscrumble.com</a>, or by post to <span class="fill">[postal address]</span>.</p>
+      <h2 id="changes">11. Changes to this policy</h2>
+      <p>If we change what the app collects — for example if accounts or business access codes are added — we'll update this page and the effective date before the change reaches the app. If a change means using your data for a new purpose, we'll ask for your consent again in the app.</p>
+
+      <h2 id="contact">12. Contact</h2>
+      <p>Questions, requests and complaints about privacy: the person in charge of privacy, <span class="fill">[Your name]</span>, at <a href="mailto:support@learnscrumble.com">support@learnscrumble.com</a>, or by post to <span class="fill">[Postal address]</span>, Ontario, Canada.</p>
     </div>
   </main>
 

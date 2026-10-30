@@ -19,6 +19,8 @@ enum GenerationError: Error, Equatable {
   case badResponse          // garbled reply (GPT on the server, or a broken picture), worth another try
   case serviceUnavailable   // server's OpenAI key, billing or App Check problem (failed-precondition): OUR problem, retry won't help
   case noWordsAvailable     // bank and GPT have nothing new for this profession + language (or the job text was refused)
+  case jobComplete          // the player has played every word of the profession's (complete) vocabulary
+  case dailyLimit           // today's new pictures for this user are used up (server PICTURES_PER_DAY), back tomorrow
   case unknown
   
   /// What ErrorView offers the user.
@@ -31,8 +33,8 @@ enum GenerationError: Error, Equatable {
   var recovery: Recovery {                                         // which button ErrorView shows for this error
     switch self {
     case .offline, .timedOut, .serverBusy, .badResponse, .unknown: .retry
-    case .noWordsAvailable:                                       .changeProfession
-    case .serviceUnavailable:                                     .none
+    case .noWordsAvailable, .jobComplete:                         .changeProfession
+    case .serviceUnavailable, .dailyLimit:                        .none
     }
   }
   
@@ -46,6 +48,8 @@ enum GenerationError: Error, Equatable {
     case .badResponse:        "Something went wrong while preparing your words. Please try again."
     case .serviceUnavailable: "We can't prepare new words right now. We're on it — please check back later."
     case .noWordsAvailable:   "We couldn't find new words for this profession and language right now. Try again later or pick a different profession."
+    case .jobComplete:        "🎉 You've played every word for this profession! Keep practising them in My words, or try another profession."
+    case .dailyLimit:         "You've reached today's limit of new pictures. Practise your words in My words, or come back tomorrow."
     case .unknown:            "Something went wrong. Please try again."
     }
   }
@@ -62,6 +66,8 @@ enum GenerationError: Error, Equatable {
     case .noWordsAvailable:   6
                                       // 7, 8: reviewUnavailable, noStruggleWords — removed 28 Oct 2026 (review is local now), never reuse
     case .unknown:            9
+    case .jobComplete:        10
+    case .dailyLimit:         11
     }
   }
 

@@ -386,6 +386,8 @@ class RequestModel {
     // Server error codes -> GenerationError (the server side of this table is in functions/src/errors.ts):
     //   no connection (a URLError underneath)   -> .offline / .timedOut (GenerationError.from)
     //   resource-exhausted "tooManyReports"    -> TooManyReports      (reportPicture only)
+    //   resource-exhausted "pictureLimit"      -> .dailyLimit         (100 new pictures today, server PICTURES_PER_DAY)
+    //   not-found "jobComplete"                -> .jobComplete        (every word of the profession played)
     //   unavailable, resource-exhausted        -> .serverBusy          (OpenAI busy after the server's retries)
     //   deadline-exceeded                      -> .timedOut
     //   failed-precondition, permission-denied -> .serviceUnavailable  (our side: key, billing, App Check)
@@ -405,6 +407,8 @@ class RequestModel {
         }
         Log.info("☁️ \(function) — server error \(code.rawValue): \(ns.localizedDescription)", .words)
         if code == .resourceExhausted, ns.localizedDescription == "tooManyReports" { return TooManyReports() }
+        if code == .resourceExhausted, ns.localizedDescription == "pictureLimit" { return GenerationError.dailyLimit }
+        if code == .notFound, ns.localizedDescription == "jobComplete" { return GenerationError.jobComplete }
         switch code {
         case .cancelled:                             return CancellationError()
         case .unavailable, .resourceExhausted:       return GenerationError.serverBusy

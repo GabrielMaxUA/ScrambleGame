@@ -408,7 +408,7 @@ struct SettingsView: View {
   // Debug builds and tester builds (TESTFLIGHT_TOOLS, see README "Tester builds") only: testing tools. Text(verbatim:) keeps these English labels out of the translation catalog.
   //   "Crashlytics crash test" (red) -> fatalError: a real crash for testing Crashlytics (README → Crashlytics test crash)
   //   "Reset free words" -> FreeAllowance.resetForTesting(): the 10 free words again (shows how many are used now)
-  //   "Unlock every profession" -> Purchases.debugUnlockAll: the paid version (unlimited words, My words, voices)
+  //   "Unlock every profession" -> Purchases.debugUnlockAll: the paid version (the whole word list, My words, voices)
   //   without buying anything
   private var debugSection: some View {
     VStack(alignment: .leading, spacing: 10) {

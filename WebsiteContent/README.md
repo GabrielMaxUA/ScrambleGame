@@ -91,10 +91,14 @@ Everything runs on the Mac, in Terminal, from the **repository root** (the folde
 | Random anonymous sign-in ID | Firebase Authentication (`AnonymousAuth.swift`), sent with every function call; auto clean-up deletes it 30 days after creation |
 | Picture reports: word's English name, job's English name, the picture link seen | `reportPicture` -> OpenAI (word + job, to describe and draw it again) -> the new picture only to the reporter (Storage `reports/`). Firestore `reports/{word}`: word, jobs, counts, the picture seen, the suggested picture + description, status; `reports/{word}/reporters/{code}`: a one-way hash of the anonymous ID, to count people. Daily email to support@learnscrumble.com (`mailReports`). The bank picture changes only when the developer approves |
 | Today's date + pictures reported today, per anonymous ID | Firestore `reportUsage/{uid}`, written by `reportPicture`, overwritten daily (max 10 a day) |
+| Today's date + new pictures drawn today, per anonymous ID | Firestore `pictureUsage/{uid}`, written by `getPicture`, overwritten daily (max 100 a day, since 29 October 2026) |
+| Alerts: OpenAI credits used up; a user over the picture limit (one-way code of the anonymous ID, never the ID) | Firestore `alerts/{kind}-{day}` + an email to support@learnscrumble.com (`mailAlert`), at most one per kind per day |
+| A job's word list status (open / complete, word count) | Firestore `jobs/{key}`, no user data (since 30 October 2026) |
 | App Check token (App Attest on iPhones, debug token in the simulator) | Firebase App Check, with every Firebase call; no personal data |
 | Purchases: one-time profession unlocks (non-consumable, $9.99) | Apple App Store (StoreKit 2, `Purchases.swift`); the app only reads which ones the user owns |
 
-**Update the policy before shipping** any of these (all planned in `Docs/AppFlowIdeas.md`): RevenueCat, business access codes, typed jobs coming back, the server enforcing the free words. *(Crashlytics, optional Analytics and the OpenAI consent were added to the policy on 15 October 2026; the Cloud Functions, anonymous sign-in, the daily count on the server and App Check on 27 October 2026; one-time unlocks, My words, the picture Report flag and the end of the time check and typed jobs on 28 October 2026.)*
+**Update the policy before shipping** any of these (all planned in `Docs/AppFlowIdeas.md`): RevenueCat, business access codes, typed jobs coming back, the server enforcing the free words. *(Crashlytics, optional Analytics and the OpenAI consent were added to the policy on 15 October 2026; the Cloud Functions, anonymous sign-in, the daily count on the server and App Check on 27 October 2026; one-time unlocks, My words, the picture Report flag and the end of the time check and typed jobs on 28 October 2026;
+Ontario/Canada law, the daily picture count and the alert emails on 29 October 2026.)*
 
 ## App Store privacy questions (suggestion)
 

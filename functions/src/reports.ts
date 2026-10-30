@@ -8,20 +8,13 @@
 //                    since the last email — word, jobs, how many reports and people, both pictures, and a link to the
 //                    report in the console. No new reports -> no email.
 //
-// Email: Namecheap Private Email over SMTP (mail.privateemail.com, port 465, SSL), signed in as
-// support@learnscrumble.com with its mailbox password from Secret Manager (SUPPORT_EMAIL_PASSWORD; set with
-// `firebase functions:secrets:set SUPPORT_EMAIL_PASSWORD --project <project>`). Change the mailbox password in
-// Namecheap -> set the secret again and redeploy, or the emails stop (the error shows in the function's logs).
+// Email: sent through mail.ts (Namecheap Private Email, the SUPPORT_EMAIL_PASSWORD secret).
 
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
-import { createTransport } from "nodemailer";
 import { approveReport, pendingReports, markNotified, db } from "./store";
-
-const SUPPORT_EMAIL_PASSWORD = defineSecret("SUPPORT_EMAIL_PASSWORD");
-const SUPPORT_EMAIL = "support@learnscrumble.com";
+import { SUPPORT_EMAIL_PASSWORD, sendSupportEmail } from "./mail";
 
 // MARK: - reviewReport
 // Only the developer's two words start something: "approve" -> approveReport (status becomes "approved"),
@@ -76,13 +69,7 @@ export const mailReports = onSchedule({ schedule: "0 8 * * *", timeZone: "Americ
 <p style="color:#666;font-size:12px">${escape(r.description)}</p>`).join("");
 
   try {
-    const transport = createTransport({
-      host: "mail.privateemail.com",
-      port: 465,
-      secure: true,
-      auth: { user: SUPPORT_EMAIL, pass: SUPPORT_EMAIL_PASSWORD.value() },
-    });
-    await transport.sendMail({ from: `LearnScrumble reports <${SUPPORT_EMAIL}>`, to: SUPPORT_EMAIL, subject, text, html });
+    await sendSupportEmail("LearnScrumble reports", subject, text, html);
     await markNotified(rows.map((r) => r.id));
     logger.info("mailReports: sent", { reports: rows.length });
   } catch (error) {

@@ -340,3 +340,17 @@ We may also check with Polish work agencies whether they would pay for pre-creat
 - ✅ 28 new texts (My words, streak, picture reports, the unlock and purchase messages) translated into all 53 languages *(AI-made, like the rest; native review recommended)*. 22 unused texts removed from the catalog; `!`, `-`, `?` and the version number marked "don't translate". 0 texts left untranslated.
 - ✅ Restore purchases: cancelling the App Store sign-in just closes it, with no error alert (`Purchases.restore`, Settings and the paywall).
 - ✅ Old comments and log lines that still said "daily" free words or "subscription" are updated.
+
+**Legal, security and word lists (29–30 October)** *(details: `Docs/remaining.md`, `Docs/LegalReview.md`)*
+- ✅ App published from Max's **personal** developer account (individual); the Auxility / Konstantin parts of this file no longer apply.
+- ✅ **Ontario / Canada law:** privacy page (PIPEDA, Québec Law 25, U.S. storage notice, rights, breaches), terms (Ontario law, consumer rights, no arbitration, 30 days' notice), support FAQ. Only name, address and the effective date are left as placeholders. Not deployed yet.
+- ✅ **App texts:** the consent says the data is processed in the United States; no "unlimited" anywhere — "The most-used workplace words for this profession"; the limits shown on the setup screen, the paywall and the new "Unlocked! 🎉" screen; a Terms of Use link on the setup screen. All in 53 languages.
+- ✅ **App Check enforced** on all callable functions (29 October), after App Attest was verified with the TestFlight build on a real iPhone.
+- ✅ **Prepare:** refused pictures are skipped; a failed job no longer stops the queue; no OpenAI credits → the queue pauses. All 32 jobs filled (~100 words each).
+- ✅ **OpenAI credits:** out of credits → "We can't prepare new words right now" (not "busy"), plus an alert email; auto-reload on.
+- ✅ **Alert emails** (`mailAlert`): credits used up, a user over the picture limit.
+- ✅ **100 new pictures per user per day** (bank pictures don't count).
+- ✅ **Word lists end:** GPT says "exhausted" + an AI quality check; the job becomes complete (or at 500 words); "🎉 You've played every word for this profession" and a daily-limit message in the app.
+- ✅ The 32 products in App Store Connect (descriptions: "Most-used work words, pictures and My words").
+- ⏸ Later: the server checks who owns a job (`remaining.md` §3).
+- ⬜ Deploy the latest functions and the website; build 3 to TestFlight; the rest of `remaining.md`.

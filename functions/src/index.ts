@@ -14,11 +14,12 @@
 //   prepareProfession -> fills the bank with ~100 English words + pictures per menu job ("prepare" collection).
 //   reviewReport      -> you set a report's status to "approve" / "reject" in the console (reports.ts)
 //   mailReports       -> once a day, an email to support@learnscrumble.com with the new reports (reports.ts)
+//   mailAlert         -> an email right away when OpenAI credits run out or a user hits the daily picture cap (alerts.ts)
 //
 // Every call:
 //   - must come from a signed-in user (the app's silent anonymous sign-in, AnonymousAuth.swift)
-//   - App Check: tokens are accepted but not required yet (enforceAppCheck false = monitoring).
-//     Switch to true once the app sends tokens and the console shows almost all requests verified.
+//   - App Check: required (enforceAppCheck true since 29 Oct 2026); requests without a valid token are refused.
+//   - at most PICTURES_PER_DAY new pictures per user per day (getPicture; getWords then serves bank words only)
 //   - runs in us-central1, next to Firestore (nam5, United States)
 //   - errors are HttpsError codes the app maps back to its GenerationError cases (errors.ts)
 //
@@ -31,16 +32,23 @@ import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import * as openai from "./openai";
 import { fetchBank, fetchWords, saveWord, savePicture, repairPictureLink, countProfession, WordDoc,
-         countReport, saveReportPicture, recordReport, parsePictureURL, samePicture } from "./store";
-import { noWords, refused, badInput, notSignedIn, tooManyReports } from "./errors";
+         countReport, countPicture, picturesToday, userCode, isJobComplete, completeJob, saveReportPicture, recordReport, parsePictureURL,
+         samePicture } from "./store";
+import { raiseAlert } from "./alerts";
+import { noWords, refused, badInput, notSignedIn, tooManyReports, jobComplete, pictureLimit } from "./errors";
 export { prepareProfession } from "./prepare";                  // background bank filling (prepare.ts)
 export { reviewReport, mailReports } from "./reports";           // approve/reject a report, the daily report email
+export { mailAlert } from "./alerts";                            // an email right away: OpenAI credits used up, picture cap reached
 
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 setGlobalOptions({ region: "us-central1", maxInstances: 10 });
 
 const BATCH = 5;                   // words per batch, as in the app
 const REPORTS_PER_DAY = 10;        // reports one user can send per day — each one draws a picture, so this caps the cost
+const MAX_WORDS_PER_JOB = 500;     // a menu job's vocabulary never grows past this (cost safety; GPT usually ends earlier)
+const MIN_WORDS_BEFORE_COMPLETE = 100;   // GPT's "exhausted" only counts once the job has this many (the prepared bank)
+const PICTURES_PER_DAY = 100;      // new pictures getPicture draws for one user per day (bank pictures don't count): caps
+                                   // what a modified app could cost; normal players stay far below (terms.html §5)
 const MAX_GPT_ATTEMPTS = 3;        // as RequestModel.maxGenerationAttempts
 
 // MARK: - input checks
@@ -78,15 +86,22 @@ interface WordOut {
 //     TRANSLATES them (one text request, no new pictures), the translations are saved on the words, and they're
 //     played. This is what makes pre-made words (English name + picture, no translations yet) usable for any language
 //     pair. Translation fails -> logged, step 4 fills the batch instead.
-// 4. Still short? GPT for ONLY the missing number (skipping excluded + bank words already picked), up to 3 attempts.
-//    Nothing at all -> not-found "noWordsAvailable". GPT empty but the bank gave some -> play those.
+// 4. Still short? GPT for ONLY the missing number (skipping excluded + bank words already picked), up to 3 attempts,
+//    unless the job is complete. A menu job's vocabulary has a natural end (since 30 Oct 2026): GPT answers
+//    "exhausted" when no common everyday items are left, and checkWords drops new words that don't really belong to
+//    the job or repeat a bank word. The job becomes complete (jobs/{key}, store.ts) when GPT says exhausted, or brings
+//    nothing usable in 3 attempts, once the bank has MIN_WORDS_BEFORE_COMPLETE words — or at MAX_WORDS_PER_JOB.
+//    Nothing at all for this player -> daily picture limit: resource-exhausted "pictureLimit"; complete job:
+//    not-found "jobComplete" (the app's "you've played every word" screen); otherwise not-found "noWordsAvailable".
+//    GPT empty but the bank gave some -> play those.
 // 5. GPT words: existing docs are reused (picture link, missing translations filled, job tag added);
 //    new words are created with image "" (the app then calls getPicture for them).
 // 6. countJob -> the job counter.
 // The free words (10, once per install) and the job unlocks are checked on the phone (FreeAllowance, Purchases);
-// the server doesn't verify purchases yet, so it doesn't limit words either.
-export const getWords = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 120, enforceAppCheck: false }, async (request) => {
-  requireUser(request);                                           // signed-in (anonymous) users only
+// the server doesn't verify purchases yet. A user who drew PICTURES_PER_DAY new pictures today gets only bank words
+// (step 4 is skipped: new words would need new pictures); nothing left -> noWordsAvailable, "try again later".
+export const getWords = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 120, enforceAppCheck: true }, async (request) => {
+  const uid = requireUser(request);                               // signed-in (anonymous) users only
   const data = request.data ?? {};
   const { origin, target, profession, isMenuJob } = data;
   if (!isLang(origin) || !isLang(target)) throw badInput("language");
@@ -140,21 +155,39 @@ export const getWords = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 120,
   // 4. GPT for the rest
   let generated = 0;
   const missing = count - words.length;
-  if (missing > 0) {
-    const skip = new Set([...excluded, ...ready.map((d) => d.word), ...words.map((w) => w.toolName)]);
+  const capped = missing > 0 && await picturesToday(uid) >= PICTURES_PER_DAY;
+  if (capped) logger.warn("getWords: daily picture limit reached, bank words only", { user: userCode(uid), missing });
+  const menuKey = isMenuJob === true && key ? key : null;           // only menu jobs have a vocabulary that can end
+  let complete = missing > 0 && menuKey ? await isJobComplete(menuKey) : false;
+  if (missing > 0 && menuKey && !complete && bank.length >= MAX_WORDS_PER_JOB) {
+    await completeJob(menuKey, bank.length, "limit");
+    logger.info("getWords: job reached the word limit, now complete", { key: menuKey, words: bank.length });
+    complete = true;
+  }
+  if (missing > 0 && !capped && !complete) {
+    const skip = new Set([...excluded, ...bank.map((d) => d.word), ...words.map((w) => w.toolName)]);
     const collected: openai.GptWord[] = [];
     let job: string | null = null;
-    for (let attempt = 1; attempt <= MAX_GPT_ATTEMPTS && collected.length < missing; attempt++) {
+    let exhausted = false;
+    for (let attempt = 1; attempt <= MAX_GPT_ATTEMPTS && collected.length < missing && !exhausted; attempt++) {
       const reply = await openai.wordList(apiKey, profession, origin, target, [...skip]);
       job = job ?? reply.job;
-      for (const w of reply.words) {
-        if (!skip.has(w.toolName)) collected.push(w);
-        skip.add(w.toolName);
-      }
+      exhausted = reply.exhausted;
+      const offered = reply.words.filter((w) => !skip.has(w.toolName));
+      reply.words.forEach((w) => skip.add(w.toolName));
+      const keep = menuKey ? await openai.checkWords(apiKey, menuKey, offered.map((w) => w.toolName), bank.map((d) => d.word))
+                           : new Set(offered.map((w) => w.toolName));
+      collected.push(...offered.filter((w) => keep.has(w.toolName)));
+      if (keep.size < offered.length) logger.info("getWords: quality check dropped words", { key: menuKey, dropped: offered.length - keep.size });
     }
     if (!key && job && job !== "invalid" && job.length <= 40) key = job;   // a typed job gets its English key here
     const fresh = collected.slice(0, missing);
-    logger.info("getWords: GPT", { asked: missing, got: fresh.length, key: key ?? "none" });
+    logger.info("getWords: GPT", { asked: missing, got: fresh.length, exhausted, key: key ?? "none" });
+    if (menuKey && (exhausted || fresh.length === 0) && bank.length + fresh.length >= MIN_WORDS_BEFORE_COMPLETE) {
+      await completeJob(menuKey, bank.length + fresh.length, exhausted ? "exhausted" : "no new words");
+      logger.info("getWords: job vocabulary complete", { key: menuKey, words: bank.length + fresh.length, exhausted });
+      complete = true;
+    }
 
     // 5. Reuse or create the docs
     const existing = await fetchWords(fresh.map((w) => w.toolName));
@@ -174,7 +207,11 @@ export const getWords = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 120,
     logger.info("getWords: whole batch from the bank, no GPT call");
   }
 
-  if (words.length === 0) throw noWords();
+  if (words.length === 0) {
+    if (capped) throw pictureLimit();
+    if (complete) throw jobComplete();
+    throw noWords();
+  }
 
   // 6. Job counter
   if (data.countJob === true && key) {
@@ -192,9 +229,10 @@ export const getWords = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 120,
 //    -> that link, no cost.
 // 2. Reported broken -> repairPictureLink: the file is still in Storage -> the link is rebuilt with the file's current
 //    token and saved on the word, no cost. The file is gone (or the link isn't a Storage link) -> step 3.
-// 3. GPT draws it -> WebP -> Storage tools/<id>.webp -> saved on the word -> its link.
-export const getPicture = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 180, memory: "512MiB", enforceAppCheck: false }, async (request) => {
-  requireUser(request);
+// 3. GPT draws it -> WebP -> Storage tools/<id>.webp -> saved on the word -> its link. At most PICTURES_PER_DAY new
+//    pictures per user per day: over it -> resource-exhausted "pictureLimit", and an alert email (alerts.ts, once a day).
+export const getPicture = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 180, memory: "512MiB", enforceAppCheck: true }, async (request) => {
+  const uid = requireUser(request);
   const { toolName, imagePrompt, broken } = request.data ?? {};
   if (!isText(toolName, 60)) throw badInput("toolName");
   const name = toolName.trim().toLowerCase();
@@ -216,6 +254,14 @@ export const getPicture = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 18
     }
     logger.info("getPicture: stored picture is missing, drawing a new one");
   }
+  const drawn = await countPicture(uid);
+  if (drawn > PICTURES_PER_DAY) {
+    logger.warn("getPicture: daily picture limit reached", { user: userCode(uid), drawn });
+    if (drawn === PICTURES_PER_DAY + 1) {
+      await raiseAlert("pictureCap", `User ${userCode(uid)} asked for more than ${PICTURES_PER_DAY} new pictures today (${new Date().toISOString()}).`);
+    }
+    throw pictureLimit();
+  }
   const png = await openai.image(OPENAI_API_KEY.value(), description);
   const imageURL = await savePicture(name, png);
   logger.info("getPicture: generated and saved a new picture");
@@ -226,7 +272,7 @@ export const getPicture = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 18
 // Input:  { toolNames, origin, target }   Output: { words: [WordOut] }
 // The struggle review's words, read from the bank. Words without a translation in the learned language
 // or without a picture are skipped. No OpenAI call, no writes.
-export const getReviewWords = onCall({ timeoutSeconds: 30, enforceAppCheck: false }, async (request) => {
+export const getReviewWords = onCall({ timeoutSeconds: 30, enforceAppCheck: true }, async (request) => {
   requireUser(request);
   const { origin, target } = request.data ?? {};
   const toolNames = nameList(request.data?.toolNames ?? [], 100);
@@ -260,7 +306,7 @@ export const getReviewWords = onCall({ timeoutSeconds: 30, enforceAppCheck: fals
 //    (saveReportPicture) -> recordReport: counted, the suggestion kept, status "new", into tomorrow's email (reports.ts).
 // Privacy: a report stores the word, the job, the picture links and a one-way code of the anonymous sign-in ID
 // (to count different people) — nothing else about the user.
-export const reportPicture = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 180, memory: "512MiB", enforceAppCheck: false }, async (request) => {
+export const reportPicture = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 180, memory: "512MiB", enforceAppCheck: true }, async (request) => {
   const uid = requireUser(request);
   const { toolName, profession, imageURL } = request.data ?? {};
   if (!isText(toolName, 60)) throw badInput("toolName");

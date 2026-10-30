@@ -25,5 +25,5 @@ import SwiftUI
 
 enum AIConsent {
   static let key = "aiConsentDate"                                  // when the user agreed, seconds since 1970; 0 = not yet
-  static let message: LocalizedStringKey = "To create your words and pictures, your job, your two languages and the words you've already practised are sent to OpenAI."
+  static let message: LocalizedStringKey = "To create your words and pictures, your job, your two languages and the words you've already practised are sent to OpenAI. This data is processed in the United States."   // where it goes: PIPEDA / Québec Law 25 (Docs/LegalReview.md)
 }

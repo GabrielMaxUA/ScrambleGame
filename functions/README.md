@@ -6,12 +6,13 @@ Plan and progress: `Docs/ServerMigrationPlan.md` (Phases 4–8).
 
 | Function | What it does | Replaces in the app |
 |---|---|---|
-| `getWords` | Next batch for a job: word bank first (bank words missing the player's languages are only translated by GPT, no new pictures), GPT new words only for the missing number; tags words with the job; counts the job | `RequestModel.nextBatch`, `generateUniqueWordList`, `FirebaseWordStore.saveIfNeeded`, `ProfessionStore` |
+| `getWords` | Next batch for a job (a menu job's word list ends: GPT says "exhausted", or 500 words; then `jobs/{key}` is `complete` and only bank words are served — see "Profession word lists") — word bank first (bank words missing the player's languages are only translated by GPT, no new pictures), GPT new words only for the missing number; tags words with the job; counts the job | `RequestModel.nextBatch`, `generateUniqueWordList`, `FirebaseWordStore.saveIfNeeded`, `ProfessionStore` |
 | `getPicture` | One word's picture: the stored one, a repaired link when the app reports it broken, or a new one (GPT → WebP → Storage → saved on the word) | `RequestModel.generateImage`, `FirebaseImageStore` |
 | `getReviewWords` | Known words with translations and picture links. Not used by the app since 28 Oct 2026 ("My words" plays from the phone) | `RequestModel.generateStruggleReview`'s Firestore read |
 | `reportPicture` | A user flags a wrong picture: a new picture is drawn for that user only, and the report is recorded (see "Reported pictures") | — (new) |
 | `reviewReport` | Firestore trigger: you set a report's `status` to `approve` or `reject` | — (new) |
 | `mailReports` | Every morning: email to support@learnscrumble.com with the new reports | — (new) |
+| `mailAlert` | Right away, at most once per kind per day: email when OpenAI credits are used up or a user hits the daily picture cap (`alerts.ts`) | — (new) |
 
 Files: `src/index.ts` (the callable functions), `src/openai.ts` (all OpenAI calls), `src/store.ts` (Firestore + Storage),
 `src/errors.ts` (error codes the app maps to `GenerationError`).
@@ -30,10 +31,29 @@ Start it in the Firebase console → Firestore → collection `prepare`:
   gets `pictureRefused: true` and is skipped; the log shows the word and the prompt ("picture refused"). `getPicture`
   still tries again when a player reaches it. A job that fails for another reason no longer stops the queue: the next
   queued job starts (since 29 Oct 2026).
+- **OpenAI credits used up** (429 `insufficient_quota`, not retried): the running job goes to `paused` with the error
+  "OpenAI credits used up…" and the rest stay `queued`. Add credits (platform.openai.com → Billing), then set that
+  job's `status` to `run`; the queue continues by itself. Players see "We can't prepare new words right now" instead
+  of "Our servers are busy" (since 29 Oct 2026). Jobs left `failed` by an earlier stop: set them to `queued`.
 
 Each job's document shows `words` (with pictures), `steps`, `lastStep` and any `error`. One step = 10 new words and
 up to 15 pictures; it ends with `done`. Costs roughly one low-quality OpenAI picture per new word: watch the OpenAI
 usage page during a big run. When the menu changes, update `MENU_JOBS` in `src/prepare.ts`.
+
+## Profession word lists (since 30 Oct 2026)
+
+A menu job's vocabulary is the common, everyday items of that job, so it has an end. Players fill it on the fly:
+- the bank is played first (about 100 prepared words per job); only when a player has played them all does `getWords`
+  ask GPT for new words, and then only paying users get that far (free users get 10 words);
+- GPT answers `"exhausted": true` when no common items are left, and `checkWords` drops new words that don't belong
+  to the job or repeat a bank word;
+- the job becomes **complete** (Firestore `jobs/{key}`: `status`, `words`, `reason`) when GPT says exhausted or brings
+  nothing usable in 3 tries (once the job has 100 words), or at 500 words (`MAX_WORDS_PER_JOB`);
+- after that no more GPT words for the job; a player who has played everything gets `not-found "jobComplete"` → the
+  app's "🎉 You've played every word for this profession" screen. Translations for new language pairs still work;
+- to let a job grow again: set `jobs/{key}.status` to `open` in the console.
+A player over 100 new pictures today gets `resource-exhausted "pictureLimit"` → "You've reached today's limit of new
+pictures" (older app builds show "busy").
 
 ## Secret
 
@@ -87,7 +107,9 @@ The flag on a game picture calls `reportPicture` with the word, the menu job and
   - `reject` → `status` becomes `rejected`, nothing changes for others (the reporter keeps their picture).
 
   A new report on the same word sets it back to `new` and it comes in the next email.
-- **Limits:** 10 reports per user per day (`reportUsage/{uid}`). If the bank picture was already replaced since the
+- **Limits:** 10 reports per user per day (`reportUsage/{uid}`); separately, 100 new pictures per user per day in
+  `getPicture` (`pictureUsage/{uid}`, `PICTURES_PER_DAY`; over it `getWords` serves bank words only and an alert
+  email goes out). If the bank picture was already replaced since the
   user saw it, they get that one and nothing is drawn. Each report costs one text request + one low-quality picture.
 - **Email secret (once per project):** the support@learnscrumble.com mailbox password —
   `firebase functions:secrets:set SUPPORT_EMAIL_PASSWORD --project scrumblegame` (and `--project scrumblegame-dev`).
@@ -137,8 +159,8 @@ pallet jack, for a hand truck). In the file set `"apply": false` or change `"fix
 
 ## Notes
 
-- App Check is in monitoring mode (`enforceAppCheck: false`). Switch to `true` in `src/index.ts` once the
-  console shows almost all requests verified, and deploy.
+- App Check is enforced (`enforceAppCheck: true` in `src/index.ts`, 29 Oct 2026, after the TestFlight build was verified
+  on a real iPhone). A simulator or Xcode run without a registered debug token is refused.
 - No word counting on the server (removed 28 Oct 2026): the 10 free words are once per install and the job unlocks are
   checked on the phone (`FreeAllowance`, `Purchases`). The server doesn't verify purchases yet. `getWords` is deployed
   without the count (28 Oct 2026), so the old `usage` collection can be deleted; `reportUsage/{uid}` (10 reports a day) stays.

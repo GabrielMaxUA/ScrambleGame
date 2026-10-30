@@ -12,8 +12,9 @@ import StoreKit
 // The unlock screen for the current job (a sheet over RootView, from any "Unlock" button).
 //   Purchases.product(for:) -> the price in the user's own currency ($9.99 in the US)
 //   -> "Unlock for $9.99" -> Purchases.buy(_:) -> Apple's purchase sheet
-//      bought -> onUnlocked (sheet closes, the game can go on); cancelled -> nothing; pending (Ask to Buy) / failed -> a note
-//   -> "Restore purchases" -> Purchases.restore(); the job already owned -> onUnlocked
+//      bought -> "Unlocked! 🎉" (what's included and the daily picture limit once more) -> "Let's go!" -> onUnlocked
+//      (sheet closes, the game can go on); cancelled -> nothing; pending (Ask to Buy) / failed -> a note
+//   -> "Restore purchases" -> Purchases.restore(); the job already owned -> the same "Unlocked! 🎉" -> onUnlocked
 //   -> "Not now" -> onClose
 //   No product (offline, or not set up in App Store Connect) -> the button stays disabled with a note.
 
@@ -25,8 +26,15 @@ struct PaywallView: View {
   @State private var isLoading = true                    // the product is being loaded
   @State private var isBuying = false                    // Apple's sheet is open / restore is running
   @State private var note: LocalizedStringKey?           // pending / failed / unavailable message under the button
+  @State private var unlocked = false                    // bought or restored: the confirmation replaces the offer
 
   var body: some View {
+    if unlocked { confirmation } else { offer }
+  }
+
+  // MARK: - offer
+  // What the unlock gives, the limits in small print, the price button, Restore purchases and Not now.
+  private var offer: some View {
     VStack(spacing: 24) {
       VStack(spacing: 8) {
         Image(systemName: "lock.open.fill")
@@ -44,7 +52,7 @@ struct PaywallView: View {
       .padding(.top, 32)
 
       VStack(alignment: .leading, spacing: 14) {
-        benefit("Unlimited words and pictures for this profession", icon: "infinity")
+        benefit("The most-used workplace words for this profession", icon: "books.vertical")   // not "unlimited": a job's vocabulary is finite (Docs/LegalReview.md)
         benefit("My words: every word you've played, with your right and wrong answers", icon: "list.bullet.rectangle")
         benefit("Repeat all your words, even without internet", icon: "arrow.counterclockwise")
         benefit("Choose a different voice", icon: "speaker.wave.2")
@@ -55,6 +63,10 @@ struct PaywallView: View {
       Spacer(minLength: 0)
 
       VStack(spacing: 12) {
+        Text("Each profession has its own vocabulary, usually a few hundred words. Up to 100 new pictures a day.")   // the limits, before buying (terms §5)
+          .font(.caption)
+          .foregroundStyle(.white.opacity(0.55))
+          .multilineTextAlignment(.center)
         if let note {
           Text(note)
             .font(.footnote)
@@ -103,6 +115,42 @@ struct PaywallView: View {
     }
   }
 
+  // MARK: - confirmation
+  // Right after buying or restoring: the job is unlocked, what that includes, and the daily picture limit once more
+  // (terms §5), so nobody is surprised later. "Let's go!" -> onUnlocked.
+  private var confirmation: some View {
+    VStack(spacing: 20) {
+      Spacer()
+      Text(verbatim: "🎉")
+        .font(.system(size: 64))
+        .accessibilityHidden(true)
+      Text("Unlocked!")
+        .font(.largeTitle.bold())
+        .foregroundStyle(.white)
+      Text(job.displayName)
+        .font(.title3)
+        .foregroundStyle(.white.opacity(0.7))
+      Text("You now have this profession's most-used workplace words and My words. Up to 100 new pictures a day — words already in our library don't count.")
+        .font(.body)
+        .foregroundStyle(.white.opacity(0.85))
+        .multilineTextAlignment(.center)
+        .padding(.top, 8)
+      Spacer()
+      Button(action: onUnlocked) {
+        Text("Let's go!")
+          .font(.headline)
+          .foregroundStyle(.white)
+          .frame(maxWidth: .infinity)
+          .padding(.vertical, 14)
+      }
+      .glassCompat(in: .capsule, interactive: true)
+    }
+    .padding(.horizontal, 24)
+    .padding(.bottom, 16)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(Color.black.opacity(0.96))
+  }
+
   // MARK: - benefit(_:icon:)
   // One line of what the unlock gives: an icon and a sentence.
   private func benefit(_ text: LocalizedStringKey, icon: String) -> some View {
@@ -117,13 +165,13 @@ struct PaywallView: View {
   }
 
   // MARK: - buy
-  // Purchases.buy -> bought: onUnlocked; cancelled: nothing; pending / failed: a note under the button.
+  // Purchases.buy -> bought: the confirmation; cancelled: nothing; pending / failed: a note under the button.
   private func buy() async {
     isBuying = true
     defer { isBuying = false }
     note = nil
     switch await Purchases.shared.buy(job) {
-    case .purchased: onUnlocked()
+    case .purchased: unlocked = true
     case .cancelled: break
     case .pending: note = "Your purchase is waiting for approval. Your profession unlocks as soon as it's approved."
     case .failed: note = "The purchase didn't go through. Please try again."
@@ -131,7 +179,7 @@ struct PaywallView: View {
   }
 
   // MARK: - restore
-  // Asks Apple for earlier purchases; the job is owned now -> onUnlocked, otherwise a note.
+  // Asks Apple for earlier purchases; the job is owned now -> the confirmation, otherwise a note.
   // The user cancelled Apple's sign-in -> no note, the paywall just stays as it was.
   private func restore() async {
     isBuying = true
@@ -140,7 +188,7 @@ struct PaywallView: View {
     do {
       guard try await Purchases.shared.restore() else { return }     // cancelled: nothing to say
       if Purchases.shared.isUnlocked(job) {
-        onUnlocked()
+        unlocked = true
       } else {
         note = "No earlier purchase of this profession was found."
       }

@@ -11,7 +11,7 @@ import Observation
 // MARK: - Flow of this file
 // One-time job unlocks with Apple's In-App Purchase (StoreKit 2). No subscription.
 // Every job in the menu is its own non-consumable product, $9.99: "com.MaxGabriel.LearnScrumble.job.<case name>"
-// (Occupation.productID). Buying it unlocks unlimited words and "My words" for that job, on every phone of the
+// (Occupation.productID). Buying it unlocks the job's word list (its most-used workplace words) and "My words" for that job, on every phone of the
 // same Apple Account, and it comes back with Restore purchases.
 //   LearnScrumbleApp -> start(): listens for purchases made outside the app (Ask to Buy, another phone) + refresh()
 //   AppManager.hasAccess -> isUnlocked(current job); SettingsView's voice picker -> hasAnyUnlock

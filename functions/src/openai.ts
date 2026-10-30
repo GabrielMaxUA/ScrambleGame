@@ -1,9 +1,11 @@
 // openai.ts — every OpenAI call, with the key from Secret Manager.
 //
 // Same requests the app used to make itself (RequestModel), moved here so the key never leaves the server:
-//   wordList(...)      -> gpt-4.1 chat: 5 workplace words for a job, named as THAT job means them ("motor oil",
+//   wordList(...)      -> gpt-4.1 chat: up to 5 workplace words for a job, named as THAT job means them ("motor oil",
 //                         not "oil", since 28 Oct 2026 — one bank entry per meaning), two languages, an image description each,
-//                         plus the job's common English name ("job") or "invalid"
+//                         plus the job's common English name ("job") or "invalid", and "exhausted" when no common
+//                         everyday items are left (since 30 Oct 2026: the job's vocabulary has a natural end)
+//   checkWords(...)    -> gpt-4.1 chat: which new words really belong to the job and aren't a variant of a bank word
 //   translate(...)     -> gpt-4.1 chat: existing bank words (English names) into the player's languages
 //   describePicture()  -> gpt-4.1 chat: a new, unambiguous picture description for a word whose picture was reported
 //   meanings(...)      -> gpt-4.1 chat: does a word shared by several jobs mean the same thing in each? If not, a
@@ -14,10 +16,12 @@
 //   image(prompt)      -> gpt-image-1-mini, 1024×1024, low quality, transparent PNG -> raw PNG bytes
 //   isFlagged(text)    -> moderation of the job text the user typed (free)
 // send() does the HTTP part for all three: 90 s timeout, retries 408/429/5xx twice (2 s, 4 s),
-// and turns any other failure into the errors in errors.ts.
+// and turns any other failure into the errors in errors.ts. A 429 "insufficient_quota" (no OpenAI credits left) isn't
+// retried: it becomes outOfCredits, not busy, and emails an alert (alerts.ts, once a day).
 
 import * as logger from "firebase-functions/logger";
-import { busy, timedOut, serviceUnavailable, pictureRefused, badResponse } from "./errors";
+import { busy, timedOut, serviceUnavailable, pictureRefused, outOfCredits, badResponse } from "./errors";
+import { raiseAlert } from "./alerts";
 
 export interface GptWord {
   toolName: string;     // canonical English name, lowercase — the Firestore document key
@@ -45,10 +49,15 @@ async function send(apiKey: string, path: string, body: unknown): Promise<any> {
       throw timeout ? timedOut() : busy();
     }
     if (response.ok) return response.json();
-    const retryable = response.status === 408 || response.status === 429 || response.status >= 500;
-    if (retryable && attempt < delays.length) { await sleep(delays[attempt]); continue; }
     const detail = (await response.text()).slice(0, 300);           // OpenAI's error text — never user data
+    const noCredits = response.status === 429 && /insufficient_quota/.test(detail);
+    const retryable = !noCredits && (response.status === 408 || response.status === 429 || response.status >= 500);
+    if (retryable && attempt < delays.length) { await sleep(delays[attempt]); continue; }
     logger.error(`openai ${path}: status ${response.status}`, { detail });
+    if (noCredits) {
+      await raiseAlert("openaiCredits", `OpenAI refused ${path}: no credits remaining (${new Date().toISOString()}).`);
+      throw outOfCredits();
+    }
     if (response.status === 408) throw timedOut();
     if (response.status === 400 && /safety system|safety_violations/.test(detail)) throw pictureRefused();
     throw retryable ? busy() : serviceUnavailable();
@@ -63,12 +72,14 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 // different things in two jobs gets two bank entries, each with its own translations and picture.
 // Words already in the bank under a plain name ("oil") keep it until they're split by hand.
 export async function wordList(apiKey: string, profession: string, origin: string, target: string,
-                               exclude: string[]): Promise<{ job: string | null; words: GptWord[] }> {
+                               exclude: string[]): Promise<{ job: string | null; words: GptWord[]; exhausted: boolean }> {
   const exclusionClause = exclude.length === 0 ? ""
     : `\nDo not repeat any of these items already used: ${exclude.join(", ")}.`;
-  const prompt = `List exactly 5 common workplace items, objects, equipment, materials, or resources used by a ${profession}.${exclusionClause}
+  const prompt = `List up to 5 common workplace items, objects, equipment, materials, or resources used by a ${profession}.${exclusionClause}
 Rules:
-- Return exactly 5 unique items.
+- Return up to 5 unique items.
+- Only items a ${profession} really uses or meets at work often enough to need the word. Never invent rare, obscure, overly specific or unrelated items, or variants of items already used, just to reach 5.
+- If fewer than 5 such items are left, return only those (or none) and set "exhausted" to true; otherwise set it to false.
 - Choose common and practical vocabulary that someone working as a ${profession} would actually encounter.
 - Prefer concrete items that can be clearly represented by a single image.
 - Include a mix of relevant physical objects, equipment, materials, or other recognizable workplace resources when appropriate for the profession.
@@ -86,6 +97,7 @@ Rules:
 Return exactly this shape:
   {
     "job": "carpenter",
+    "exhausted": false,
     "words": [
       {
         "toolName": "hammer",
@@ -114,9 +126,42 @@ Return exactly this shape:
       return toolName && targetWord && toolName.length <= 60 ? [{ toolName, originWord: originWord || targetWord, targetWord, imagePrompt }] : [];
     });
     const job = typeof parsed?.job === "string" ? parsed.job.trim().toLowerCase() : null;
-    return { job, words };
+    return { job, words, exhausted: parsed?.exhausted === true };
   } catch {
     logger.warn("wordList: GPT reply wasn't valid JSON");
+    throw badResponse();
+  }
+}
+
+// MARK: - checkWords
+// The quality check for words GPT just suggested for a job (getWords, since 30 Oct 2026): keeps only items a person in
+// this job really uses or meets at work, that one picture can show, and that aren't the same item as a word the job
+// already has (a synonym or a variant: "chef's knife" when "kitchen knife" is there). One text request.
+// Returns the English names to keep. A garbled reply keeps nothing (badResponse) — the words are simply not added.
+export async function checkWords(apiKey: string, profession: string, candidates: string[],
+                                 existing: string[]): Promise<Set<string>> {
+  if (candidates.length === 0) return new Set();
+  const prompt = `A ${profession} is learning the vocabulary of their workplace in another language.
+Words the ${profession} already has: ${existing.length ? existing.join(", ") : "(none)"}.
+New candidates: ${candidates.join(", ")}.
+Keep a candidate only if ALL of these are true:
+- a ${profession} really uses or meets this item at work, often enough to need the word;
+- one clear picture can show it;
+- it is not the same item as a word the ${profession} already has, or as another candidate (a synonym, a variant, or the same thing with a different name).
+Respond ONLY with a JSON object, no markdown: {"keep": ["<candidate exactly as written>", ...]}`;
+  const reply = await send(apiKey, "chat/completions", {
+    model: "gpt-4.1",
+    messages: [{ role: "user", content: prompt }],
+  });
+  const content: unknown = reply?.choices?.[0]?.message?.content;
+  if (typeof content !== "string") throw badResponse();
+  try {
+    const parsed = JSON.parse(content.replace(/```json/g, "").replace(/```/g, "").trim());
+    const keep: unknown[] = Array.isArray(parsed?.keep) ? parsed.keep : [];
+    const allowed = new Set(candidates);
+    return new Set(keep.flatMap((k) => typeof k === "string" && allowed.has(k.trim().toLowerCase()) ? [k.trim().toLowerCase()] : []));
+  } catch {
+    logger.warn("checkWords: GPT reply wasn't valid JSON");
     throw badResponse();
   }
 }

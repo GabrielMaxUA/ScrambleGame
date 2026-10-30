@@ -19,6 +19,8 @@
 //   tagged with the job (an existing word just gets the tag), and words without a picture get one
 //   (3 at a time, at most 15 per step). A picture OpenAI's safety system refuses is skipped: the word is marked
 //   pictureRefused (logged with its prompt) and later steps leave it alone; getPicture still tries when someone plays it.
+//   OpenAI credits used up -> this job goes to "paused" (error says so) and the queue waits: add credits, then set
+//   status "run" on it; the queued jobs follow when it's done.
 //   Any other error -> status "failed" with the message, and the next queued job starts; set status "run" to retry.
 // Cost: roughly one OpenAI picture per new word (low quality) plus small text requests. Words other jobs already
 // have are tagged, not drawn again. Keep an eye on the OpenAI usage page during a big run.
@@ -29,7 +31,7 @@ import * as logger from "firebase-functions/logger";
 import { FieldValue } from "firebase-admin/firestore";
 import * as openai from "./openai";
 import { db, docID, fetchBank, fetchWords, saveWord, savePicture, WordDoc } from "./store";
-import { isPictureRefused } from "./errors";
+import { isPictureRefused, isOutOfCredits } from "./errors";
 
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 const DEFAULT_TARGET = 100;
@@ -90,6 +92,11 @@ export const prepareProfession = onDocumentWritten(
       logger.info("prepareProfession: step done", { key, words: result.words, added: result.added, finished });
       if (finished) await startNextQueued();
     } catch (error) {
+      if (isOutOfCredits(error)) {                                 // every next job would fail the same way: wait
+        logger.error("prepareProfession: OpenAI credits used up, queue paused", { key });
+        await ref.update({ status: "paused", error: "OpenAI credits used up: add credits, then set status to run" });
+        return;
+      }
       logger.error("prepareProfession: step failed", { key, error: String(error) });
       await ref.update({ status: "failed", error: String(error).slice(0, 300) });
       await startNextQueued();                                     // one failed job doesn't stop the queue
