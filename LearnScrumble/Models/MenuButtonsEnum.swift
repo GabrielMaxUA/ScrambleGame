@@ -14,5 +14,5 @@ import Foundation
 //   The struggle-review button (.struggle, .menu) was removed on 28 Oct 2026: review is "My words" now.
 
 enum MenuButtonsEnum {
-    case settings                  // only the settings gear
+    case back                      // the back arrow (was the settings gear until 30 Oct 2026)
 }

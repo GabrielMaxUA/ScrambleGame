@@ -9,8 +9,9 @@ import SwiftUI
 
 // MARK: - Flow of this file
 // One card in WelcomeBackView's wallet-style stack (CabinetVM.Card).
-//   Top strip (always visible, also when the next card overlaps the rest): the language being learned as the title,
-//   the profession under it, and the learned words — or a lock — in the trailing corner. Tapping it -> onOpen.
+//   Top strip (always visible, also when the next card overlaps the rest): the profession as the title (what the user
+//   looks for), the language being learned under it, and the learned words — or a lock — in the trailing corner.
+//   Tapping it -> onOpen.
 //   Open (isOpen): the score — learned, right, wrong — the words played and, if not bought, the free words left,
 //   then the buttons, one under the other:
 //     Continue learning -> onContinue (a game) · My words -> onWordList (bought, after the first word)
@@ -52,16 +53,16 @@ struct CabinetCardView: View {
   }
 
   // MARK: - strip
-  // Title, profession and the corner (learned words or lock). Fixed height, content at the top: when the next card
+  // Title (profession), language and the corner (learned words or lock). Fixed height, content at the top: when the next card
   // overlaps the lower part, the text stays readable.
   private var strip: some View {
     HStack(alignment: .top, spacing: 12) {
       VStack(alignment: .leading, spacing: 4) {
-        Text(verbatim: card.language.name(in: locale))   // title: the language being learned
+        Text(card.job.displayName)                       // title: the profession
           .font(.headline)
           .foregroundStyle(.white)
           .singleLine()
-        Label { Text(card.job.displayName) } icon: { Image(systemName: "briefcase") }   // the profession
+        Label { Text(verbatim: card.language.name(in: locale)) } icon: { Image(systemName: "globe") }   // the language being learned
           .font(.subheadline)
           .foregroundStyle(.white.opacity(0.8))
           .singleLine()

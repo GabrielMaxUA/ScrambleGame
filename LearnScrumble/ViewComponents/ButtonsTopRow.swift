@@ -2,42 +2,32 @@ import SwiftUI
 
 // MARK: - Flow of this file
 // The round glass buttons along the top of the game screen.
-//   RootView.topRow picks `buttons` (.settings) and passes the current word
-//   -> gear: "Open Settings?" alert -> onOpenSettings() -> AppManager.openSettings()
+//   RootView.topRow picks `buttons` (.back) and passes the current word
+//   -> back arrow (left): onBack() -> AppManager.exitToWelcome() — the round ends (every answer is already saved),
+//      WelcomeBackView's cards show; Settings is the gear there
 //   -> speaker (right side): SpeechManager reads the current word in the target language.
 
 struct ButtonsTopRow: View {
-    @State private var showAlert: Bool = false         // is the confirmation / paywall alert open
-    @State private var type: MenuAlert = .settings     // which alert texts to show
-    
     let speechManager: SpeechManager                   // reads the word aloud
     let requestModel: RequestModel                     // gives the target language for the voice
     let word: String?                                  // current word; nil = no speaker button
-    let onShowPaywall: () -> Void                      // "Unlock" in a paywall alert
-    let onOpenSettings: () -> Void                     // was onExitToSettings
+    let onBack: () -> Void                             // back to WelcomeBackView (was the gear -> Settings)
     let buttons: MenuButtonsEnum                       // which buttons to show
     var buttonSize: CGFloat = 50                       // 40 on the folded iPhone Duo (FoldLayout.swift)
     
     var body: some View {
         row
-        .foldAlert(type.title, isPresented: $showAlert, message: type.message, confirmTitle: type.confirmTitle) {
-            switch type {                              // main button: do what the alert asked
-            case .settings: onOpenSettings()
-            case .wordListLocked, .settingsLocked, .freeWordsDone: onShowPaywall()
-            }
-        }
-        .alertSound(isPresented: showAlert)            // notification sound when the alert opens
     }
 
     // MARK: - row
-    // Gear left, speaker right.
+    // Back arrow left, speaker right.
     private var row: some View {
         HStack {
             GlassContainer {                           // left group: their glass can blend on iOS 26
                 HStack {
                     switch buttons {
-                    case .settings:
-                        settingsButton
+                    case .back:
+                        backButton
                     }
                 }//hs
             }//glass Container
@@ -55,8 +45,9 @@ struct ButtonsTopRow: View {
         }
     }
     
-    private var settingsButton: some View {
-        glassButton("gear") { type = .settings; showAlert = true }   // open for everyone; SettingsView will replace this later
+    private var backButton: some View {
+        glassButton("chevron.backward", action: onBack)   // mirrors itself in right-to-left languages
+            .accessibilityLabel(Text("Back"))
     }
     
     // MARK: - glassButton
@@ -77,9 +68,8 @@ struct ButtonsTopRow: View {
         speechManager: SpeechManager(),
         requestModel: RequestModel(),
         word: "Hummer",
-        onShowPaywall: {},
-        onOpenSettings: {},
-        buttons: .settings)
+        onBack: {},
+        buttons: .back)
     .background(.black)
     .environment(\.layoutDirection, .leftToRight)
 }

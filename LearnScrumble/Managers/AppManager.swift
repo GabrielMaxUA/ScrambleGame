@@ -223,6 +223,13 @@ final class AppManager {
     return await requestModel.reportPicture(toolName: question.word.toolName, imageURL: question.imageURL)
   }
 
+  // MARK: - reportSavedPicture(_:)
+  // The flag on My words' card (WordCardOverlay): the same report as in the game, for a word saved on the phone.
+  func reportSavedPicture(_ word: SwiftDataWordModel) async -> RequestModel.ReportResult {
+    Track.pictureReported()
+    return await requestModel.reportPicture(toolName: word.concept, imageURL: word.imageURL)
+  }
+
   // MARK: - showFailure(fallback:)
   // Single place that decides which failure screen to show.
   // Offline wins if RequestModel saw it, OR if the phone has no connection right now —
@@ -250,6 +257,7 @@ final class AppManager {
   // MARK: - exitToWelcome
   // Called when the user leaves a session (result, error or offline screen).
   // Drops activeVM — the last strong-ish reference; the vm deallocates once phase changes — then shows WelcomeBackView.
+  // Also the game's back arrow (ButtonsTopRow): every answer is already saved.
   func exitToWelcome() {
     Log.info("🚪 exitToWelcome — dropping activeVM, returning to Welcome Screen", .app)
     activeVM = nil
@@ -257,7 +265,7 @@ final class AppManager {
   }
   
   // MARK: - openSettings
-  // Gear (in game or on WelcomeBackView) or ErrorView's "Change profession".
+  // Gear on WelcomeBackView or ErrorView's "Change profession".
   // A running round ends — every answer is already saved — and SettingsView opens.
   func openSettings() {
     activeVM = nil

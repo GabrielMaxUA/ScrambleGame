@@ -127,6 +127,7 @@ struct RootView: View {
                 targetLanguage: manager.requestModel.selectedLanguage.rawValue,
                 onContinue: { withConsent { Task { await manager.startGame() } } },
                 onRepeat: { manager.startReview() },
+                onReport: { await manager.reportSavedPicture($0) },
                 onBack: { manager.exitToWelcome() })
             }
           }
@@ -202,7 +203,7 @@ struct RootView: View {
     private var topRow: some View {                              // which top buttons each phase gets
         switch manager.phase {
         case .playing(let vm) where vm.guessResult == nil:        // in game, hidden while the answer result shows
-            row(word: vm.word?.targetWord, buttons: .settings, manager: manager)
+            row(word: vm.word?.targetWord, buttons: .back, manager: manager)
         default:
             EmptyView()                                          // includes .welcomeBack: it has its own buttons
         }
@@ -211,14 +212,13 @@ struct RootView: View {
   // MARK: - row(word:buttons:manager:)
   // Builds ButtonsTopRow for the current screen and wires its buttons to AppManager:
   //   word -> speaker button reads it (nil = no speaker); buttons -> which glass buttons show
-  //   gear -> manager.openSettings(); onShowPaywall -> PaywallView
+  //   back arrow -> manager.exitToWelcome()
   private func row(word: String?, buttons: MenuButtonsEnum, manager: AppManager) -> some View {
     ButtonsTopRow(
       speechManager: speechManager,
       requestModel: manager.requestModel,
       word: word,
-      onShowPaywall: { showPaywall = true },
-      onOpenSettings: { manager.openSettings() },
+      onBack: { manager.exitToWelcome() },
       buttons: buttons,
       buttonSize: topButtons?.buttonSize ?? 50)
         .padding(.horizontal, topButtons?.horizontal ?? 16)      // iPhone Duo: clear of its corners and edges

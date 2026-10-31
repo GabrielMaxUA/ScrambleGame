@@ -20,6 +20,8 @@ import SwiftUI
 struct ImageComponent: View {
     let image: UIImage?                         // current word's picture; nil = not loaded / failed
     let hint: String                            // the word in the user's native language
+    var showsHint: Bool = true                  // the lightbulb; off on My words' card (WordCardOverlay), where the hint is written
+    var framed: Bool = true                     // the light box and outline; off on My words' black card (WordCardOverlay)
     var onHintToggled: (Bool) -> Void = { _ in }   // tutorial only: tells OnboardingService the hint opened (true) / closed (false)
     var report: PictureReport = .idle           // where this word's picture report stands
     var onReport: (() -> Void)? = nil           // sends the report; nil = no flag (tutorial)
@@ -45,13 +47,13 @@ struct ImageComponent: View {
         }
         .frame(maxWidth: maxSide, maxHeight: maxSide)
         .aspectRatio(1, contentMode: .fit)                              // always a square card, shrinks on small screens
-        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 20))
+        .background(.white.opacity(framed ? 0.08 : 0), in: RoundedRectangle(cornerRadius: 20))
         .overlay {
             RoundedRectangle(cornerRadius: 20)
-                .stroke(.white.opacity(0.2), lineWidth: 1)
+                .stroke(.white.opacity(framed ? 0.2 : 0), lineWidth: 1)
         }
         .overlay(alignment: .topTrailing) {                             // lightbulb in the top-right corner
-            hintButton.padding(10)
+            if showsHint { hintButton.padding(10) }
         }
         .overlay(alignment: .topLeading) {                              // flag in the top-left corner
             if onReport != nil, report == .idle || report == .failed {
