@@ -15,9 +15,12 @@ Nothing can be bought, not even in TestFlight, until this agreement is **Active*
 - ✅ Paid Apps Agreement signed (29 October).
 - ⬜ Bank account (RBC, CAD): wait for Apple to verify it.
 - ⬜ W-8BEN: individual, Canada, SIN, treaty benefits.
-- ⬜ **CRA Business Number** (sole proprietor, free, no company needed): register for GST/HST at CRA Business
-  Registration Online. You get a BN + `RT0001`.
-- ⬜ GST/HST Form 506 in App Store Connect with that number.
+- ✅ *(1 November 2026)* **CRA business registration** active: Max Gabriel, sole proprietor, business name **PawIT**.
+  ✅ Ontario Business Registry: business name PAWIT registered (sole proprietorship, 1 November 2026; renew in 5 years).
+  ⬜ Make sure the GST/HST account (`RT0001`) is open on the CRA Business Number; the OBR profile shows no Business
+  Number linked yet, which is fine for Apple's form (it asks for the CRA number).
+- ✅ *(1 November 2026)* GST/HST Form 506 in App Store Connect: CRA Business Number + RT 0001 entered. ⬜ Wait for
+  Apple to accept it (Business page → Tax Forms).
 - ⬜ EU trader status (Digital Services Act): answer it.
 - ⬜ App Store Small Business Program: apply (15% commission instead of 30%).
 
@@ -109,9 +112,12 @@ reused after it's created.
 
 - ✅ Privacy, terms, support and home pages updated for Ontario/Canada law (29 October, not deployed yet).
 - ⬜ Everything open in `LegalReview.md`: privacy officer, breach record, Québec assessment, French pages, the app's
-  consent and paywall wording, the business name decision, a lawyer's read.
+  consent and paywall wording, a lawyer's read. *(The business name is decided: PawIT, 1 November.)*
 
-- ⬜ Fill the yellow placeholders with **your own** details: name (Max Gabriel), postal address, effective dates,
+- ✅ *(1 November)* Name on every page: "Max Gabriel, operating as PawIT"; privacy officer Max Gabriel.
+- ✅ *(1 November, not deployed)* Pronunciation test on the website: privacy (Apple speech recognition, microphone,
+  results on the phone), terms, support FAQ, home and how-to-play. ⬜ Retake `images/app/progress.jpg`.
+- ⬜ Fill the remaining yellow placeholders: postal address, effective dates,
   minimum age (16 suggested), governing law (Ontario, Canada). Then deploy: `firebase deploy --only hosting`.
 - ⬜ Connect `www.learnscrumble.com` and test every page.
 - ⬜ Firebase: accept the data processing terms. OpenAI: accept the Data Processing Addendum.
@@ -125,9 +131,19 @@ reused after it's created.
 - ⬜ Screenshots: 6.9" iPhone (required).
 - ⬜ URLs: Privacy `https://learnscrumble.com/privacy`, Support `https://learnscrumble.com/support`,
   Marketing `https://learnscrumble.com`.
-- ⬜ Notes for the reviewer: the text is ready in `AppStoreReadiness.md` §2.3.
+- ⬜ Notes for the reviewer: the text is ready in the README, **App Store review guide** (1 November, with the
+  pronunciation test and the new start screen); the full app flow for any reviewer question is there too.
+- ⬜ App Privacy answers: Audio Data is not collected by us (Apple's speech recognition) — confirm at sign-off
+  (`WebsiteContent/README.md`).
 
 ## 6. Testing
+
+- ✅ *(1 November, fixed)* **The tutorial still taught the gear in the game** ("The gear opens Settings… Tap it.", `OnboardingView` /
+  `OnboardingService`), but since 30 October the game shows a back arrow there and the gear is on the start screen.
+  Now the tutorial shows the back arrow: "This arrow takes you back to the start screen. Settings are there, behind
+  the gear." (53 languages). ⬜ Retake `WebsiteContent/images/how-to-play/08-settings.jpg`.
+- ⬜ **Pronunciation test on a real iPhone** (the simulator can't recognise speech): permissions, a right word, three
+  misses, Again / Next word, the counts and rings, a language without speech recognition.
 
 - ⬜ Update to Xcode 27.1 and check the app on the **iPhone Duo** simulator (all poses).
 - ⬜ TestFlight round on a real iPhone, once section 1 is Active: free words → paywall → sandbox purchase → more

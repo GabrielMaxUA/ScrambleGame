@@ -23,6 +23,9 @@ import Foundation
 //   playedJobLanguages()               <- CabinetVM: every job + language pair with saved words (one card each)
 //   jobProgress(profession:targetLanguage:) <- CabinetVM (WelcomeBackView's cards) / ResultView: learned words, right and wrong answers
 //   overallAccuracy(targetLanguage:)   <- WordVM.overallAccuracy (ResultView) and WelcomeBackView's stats
+//   speechWords / speechProgress / recordSpeech <- the pronunciation test (MyWordsView .speech, WordCardOverlay,
+//                                         CabinetVM): the job's words struggles first, its numbers, one saved test
+//   vocabularyScore() / speechScore(languages:) <- the two rings on the cabinet's top cards (all languages together)
 //   resetProgress(targetLanguage:)     <- SettingsView "reset progress" for the current target language
 //   deleteAllProgress()                <- not called right now (AppManager's deleteAllData is commented out)
 //   debugPrintAllWords()               <- manual dev-console dump, not called by app logic
@@ -118,6 +121,48 @@ final class PersistenceController {
                            incorrect: records.reduce(0) { $0 + $1.incorrect })
     }
     
+    // MARK: - speechWords(profession:targetLanguage:)
+    // The job's words for the pronunciation test: struggles first, then untested ones, then the ones said right on
+    // the first try; on a tie, the one practiced longest ago.
+    func speechWords(profession: String, targetLanguage: String) -> [SwiftDataWordModel] {
+        jobWords(profession: profession, targetLanguage: targetLanguage)
+            .sorted { ($0.speechScore, $0.lastSeen) < ($1.speechScore, $1.lastSeen) }
+    }
+
+    // MARK: - speechProgress(profession:targetLanguage:)
+    func speechProgress(profession: String, targetLanguage: String) -> SpeechProgress {
+        let records = jobWords(profession: profession, targetLanguage: targetLanguage)
+        return SpeechProgress(words: records.count,
+                              tested: records.filter { $0.speechTests > 0 }.count,
+                              firstTry: records.reduce(0) { $0 + $1.speechFirstTry },
+                              struggled: records.reduce(0) { $0 + $1.speechStruggled })
+    }
+
+    // MARK: - recordSpeech(_:firstTry:)
+    // One finished pronunciation test: right on the first try, or a struggle (2nd / 3rd try, or missed).
+    func recordSpeech(_ word: SwiftDataWordModel, firstTry: Bool) {
+        if firstTry { word.speechFirstTry += 1 } else { word.speechStruggled += 1 }
+        try? context.save()
+        Log.info("🎙️ recordSpeech — \(word.concept) [\(word.targetLanguage)] firstTry=\(firstTry)", .storage)
+    }
+
+    // MARK: - vocabularyScore() / speechScore(languages:)
+    // The cabinet's two rings, every job and language together: right answers out of all answers in the game, and
+    // tests said right on the first try out of all tests (only languages with a pronunciation test).
+    // nil = nothing played / tested yet.
+    func vocabularyScore() -> Double? {
+        let records = (try? context.fetch(FetchDescriptor<SwiftDataWordModel>())) ?? []
+        let correct = records.reduce(0) { $0 + $1.correct }, total = records.reduce(0) { $0 + $1.attempts }
+        return total > 0 ? Double(correct) / Double(total) : nil
+    }
+
+    func speechScore(languages: Set<String>) -> Double? {
+        let records = ((try? context.fetch(FetchDescriptor<SwiftDataWordModel>())) ?? [])
+            .filter { languages.contains($0.targetLanguage) }
+        let firstTry = records.reduce(0) { $0 + $1.speechFirstTry }, total = records.reduce(0) { $0 + $1.speechTests }
+        return total > 0 ? Double(firstTry) / Double(total) : nil
+    }
+
     // MARK: - overallAccuracy(targetLanguage:)
     // Correct answers vs all answers across the whole history in one target language.
     // Adds up `correct` and `incorrect` of every record; returns (correct, total).

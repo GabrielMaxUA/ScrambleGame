@@ -21,11 +21,15 @@ import SwiftData
 //   -> "Repeat all" -> onRepeat -> AppManager.startReview(): the same list as a game, in rounds of 10
 //   -> back (top) -> onBack -> AppManager.exitToWelcome()
 // Opened from a card on WelcomeBackView (CabinetVM) or from ResultView; the title shows the job and the language.
+// Pronunciation test (mode .speech, phase .speechList, from a Pronunciation test card): the same list, struggles
+// first (PersistenceController.speechWords), with each word's speech numbers (✓ right on the first try, ↻ struggles);
+// a tapped word opens WordCardOverlay in .speech (picture, word, Tap to speak). No Continue / Repeat buttons.
 
 struct MyWordsView: View {
   @Environment(\.locale) private var locale              // the app's language, for the language's name
   let job: Occupation?                                   // the job whose words are listed
   let targetLanguage: String                             // the language being learned (Languages.rawValue)
+  let mode: CabinetVM.Section                            // .vocabulary: My words; .speech: the pronunciation test
   var onContinue: () -> Void                             // new words for this job and language
   var onRepeat: () -> Void                               // start the review
   var onReport: (SwiftDataWordModel) async -> RequestModel.ReportResult = { _ in .failed }   // the card's flag
@@ -38,23 +42,27 @@ struct MyWordsView: View {
   @State private var images = WordImages()               // decoded pictures, shared with the cards
   @Namespace private var pictures                        // a row's picture <-> the card's picture
 
-  init(job: Occupation?, targetLanguage: String, onContinue: @escaping () -> Void, onRepeat: @escaping () -> Void,
+  init(job: Occupation?, targetLanguage: String, mode: CabinetVM.Section = .vocabulary,
+       onContinue: @escaping () -> Void, onRepeat: @escaping () -> Void,
        onReport: @escaping (SwiftDataWordModel) async -> RequestModel.ReportResult = { _ in .failed },
        onBack: @escaping () -> Void) {
     self.job = job
     self.targetLanguage = targetLanguage
+    self.mode = mode
     self.onContinue = onContinue
     self.onRepeat = onRepeat
     self.onReport = onReport
     self.onBack = onBack
-    _words = State(initialValue: PersistenceController.shared.jobWords(profession: job?.rawValue ?? "",
-                                                                       targetLanguage: targetLanguage))
+    let store = PersistenceController.shared
+    _words = State(initialValue: mode == .speech
+                   ? store.speechWords(profession: job?.rawValue ?? "", targetLanguage: targetLanguage)
+                   : store.jobWords(profession: job?.rawValue ?? "", targetLanguage: targetLanguage))
   }
 
   var body: some View {
     VStack(spacing: 16) {
       VStack(spacing: 4) {
-        Text("My words")
+        Text(mode == .speech ? "Pronunciation" : "My words")
           .font(.largeTitle.bold())
           .foregroundStyle(.white)
         if let job {
@@ -73,14 +81,16 @@ struct MyWordsView: View {
 
       if words.isEmpty {
         Spacer()
-        Text("Words you play for this profession will appear here.")
+        Text(mode == .speech ? "Play a few words first, then come back to say them."
+                             : "Words you play for this profession will appear here.")
           .font(.title3)
           .foregroundStyle(.white.opacity(0.7))
           .multilineTextAlignment(.center)
         Spacer()
-        continueButton
+        if mode == .vocabulary { continueButton }
       } else {
-        Text("Hardest words first. Tap a word to see it big.")
+        Text(mode == .speech ? "Hardest to say first. Tap a word, then say it out loud."
+                             : "Hardest words first. Tap a word to see it big.")
           .font(.footnote)
           .foregroundStyle(.white.opacity(0.6))
           .multilineTextAlignment(.center)
@@ -103,16 +113,18 @@ struct MyWordsView: View {
         .scrollPosition(id: $scrolledID, anchor: .center)
         .scrollIndicators(.hidden)
 
-        continueButton
+        if mode == .vocabulary {
+          continueButton
 
-        Button(action: onRepeat) {
-          Label("Repeat all (\(words.count))", systemImage: "arrow.counterclockwise")
-            .font(.headline)
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
+          Button(action: onRepeat) {
+            Label("Repeat all (\(words.count))", systemImage: "arrow.counterclockwise")
+              .font(.headline)
+              .foregroundStyle(.white)
+              .frame(maxWidth: .infinity)
+              .padding(.vertical, 14)
+          }
+          .glassCompat(in: .capsule, interactive: true)
         }
-        .glassCompat(in: .capsule, interactive: true)
       }
     }
     .padding(.horizontal, 20)
@@ -139,6 +151,8 @@ struct MyWordsView: View {
                         heroID: heroID,
                         namespace: pictures,
                         images: images,
+                        mode: mode,
+                        language: Languages(rawValue: targetLanguage),
                         speak: { speechManager.speak($0, language: targetLanguage) },
                         onReport: onReport,
                         onClose: closeCard)
@@ -178,7 +192,8 @@ struct MyWordsView: View {
   }
 
   // MARK: - row(_:isOpen:)
-  // One word: picture, the word being learned and its hint, a star once learned, then the right / wrong counts.
+  // One word: picture, the word being learned and its hint, a star once learned, then the right / wrong counts
+  // (.speech: no star; right on the first try / struggles).
   // While its picture is on the card (the hero, same matchedGeometryEffect id) the row keeps an empty spot.
   private func row(_ word: SwiftDataWordModel, isOpen: Bool) -> some View {
     HStack(spacing: 12) {
@@ -207,7 +222,7 @@ struct MyWordsView: View {
           Text(verbatim: word.targetWord)
             .font(.headline)
             .foregroundStyle(.white)
-          if word.isLearned {
+          if mode == .vocabulary && word.isLearned {
             Image(systemName: "star.fill")
               .font(.caption)
               .foregroundStyle(.yellow)
@@ -223,8 +238,13 @@ struct MyWordsView: View {
       Spacer(minLength: 8)
 
       HStack(spacing: 10) {
-        count(word.correct, icon: "checkmark.circle.fill", tint: .green, label: "Right")
-        count(word.incorrect, icon: "xmark.circle.fill", tint: .red, label: "Wrong")
+        if mode == .speech {                             // the pronunciation test's numbers
+          count(word.speechFirstTry, icon: "checkmark.circle.fill", tint: .green, label: "First try")
+          count(word.speechStruggled, icon: "arrow.counterclockwise.circle.fill", tint: .orange, label: "Struggled")
+        } else {
+          count(word.correct, icon: "checkmark.circle.fill", tint: .green, label: "Right")
+          count(word.incorrect, icon: "xmark.circle.fill", tint: .red, label: "Wrong")
+        }
       }
     }
     .padding(10)

@@ -4,26 +4,34 @@
 
 ## Now: before the site counts as final
 
+- ✅ *(1 November 2026)* **French version** of every page (`fr/`), EN | FR switch, provider policy links on the privacy page, deployed. ⬜ A French speaker's check of the translation.
+
+- ✅ *(1 November 2026)* **Launched the final pages:** PawIT name, effective dates 1 November 2026, no postal address (email contact), the pronunciation test, the store button hidden until the app is live. Deployed with `firebase deploy --only hosting`.
+
 - ✅ **Deploy the latest changes.** From the repository root: `firebase deploy --only hosting` (steps in `README.md`). *(28 October: deployed — the 27 October server changes plus the one-time unlocks, My words, the Report flag and no typed jobs.)*
-- ⬜ **`www.learnscrumble.com` → Connected.** Namecheap must show CNAME `www` → `scrumblegame.web.app.`; then Firebase → Hosting → ⋮ next to `www` → Verify. `learnscrumble.com` is already Connected with HTTPS (18 October).
-- ⬜ **Test after `www` connects:** `https://learnscrumble.com` (padlock), `www.learnscrumble.com` (redirects to it), every page and the menu on a phone, and an email to support@learnscrumble.com still arrives.
+- ✅ *(1 November 2026: `www` redirects to `https://learnscrumble.com`)* **`www.learnscrumble.com` → Connected.** Namecheap must show CNAME `www` → `scrumblegame.web.app.`; then Firebase → Hosting → ⋮ next to `www` → Verify. `learnscrumble.com` is already Connected with HTTPS (18 October).
+- ✅ *(1 November 2026: all five pages answer 200, `www` → 301 to the main address)* **Test after `www` connects:** `https://learnscrumble.com` (padlock), `www.learnscrumble.com` (redirects to it), every page and the menu on a phone, and an email to support@learnscrumble.com still arrives.
 - ⬜ **Fill the remaining yellow placeholders** (`grep -n 'class="fill"' *.html`):
-  - ⬜ Developer or company name (footer of every page, privacy §1, terms intro and §13).
-  - ⬜ Postal address (privacy §1 and §11, terms §13).
-  - ⬜ Company registration number, if any (privacy §1).
-  - ⬜ Effective dates (privacy and terms): the day the final version goes live.
-  - ⬜ Minimum age (privacy §9): 16 is pre-filled as a suggestion; confirm it.
+  - ✅ *(1 November 2026)* Developer or company name: **Max Gabriel, sole proprietor operating as PawIT** (CRA registration active 1 November) — privacy §1 and contact, terms intro and §13, footer "© 2026 PawIT (Max Gabriel)" on every page.
+  - ✅ *(1 November 2026)* Postal address: left out on purpose — contact by email (support@learnscrumble.com), "Ontario, Canada".
+  - ⬜ Business Number (CRA) on the pages: not required for a sole proprietor; add it to privacy §1 only if you want to.
+  - ✅ *(1 November 2026)* Effective dates: 1 November 2026 (the day the pages went live).
+  - ✅ *(1 November 2026)* Minimum age 16 confirmed (privacy §10 "Children"). No postal address on purpose (email contact).
   - ⬜ Governing law (terms §11): your country, or Auxility's if the app is published from their account — ask Konstantin.
 
 ## Consoles: make the policy's promises true
 
 The privacy page now says these are in place, so they have to be:
 
-- ⬜ **Firebase:** Project settings → Privacy / Data processing terms → accept (puts Google's Standard Contractual Clauses in place).
-- ⬜ **OpenAI:** accept the Data Processing Addendum (organization settings, or the form linked from openai.com/policies/data-processing-addendum). OpenAI's Standard Contractual Clauses only apply once it's accepted.
-- ⬜ **Google Analytics:** Admin → Data retention → **2 months** (the privacy page says 2 months).
+- ✅ *(1 November 2026)* **Firebase:** no accept button any more — Project settings → Data privacy has only the Service Data setting and Privacy representatives (none needed). Google's Firebase Data Processing and Security Terms, with the Standard Contractual Clauses, apply to every project automatically. Unticked "Let Google use your Firebase Service Data… non-Firebase services" (optional, privacy-friendly).
+- ✅ *(1 November 2026)* **OpenAI:** nothing to sign — the Data Processing Addendum effective 1 January 2026 "supplements, and is incorporated into" the OpenAI Services Agreement, so it (with its Standard Contractual Clauses) applies to every API customer automatically. PDF kept for the records (optional).
+- ✅ *(1 November 2026)* **Google Analytics:** Admin → Data collection and modification → Data retention: event data **2 months**, user data **2 months**, "Reset on new user activity" off (the privacy page says 2 months).
 
 ## Before App Review
+
+- ⬜ **Retake `images/how-to-play/08-settings.jpg`** (tutorial step 7): since 1 November the tutorial points at the back arrow, not the gear; the page text and alt text already say so. Then raise its `?v=`.
+- ⬜ **Retake `images/app/progress.jpg`** (how-to-play "After the tutorial"): the start screen now has the My vocabulary and Pronunciation test cards with rings (1 November 2026); the text already describes it. Also consider a screenshot of the pronunciation card.
+- ✅ *(1 November 2026, not deployed)* **Pronunciation test** on the pages: privacy §2 (results on the phone), §3 (Apple speech recognition, microphone), §4, §5, §6 and the summary box; terms §1, §3 and §4; support FAQ (how it works, unsupported languages, "Do you record my voice?", My words' big card); home page cards; how-to-play (start screen, back arrow, pronunciation card).
 
 - ✅ **Paywall.** *(28 October: built as one-time profession unlocks, $9.99, after 10 free words once. `terms.html` §4–5, `support.html` ("Free words and unlocking a profession"), `index.html` ("Try 10 words free") and `how-to-play.html` match it. The 32 products still have to be created in App Store Connect with the IDs from `StoreKit/LearnScrumble.storekit`.)*
 - ✅ *(28 October)* **Retake `images/how-to-play/10-lets-go.jpg`**: the app's note now says "You get 10 free words to try the app." (then raise its `?v=` in `how-to-play.html`).
@@ -45,6 +53,7 @@ The privacy page now says these are in place, so they have to be:
 | changes the **consent text** (`AIConsent.message`) | `support.html` "Why do I have to agree", privacy §3 "We ask first" |
 | sends **new data** anywhere, or adds an SDK | Privacy §3 + §4, manifest, App Store answers |
 | changes **Settings menu names** or the tutorial | `support.html`, `how-to-play.html` |
+| changes the **pronunciation test** (what's sent, where it runs, who can use it) | `privacy.html` §2–6, `terms.html` §1, §3–4, `support.html` pronunciation FAQ, the App Store answers in `README.md` |
 
 ## Nice to have
 

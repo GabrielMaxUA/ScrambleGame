@@ -7,8 +7,11 @@
   <meta name="description" content="What LearnScrumble stores on your iPhone, what it sends to OpenAI, Google Firebase and Apple, and your rights.">
   <link rel="icon" type="image/png" href="images/favicon.png">
   <link rel="apple-touch-icon" href="images/app-icon.png">
-  <link rel="stylesheet" href="css/style.css?v=2">
-  <script src="js/main.js?v=2" defer></script>
+  <link rel="alternate" hreflang="en" href="https://learnscrumble.com/privacy">
+  <link rel="alternate" hreflang="fr" href="https://learnscrumble.com/fr/privacy">
+  <link rel="alternate" hreflang="x-default" href="https://learnscrumble.com/privacy">
+  <link rel="stylesheet" href="css/style.css?v=3">
+  <script src="js/main.js?v=3" defer></script>
 </head>
 <body>
   <!--
@@ -38,6 +41,7 @@
           <li><a href="support.html">Support</a></li>
           <li><a href="privacy.html" aria-current="page">Privacy</a></li>
           <li><a href="terms.html">Terms</a></li>
+          <li class="lang-switch" aria-label="Language"><span class="current" lang="en" aria-current="true">EN</span><a href="fr/privacy.html" lang="fr" hreflang="fr" data-set-lang="fr" title="Français">FR</a></li>
         </ul>
       </nav>
     </div>
@@ -46,10 +50,10 @@
   <main id="main">
     <div class="container legal">
       <h1>Privacy Policy</h1>
-      <p class="muted">Effective date: <span class="fill">[DD Month YYYY]</span></p>
+      <p class="muted">Effective date: 1 November 2026</p>
 
       <div class="note good">
-        <strong>In short:</strong> LearnScrumble has no account and doesn't ask for your name, email or phone number. Your settings, progress and the words you've learned stay on your iPhone. To create new words and pictures, the app sends your job, your two languages and the words you've already practised to our server, which asks OpenAI — <strong>only after you agree to it in the app</strong> — and keeps new words and pictures in a common word library on Google Firebase, without anything that identifies you. The app signs in to our server with a random ID, not with your name or email. If you report a wrong picture, only the word and your job are sent. If the app crashes or something goes wrong, a short technical report is sent so we can fix the problem. Usage statistics are sent only if you switch them on. We don't show ads, don't track you across apps and don't sell data. LearnScrumble is run from Ontario, Canada; the services we use store and process data in the <strong>United States</strong> (see <a href="#transfers">section 7</a>).
+        <strong>In short:</strong> LearnScrumble has no account and doesn't ask for your name, email or phone number. Your settings, progress and the words you've learned stay on your iPhone. To create new words and pictures, the app sends your job, your two languages and the words you've already practised to our server, which asks OpenAI — <strong>only after you agree to it in the app</strong> — and keeps new words and pictures in a common word library on Google Firebase, without anything that identifies you. The app signs in to our server with a random ID, not with your name or email. If you report a wrong picture, only the word and your job are sent. If the app crashes or something goes wrong, a short technical report is sent so we can fix the problem. The pronunciation test uses the microphone and Apple's speech recognition only after you allow them; we never receive your voice. Usage statistics are sent only if you switch them on. We don't show ads, don't track you across apps and don't sell data. LearnScrumble is run from Ontario, Canada; the services we use store and process data in the <strong>United States</strong> (see <a href="#transfers">section 7</a>).
       </div>
 
       <h2>Contents</h2>
@@ -69,8 +73,8 @@
       </ol>
 
       <h2 id="who">1. Who is responsible</h2>
-      <p>LearnScrumble is provided by <span class="fill">[Developer or company name]</span>, <span class="fill">[Postal address]</span>, Ontario, Canada ("we", "us"). We are responsible for your personal information under Canada's <em>Personal Information Protection and Electronic Documents Act</em> (PIPEDA), and we are the "controller" under the EU and UK General Data Protection Regulation (GDPR).</p>
-      <p><strong>Person in charge of privacy</strong> (privacy officer; for Québec, the person in charge of the protection of personal information): <span class="fill">[Your name]</span>, owner, <a href="mailto:support@learnscrumble.com">support@learnscrumble.com</a>. This person makes sure we follow this policy and answers privacy questions, requests and complaints.</p>
+      <p>LearnScrumble is provided by Max Gabriel, a sole proprietor operating under the registered business name <strong>PawIT</strong>, Ontario, Canada ("we", "us"). We are responsible for your personal information under Canada's <em>Personal Information Protection and Electronic Documents Act</em> (PIPEDA), and we are the "controller" under the EU and UK General Data Protection Regulation (GDPR).</p>
+      <p><strong>Person in charge of privacy</strong> (privacy officer; for Québec, the person in charge of the protection of personal information): Max Gabriel, owner, <a href="mailto:support@learnscrumble.com">support@learnscrumble.com</a>. This person makes sure we follow this policy and answers privacy questions, requests and complaints.</p>
 
       <h2 id="on-device">2. Data stored on your iPhone</h2>
       <p>This data is created by you while using the app. It stays on your device and is <strong>not sent to us</strong>.</p>
@@ -87,6 +91,11 @@
               <td>Learning progress</td>
               <td>For each word you've answered: the word's English name, the language you practised it in, how many times you were right and wrong, and when you last answered it — and the word itself: the job it belongs to, the word in both languages, its picture and the picture's link.</td>
               <td>To show your scores and progress, avoid repeating words, and show your words in "My words" and repeat them, also without internet.</td>
+            </tr>
+            <tr>
+              <td>Pronunciation results</td>
+              <td>For each word you've tested in the pronunciation test: how many times you said it right on the first try and how many times you needed more tries. No recordings and no text of what you said.</td>
+              <td>To show your pronunciation score and put the words that are hardest for you to say first.</td>
             </tr>
             <tr>
               <td>Free-word counter</td>
@@ -107,7 +116,7 @@
         </table>
       </div>
       <p>You can delete your answers and saved words for one language with <strong>Settings → Progress → Reset progress</strong>, and all app data by deleting the app (except the free-word counter, see above). Unlocked professions are kept by Apple with your purchases and come back with <strong>Restore purchases</strong>. The data may also be included in your own iPhone backups.</p>
-      <p>Spoken words are produced by your iPhone's built-in text-to-speech, on the device.</p>
+      <p>Spoken words are produced by your iPhone's built-in text-to-speech, on the device. For the pronunciation test, see "Apple — speech recognition" in <a href="#sent">section 3</a>.</p>
       <p>For troubleshooting, the app also writes short technical messages to the iPhone's own system log. Your job is marked private there, so iOS hides it outside of development tools. These messages stay on the iPhone; only the last few steps, without your job or words, are included in a crash or error report (see <a href="#sent">section 3</a>).</p>
 
       <h2 id="sent">3. Data sent to other services</h2>
@@ -169,16 +178,32 @@
       </ul>
       <p>The statistics are about how the app is used, not about who you are. They don't include your job, the words you practise or your answers. Analytics keeps them for 2 months.</p>
 
+      <h3>Apple — speech recognition for the pronunciation test (only when you use it)</h3>
+      <p>The pronunciation test checks how you say a word. It uses the microphone and Apple's speech recognition, and only after you allow both in the iOS questions that appear the first time you tap <strong>Tap to speak</strong>. You can change this at any time in iOS <strong>Settings → Privacy &amp; Security → Microphone</strong> and <strong>→ Speech Recognition</strong>; everything else in the app works without them.</p>
+      <ul>
+        <li>The microphone is on only while the button shows <strong>Listening…</strong>: from your tap until you stop speaking, at most a few seconds.</li>
+        <li>What you say is turned into text by Apple's speech recognition (Apple Inc. / Apple Distribution International). Depending on your iPhone and language, iOS does this on your iPhone or sends the audio to Apple's servers; Apple handles it under its own <a href="https://www.apple.com/legal/privacy/">Privacy Policy</a> (see also iOS <strong>Settings → Privacy &amp; Security → Speech Recognition</strong>).</li>
+        <li>The app compares that text with the word on your iPhone. <strong>We don't receive, record or keep your voice or the text</strong>, and nothing about the test is sent to our server, OpenAI or Google. Only the results described in <a href="#on-device">section 2</a> stay on your iPhone.</li>
+      </ul>
+
       <h3>Apple</h3>
       <ul>
         <li><strong>Purchases:</strong> professions are unlocked with one-time purchases through Apple's App Store, and restored there. Apple processes your payment; we don't receive your payment details. The app only asks Apple which professions you own. See <a href="https://www.apple.com/legal/privacy/">Apple's Privacy Policy</a>.</li>
         <li><strong>Notifications:</strong> if you allow them, daily reminders are local notifications scheduled on your iPhone; no notification server or push token is used.</li>
       </ul>
 
+      <h3 id="providers">Our service providers' own policies</h3>
+      <p>Each service above handles data under its own rules too:</p>
+      <ul>
+        <li><strong>OpenAI:</strong> <a href="https://openai.com/policies/privacy-policy/">Privacy Policy</a> · <a href="https://openai.com/enterprise-privacy/">How API data is handled</a> · <a href="https://openai.com/policies/data-processing-addendum/">Data Processing Addendum</a></li>
+        <li><strong>Google (Firebase, Crashlytics, Analytics):</strong> <a href="https://policies.google.com/privacy">Google Privacy Policy</a> · <a href="https://firebase.google.com/support/privacy">Privacy and security in Firebase</a> · <a href="https://firebase.google.com/terms/data-processing-terms">Firebase Data Processing and Security Terms</a></li>
+        <li><strong>Apple (App Store, notifications, speech recognition):</strong> <a href="https://www.apple.com/legal/privacy/">Apple Privacy Policy</a></li>
+      </ul>
+
       <h2 id="not">4. What we don't collect</h2>
       <ul>
         <li>No account, name, email address or phone number. (The app's anonymous sign-in uses a random ID only, see <a href="#sent">section 3</a>.)</li>
-        <li>No location, contacts, photos, camera or microphone.</li>
+        <li>No location, contacts, photos or camera. The microphone is used only during the pronunciation test, while it's listening, and we never receive or keep recordings (see <a href="#sent">section 3</a>).</li>
         <li>No advertising, no advertising identifier, no tracking across other apps or websites.</li>
         <li>No usage statistics unless you switch them on (see <a href="#sent">section 3</a>).</li>
         <li>We don't sell or rent data to anyone.</li>
@@ -186,7 +211,7 @@
 
       <h2 id="why">5. Why we use data (consent and legal bases)</h2>
       <p>We collect only what the app needs for the purposes below and don't use data for anything else without asking you again.</p>
-      <p><strong>In Canada</strong> we rely on your consent. We ask for it <strong>expressly</strong> before your job and languages are sent to OpenAI ("I agree") and before usage statistics are sent (off until you switch it on). For what the app needs to work and stay secure — the random sign-in ID, App Check, crash and error reports, the free-word counter and the daily report and picture counts — your consent is implied when you use the app after reading this policy; none of it is sensitive or identifies you by name. You can withdraw your consent at any time: switch statistics off in Settings, or stop using the app and delete it. Without the consent to send your job to OpenAI the app can't create words.</p>
+      <p><strong>In Canada</strong> we rely on your consent. We ask for it <strong>expressly</strong> before your job and languages are sent to OpenAI ("I agree"), before usage statistics are sent (off until you switch it on), and — through iOS — before the microphone and speech recognition are used for the pronunciation test. For what the app needs to work and stay secure — the random sign-in ID, App Check, crash and error reports, the free-word counter and the daily report and picture counts — your consent is implied when you use the app after reading this policy; none of it is sensitive or identifies you by name. You can withdraw your consent at any time: switch statistics off in Settings, or stop using the app and delete it. Without the consent to send your job to OpenAI the app can't create words.</p>
       <p><strong>In the EU/EEA and the UK</strong> the legal bases are:</p>
       <ul>
         <li><strong>To provide the app you asked for</strong> — creating words and pictures for your job and languages, remembering your settings and progress (performance of a contract, Art. 6(1)(b) GDPR).</li>
@@ -194,6 +219,7 @@
         <li><strong>To fix wrong pictures</strong> you report (legitimate interests, Art. 6(1)(f) GDPR). A report holds only a one-way code of your random sign-in ID, to count reporters.</li>
         <li><strong>To improve the job menu</strong> by counting jobs in English, without anything that identifies you (legitimate interests, Art. 6(1)(f) GDPR).</li>
         <li><strong>To build the shared word library</strong> so words and pictures are reused for all learners (legitimate interests, Art. 6(1)(f) GDPR). It contains no personal data.</li>
+        <li><strong>The pronunciation test</strong> only if you allow the microphone and speech recognition (consent, Art. 6(1)(a) GDPR) — you can withdraw it at any time in iOS Settings.</li>
         <li><strong>Reminders</strong> only if you allow notifications (consent, Art. 6(1)(a) GDPR) — you can switch them off at any time in the app or in iOS Settings.</li>
         <li><strong>Crash reports</strong> to keep the app working and fix bugs (legitimate interests, Art. 6(1)(f) GDPR).</li>
         <li><strong>Usage statistics</strong> only if you switch them on (consent, Art. 6(1)(a) GDPR) — you can switch them off at any time in Settings.</li>
@@ -206,6 +232,7 @@
         <li><strong>Random sign-in ID:</strong> deleted by Firebase 30 days after it was created. <strong>Daily counts on the server</strong>: today's date with the number of pictures reported and of new pictures drawn only, overwritten every day. Alert emails about the picture limit (with the one-way code) are kept in our mailbox for up to 12 months.</li>
         <li><strong>Reported pictures:</strong> the list of reports, the pictures drawn for them and the replaced pictures for as long as the service runs; the one-way reporter codes are kept with them. The daily report emails are kept in our mailbox.</li>
         <li><strong>OpenAI:</strong> according to OpenAI's API data policy (see above).</li>
+        <li><strong>Pronunciation test:</strong> we keep no recordings or text. Your results stay on your iPhone until you reset your progress or delete the app. Audio sent to Apple for recognition is handled under Apple's policy.</li>
         <li><strong>Crash reports and usage statistics:</strong> for the periods given in <a href="#sent">section 3</a>.</li>
         <li><strong>Emails to support:</strong> for as long as needed to answer you, then deleted after 12 months.</li>
       </ul>
@@ -239,13 +266,13 @@
       <p>If we change what the app collects — for example if accounts or business access codes are added — we'll update this page and the effective date before the change reaches the app. If a change means using your data for a new purpose, we'll ask for your consent again in the app.</p>
 
       <h2 id="contact">12. Contact</h2>
-      <p>Questions, requests and complaints about privacy: the person in charge of privacy, <span class="fill">[Your name]</span>, at <a href="mailto:support@learnscrumble.com">support@learnscrumble.com</a>, or by post to <span class="fill">[Postal address]</span>, Ontario, Canada.</p>
+      <p>Questions, requests and complaints about privacy: the person in charge of privacy, Max Gabriel, at <a href="mailto:support@learnscrumble.com">support@learnscrumble.com</a>.</p>
     </div>
   </main>
 
   <footer class="site-footer">
     <div class="container">
-      <span>© <span data-year>2026</span> <span class="fill">[Developer or company name]</span></span>
+      <span>© <span data-year>2026</span> PawIT (Max Gabriel)</span>
       <ul>
         <li><a href="how-to-play.html">How to play</a></li>
         <li><a href="support.html">Support</a></li>

@@ -166,6 +166,15 @@ final class AppManager {
     phase = .wordList
   }
 
+  // MARK: - openSpeechList
+  // "Practise pronunciation" on a Pronunciation test card: the job's played words to say out loud. No unlock
+  // needed — a free user tests the words they played for free.
+  func openSpeechList() {
+    guard currentJob != nil else { return }
+    activeVM = nil
+    phase = .speechList
+  }
+
   // MARK: - startReview
   // "Repeat all" on MyWordsView — replays the job's saved words, no server call.
   // 1. The job's words in this language from SwiftData, weakest first (PersistenceController.jobWords), only those

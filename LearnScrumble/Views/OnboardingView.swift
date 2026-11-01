@@ -14,7 +14,8 @@ import SwiftUI
 // (RootView's locale) and the practice word is in the language being learned.
 //   RootView shows it on top of everything while showTutorial is true
 //   -> the REAL game screen (MainView) runs OnboardingService's practice word, one session from start to finish
-//   -> above it: the title + Skip, and the game's top row (settings gear, speaker)
+//   -> above it: the title + Skip, and the game's top row (back arrow, speaker; the arrow replaced the gear on
+//      1 November 2026, like the game: the tooltip says Settings are on the start screen, behind the gear)
 //   -> one task at a time: a pointer (PointerUp) taps on the button to use, with a tooltip saying what to do;
 //      both move on as soon as the task is done (OnboardingService.instruction / pointerTarget)
 //   -> the word spelled -> "Correct!" (the game's own success screen, with the 10 free words and "Let's go!")
@@ -79,7 +80,7 @@ struct OnboardingView: View {
       }
 
       HStack {                                              // same buttons, same places as the game's top row
-        gameButton("gear", target: .settings, label: "Settings", action: service.settingsTapped)
+        gameButton("chevron.backward", target: .settings, label: "Back", action: service.settingsTapped)
         Spacer()
         gameButton("speaker.wave.2.fill", target: .speaker, label: "Hear the word", action: service.speakWord)
       }
@@ -98,7 +99,7 @@ struct OnboardingView: View {
     case .reset:                      "Tap ↻ to clear the whole answer and start over."
     case .hint:                       "Stuck? Tap the lightbulb to see the word in your language."
     case .speaker:                    "Tap the speaker to hear the word."
-    case .settings:                   "The gear opens Settings: languages, job and your daily reminder. Tap it."
+    case .settings:                   "This arrow takes you back to the start screen. Settings are there, behind the gear. Tap it."
     case .spellWord(let letter):      "Now spell the whole word. Start with \(Text(letter).bold())."
     case .now(let letter):            "Now \(Text(letter).bold())."
     case .finish:                     "Ready? Tap here to start playing!"

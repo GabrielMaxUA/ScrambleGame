@@ -22,4 +22,5 @@ enum GamePhase{
   case result(WordVM)             // ResultView — checkpoint summary after a round
   case settings                   // SettingsView
   case wordList                   // MyWordsView — the job's saved words ("My words"), unlocked jobs only
+  case speechList                 // MyWordsView in .speech — the pronunciation test for the job's played words
 }

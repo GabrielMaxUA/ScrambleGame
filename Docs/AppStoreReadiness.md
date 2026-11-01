@@ -73,6 +73,10 @@
 - **How:** move generation to Firebase Cloud Functions (`AppFlowIdeas.md` §9, step 2).
 
 ### 2.3 ⬜ **to do** Notes for the reviewer (App Store Connect → App Review Information)
+> **1 November 2026:** the current, paste-ready notes (start screen with My vocabulary and Pronunciation test, the
+> speech permissions, the back arrow) and the full app flow are in the README, **App Store review guide**. The text
+> below is the 30 October version, kept for history.
+
 New pictures take 10–30 seconds and need the internet, so explain that up front. Suggested text:
 
 > LearnScrumble creates vocabulary for the user's job with AI. Most words come from a prepared word bank, so a round usually loads in a few seconds; a new picture can take up to 30 seconds. An internet connection is needed (except "My words", which works offline). Suggested test: I speak English, profession "Cook", I want to learn Polish. After setup a short "How to play" tutorial runs while the first words load. The first 10 words are free (once per install); after them the app offers a one-time in-app purchase to unlock the chosen profession (US$9.99, non-consumable, no subscription) — please buy it with your sandbox account to test more words, "My words" (Welcome back screen), and the voice picker (Settings). Restore purchases is in Settings and on the purchase screen. Each profession's word list has an end (its most-used workplace words); when every word is played the app says so and offers My words or another profession. New pictures are limited to 100 a day per user. The flag on a picture reports a wrong picture. No account or sign-in is required (the app signs in anonymously in the background).
@@ -97,6 +101,7 @@ New pictures take 10–30 seconds and need the internet, so explain that up fron
 ## 4. Already fine
 
 - ✅ Notification permission asked in context (on Start Learning, with the reason shown), and the app works without it.
+- ✅ *(1 November 2026)* Microphone and speech recognition asked in context (first "Tap to speak" in the pronunciation test), with purpose texts in 53 languages + English (`InfoPlist.xcstrings`); denied → a note with Open Settings, and the rest of the app works without them (guideline 5.1.1).
 - ✅ No account, so no account-deletion requirement.
 - ✅ iPhone only, portrait, minimum iOS 18.
 - ✅ App icon has no transparency.

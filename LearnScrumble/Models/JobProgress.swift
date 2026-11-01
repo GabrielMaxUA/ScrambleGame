@@ -11,10 +11,19 @@ import Foundation
 // The user's numbers for one job in one target language.
 //   PersistenceController.jobProgress() adds them up from the saved words
 //   -> JobProgressCard shows them on WelcomeBackView and ResultView.
+// SpeechProgress: the same for the pronunciation test (PersistenceController.speechProgress) -> the Pronunciation
+// test's cabinet cards.
 
 struct JobProgress {
   let learned: Int        // words right at least twice and at least 75% of the time (SwiftDataWordModel.isLearned)
   let played: Int         // words of this job answered at least once — the length of "My words"
   let correct: Int        // all right answers for these words
   let incorrect: Int      // all wrong answers for these words
+}
+
+struct SpeechProgress: Equatable {
+  let words: Int          // words that can be tested (the job's played words)
+  let tested: Int         // of those, tested at least once
+  let firstTry: Int       // all tests said right on the first try
+  let struggled: Int      // all tests that needed a second or third try, or missed all three
 }

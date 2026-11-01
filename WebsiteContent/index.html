@@ -7,8 +7,11 @@
   <meta name="description" content="LearnScrumble is a word game that teaches the vocabulary of your job in the language you need, with pictures, audio and a hint in your own language.">
   <link rel="icon" type="image/png" href="images/favicon.png">
   <link rel="apple-touch-icon" href="images/app-icon.png">
-  <link rel="stylesheet" href="css/style.css?v=2">
-  <script src="js/main.js?v=2" defer></script>
+  <link rel="alternate" hreflang="en" href="https://learnscrumble.com/">
+  <link rel="alternate" hreflang="fr" href="https://learnscrumble.com/fr">
+  <link rel="alternate" hreflang="x-default" href="https://learnscrumble.com/">
+  <link rel="stylesheet" href="css/style.css?v=3">
+  <script src="js/main.js?v=3" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -24,6 +27,7 @@
           <li><a href="support.html">Support</a></li>
           <li><a href="privacy.html">Privacy</a></li>
           <li><a href="terms.html">Terms</a></li>
+          <li class="lang-switch" aria-label="Language"><span class="current" lang="en" aria-current="true">EN</span><a href="fr/index.html" lang="fr" hreflang="fr" data-set-lang="fr" title="Français">FR</a></li>
         </ul>
       </nav>
     </div>
@@ -38,9 +42,8 @@
           <p class="lead">Build the vocabulary. Gain the confidence. Unlock new opportunities.</p>
           <p class="muted">LearnScrumble is a word game for people working in a new language. Pick your job and the language you need, and spell the words you'll actually use — with a picture, the sound of the word and a hint in your own language.</p>
           <div class="actions">
-            <!-- Replace with the official "Download on the App Store" badge and the real App Store link once the app is live. -->
-            <a class="button primary" href="#"><span class="fill">Download on the App Store</span></a>
-            <a class="button" href="how-to-play.html">How to play</a>
+            <!-- Add Apple's official "Download on the App Store" badge with the real App Store link here once the app is live. -->
+            <a class="button primary" href="how-to-play.html">How to play</a>
           </div>
         </div>
         <img class="phone" src="images/how-to-play/01-start.jpg" alt="The LearnScrumble game screen: a picture of a cat, empty answer slots and the letters k, o, t to tap.">
@@ -51,7 +54,7 @@
         <div class="card feature">
           <div class="icon" aria-hidden="true">💼</div>
           <h3>Words from your job</h3>
-          <p class="muted small">Choose your profession — cook, warehouse worker, electrician and 30 more. The words come from that workplace.</p>
+          <p class="muted small">Choose your profession — cook, warehouse worker, electrician and 29 more — 32 in all. The words come from that workplace.</p>
         </div>
         <div class="card feature">
           <div class="icon" aria-hidden="true">🔤</div>
@@ -59,9 +62,9 @@
           <p class="muted small">Look at the picture and tap the scrambled letters into the right order. Wrong letter? Tap it to send it back.</p>
         </div>
         <div class="card feature">
-          <div class="icon" aria-hidden="true">💡</div>
-          <h3>Help when you need it</h3>
-          <p class="muted small">See the word in your own language, hear how it sounds, and repeat every word you've played in My words — even without internet.</p>
+          <div class="icon" aria-hidden="true">🎙️</div>
+          <h3>Hear it, then say it</h3>
+          <p class="muted small">See the word in your own language and hear how it sounds. Then say it yourself in the pronunciation test — the app listens and checks it.</p>
         </div>
         <div class="card feature">
           <div class="icon" aria-hidden="true">🌍</div>
@@ -70,8 +73,8 @@
         </div>
         <div class="card feature">
           <div class="icon" aria-hidden="true">⏰</div>
-          <h3>Progress and a daily reminder</h3>
-          <p class="muted small">See how many words you've learned, your right and wrong answers and how many days in a row you've played. One reminder a day, only on days you haven't played yet.</p>
+          <h3>Progress, My words and a reminder</h3>
+          <p class="muted small">See how many words you've learned and how well you say them, repeat every word you've played in My words — even without internet — and get one reminder a day, only on days you haven't played yet.</p>
         </div>
         <div class="card feature">
           <div class="icon" aria-hidden="true">🎁</div>
@@ -88,7 +91,7 @@
 
   <footer class="site-footer">
     <div class="container">
-      <span>© <span data-year>2026</span> <span class="fill">[Developer or company name]</span></span>
+      <span>© <span data-year>2026</span> PawIT (Max Gabriel)</span>
       <ul>
         <li><a href="how-to-play.html">How to play</a></li>
         <li><a href="support.html">Support</a></li>

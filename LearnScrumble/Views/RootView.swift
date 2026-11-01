@@ -74,6 +74,10 @@ struct RootView: View {
                   manager.cabinet.select(card)
                   showPaywall = true
                 },
+                onSpeech: { card in                              // "Practise pronunciation"
+                  manager.cabinet.select(card)
+                  manager.openSpeechList()
+                },
                 onSettings: { manager.openSettings() })
             case .generating:                                    // words/images loading
                 LoadingView(progress: manager.requestModel.progress)
@@ -128,6 +132,14 @@ struct RootView: View {
                 onContinue: { withConsent { Task { await manager.startGame() } } },
                 onRepeat: { manager.startReview() },
                 onReport: { await manager.reportSavedPicture($0) },
+                onBack: { manager.exitToWelcome() })
+            case .speechList:                                    // the pronunciation test: the job's played words
+              MyWordsView(
+                job: manager.currentJob,
+                targetLanguage: manager.requestModel.selectedLanguage.rawValue,
+                mode: .speech,
+                onContinue: {},
+                onRepeat: {},
                 onBack: { manager.exitToWelcome() })
             }
           }

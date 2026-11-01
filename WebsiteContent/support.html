@@ -4,11 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Support — LearnScrumble</title>
-  <meta name="description" content="Help with LearnScrumble: reminders, languages, progress, My words, voices, the free words, unlocking a profession and contact.">
+  <meta name="description" content="Help with LearnScrumble: reminders, languages, progress, My words, the pronunciation test, voices, the free words, unlocking a profession and contact.">
   <link rel="icon" type="image/png" href="images/favicon.png">
   <link rel="apple-touch-icon" href="images/app-icon.png">
-  <link rel="stylesheet" href="css/style.css?v=2">
-  <script src="js/main.js?v=2" defer></script>
+  <link rel="alternate" hreflang="en" href="https://learnscrumble.com/support">
+  <link rel="alternate" hreflang="fr" href="https://learnscrumble.com/fr/support">
+  <link rel="alternate" hreflang="x-default" href="https://learnscrumble.com/support">
+  <link rel="stylesheet" href="css/style.css?v=3">
+  <script src="js/main.js?v=3" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -24,6 +27,7 @@
           <li><a href="support.html" aria-current="page">Support</a></li>
           <li><a href="privacy.html">Privacy</a></li>
           <li><a href="terms.html">Terms</a></li>
+          <li class="lang-switch" aria-label="Language"><span class="current" lang="en" aria-current="true">EN</span><a href="fr/support.html" lang="fr" hreflang="fr" data-set-lang="fr" title="Français">FR</a></li>
         </ul>
       </nav>
     </div>
@@ -137,6 +141,26 @@
 
       <h2>Progress and data</h2>
       <div class="faq">
+        <details id="pronunciation">
+          <summary>How does the pronunciation test work?</summary>
+          <div class="answer">
+            <p>On the start screen, open <strong>Pronunciation test</strong>, pick your profession and tap <strong>Practise pronunciation</strong>. Tap a word, then <strong>Tap to speak</strong> and say the word shown under the picture. You have 3 tries. A word counts as right only when you say it right on the first try; the words that needed more tries come first next time. After each word the app says it for you, so you can compare.</p>
+            <p>It works with every word you've played, including your free words. The ring on the start screen shows how many of your tests were right on the first try.</p>
+            <p><strong>It doesn't hear me:</strong> check that LearnScrumble may use the microphone and speech recognition in iOS <strong>Settings → Privacy &amp; Security</strong>, speak at a normal volume close to the iPhone, and keep the room quiet. Speech recognition can occasionally mishear a word — that's not your fault.</p>
+          </div>
+        </details>
+        <details id="pronunciation-language">
+          <summary>There's no pronunciation test for the language I'm learning.</summary>
+          <div class="answer">
+            <p>The test uses Apple's speech recognition, which doesn't support every language yet. When you pick such a language, the app tells you on the setup screen and in Settings, and the start screen shows only your vocabulary. Everything else works as usual. If Apple adds the language later, the test appears by itself.</p>
+          </div>
+        </details>
+        <details id="microphone">
+          <summary>Do you record my voice?</summary>
+          <div class="answer">
+            <p>No. The microphone is on only while the button shows <strong>Listening…</strong>. Apple's speech recognition turns what you said into text — on your iPhone or on Apple's servers, depending on your iPhone and language — and the app compares it with the word on your iPhone. We never receive your voice or the text; only your counts (right on the first try / more tries) stay on your iPhone. See the <a href="privacy.html#sent">Privacy Policy</a>.</p>
+          </div>
+        </details>
         <details id="reset">
           <summary>How do I reset my progress?</summary>
           <div class="answer">
@@ -146,7 +170,7 @@
         <details id="my-words">
           <summary>What is My words, and how are learned words counted?</summary>
           <div class="answer">
-            <p><strong>My words</strong> lists every word you've played for your profession, with its picture and how often you got it right and wrong — hardest first. Tap a word to hear it, or <strong>Repeat all</strong> to play them again in rounds of 10. Everything is saved on your iPhone, so it works without internet.</p>
+            <p><strong>My words</strong> lists every word you've played for your profession, with its picture and how often you got it right and wrong — hardest first. Tap a word to see it big, with its picture, its translation and a speaker to hear it; swipe for the next word. <strong>Repeat all</strong> plays them again in rounds of 10. Everything is saved on your iPhone, so it works without internet.</p>
             <p>A word counts as <strong>learned</strong> once you've got it right at least twice, and 3 times out of 4. A word you keep missing stops counting as learned until you get it right more often.</p>
           </div>
         </details>
@@ -201,7 +225,7 @@
 
   <footer class="site-footer">
     <div class="container">
-      <span>© <span data-year>2026</span> <span class="fill">[Developer or company name]</span></span>
+      <span>© <span data-year>2026</span> PawIT (Max Gabriel)</span>
       <ul>
         <li><a href="how-to-play.html">How to play</a></li>
         <li><a href="support.html">Support</a></li>

@@ -1,0 +1,678 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "LearnScrumble"
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription" : {
+      "comment" : "iOS permission prompt for the pronunciation test (shown in the app's language).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستمع اختبار النطق أثناء قولك للكلمة للتحقق منها."
+          }
+        },
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тестът за произношение слуша, докато казваш дума, за да я провери."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "শব্দটি যাচাই করতে তুমি বলার সময় উচ্চারণ পরীক্ষা শোনে।"
+          }
+        },
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La prova de pronunciació escolta mentre dius una paraula per comprovar-la."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test výslovnosti poslouchá, když říkáš slovo, aby ho zkontroloval."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Udtaletesten lytter, mens du siger et ord, for at tjekke det."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Aussprachetest hört zu, während du ein Wort sagst, um es zu prüfen."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Το τεστ προφοράς ακούει όταν λες μια λέξη, για να την ελέγξει."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The pronunciation test listens while you say a word, to check it."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La prueba de pronunciación escucha mientras dices una palabra para comprobarla."
+          }
+        },
+        "eu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ahoskera probak entzuten du hitz bat esaten duzun bitartean, egiaztatzeko."
+          }
+        },
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "آزمون تلفظ هنگام گفتن واژه گوش می‌دهد تا آن را بررسی کند."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ääntämistesti kuuntelee, kun sanot sanan, tarkistaakseen sen."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le test de prononciation écoute pendant que tu dis un mot, pour le vérifier."
+          }
+        },
+        "gl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A proba de pronuncia escoita mentres dis unha palabra para comprobala."
+          }
+        },
+        "gu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "શબ્દ તપાસવા માટે તમે બોલો ત્યારે ઉચ્ચાર પરીક્ષણ સાંભળે છે."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "מבחן ההגייה מקשיב כשאתה אומר מילה, כדי לבדוק אותה."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शब्द जाँचने के लिए, तुम्हारे बोलते समय उच्चारण परीक्षण सुनता है।"
+          }
+        },
+        "hr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test izgovora sluša dok izgovaraš riječ kako bi je provjerio."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiejtésteszt figyel, amíg kimondasz egy szót, hogy ellenőrizze."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tes pelafalan mendengarkan saat kamu mengucapkan kata untuk memeriksanya."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il test di pronuncia ascolta mentre dici una parola per verificarla."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "発音テストは、単語を確認するためにあなたの声を聞きます。"
+          }
+        },
+        "kk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Айтылым тесті сөзді тексеру үшін сен айтқанда тыңдайды."
+          }
+        },
+        "kn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ಪದವನ್ನು ಪರಿಶೀಲಿಸಲು ನೀವು ಹೇಳುವಾಗ ಉಚ್ಚಾರಣೆ ಪರೀಕ್ಷೆ ಕೇಳುತ್ತದೆ."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "발음 테스트는 단어를 확인하기 위해 말하는 동안 소리를 들어요."
+          }
+        },
+        "lt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tarimo testas klausosi, kai sakai žodį, kad jį patikrintų."
+          }
+        },
+        "ml" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "വാക്ക് പരിശോധിക്കാൻ നിങ്ങൾ പറയുമ്പോൾ ഉച്ചാരണ പരീക്ഷ കേൾക്കുന്നു."
+          }
+        },
+        "mr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शब्द तपासण्यासाठी तुम्ही बोलताना उच्चार चाचणी ऐकते."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ujian sebutan mendengar semasa anda menyebut perkataan untuk menyemaknya."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uttaletesten lytter mens du sier et ord, for å sjekke det."
+          }
+        },
+        "ne" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शब्द जाँच्न तपाईं बोल्दा उच्चारण परीक्षणले सुन्छ।"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De uitspraaktest luistert terwijl je een woord zegt, om het te controleren."
+          }
+        },
+        "or" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ଶବ୍ଦ ଯାଞ୍ଚ ପାଇଁ ଆପଣ କହିବା ସମୟରେ ଉଚ୍ଚାରଣ ପରୀକ୍ଷା ଶୁଣେ।"
+          }
+        },
+        "pa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ਸ਼ਬਦ ਜਾਂਚਣ ਲਈ ਤੁਹਾਡੇ ਬੋਲਣ ਵੇਲੇ ਉਚਾਰਨ ਟੈਸਟ ਸੁਣਦਾ ਹੈ।"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test wymowy słucha, gdy mówisz słowo, aby je sprawdzić."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O teste de pronúncia ouve enquanto você fala uma palavra, para conferi-la."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O teste de pronúncia ouve enquanto dizes uma palavra, para a verificar."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testul de pronunție ascultă când spui un cuvânt, ca să-l verifice."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тест произношения слушает, когда ты произносишь слово, чтобы его проверить."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test výslovnosti počúva, keď hovoríš slovo, aby ho skontroloval."
+          }
+        },
+        "sl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test izgovorjave posluša, ko izgovoriš besedo, da jo preveri."
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testi i shqiptimit dëgjon kur thua një fjalë, për ta kontrolluar."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uttalstestet lyssnar medan du säger ett ord för att kontrollera det."
+          }
+        },
+        "ta" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "சொல்லைச் சரிபார்க்க நீங்கள் சொல்லும்போது உச்சரிப்புத் தேர்வு கேட்கிறது."
+          }
+        },
+        "te" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "పదాన్ని తనిఖీ చేయడానికి మీరు చెప్పేటప్పుడు ఉచ్చారణ పరీక్ష వింటుంది."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "แบบทดสอบการออกเสียงจะฟังขณะที่คุณพูดคำเพื่อตรวจสอบ"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telaffuz testi, kelimeyi kontrol etmek için söylerken seni dinler."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тест вимови слухає, коли ти вимовляєш слово, щоб його перевірити."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bài kiểm tra phát âm lắng nghe khi bạn nói một từ để kiểm tra."
+          }
+        },
+        "wuu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发音测试会在你说单词时聆听，以便检查。"
+          }
+        },
+        "yue" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "發音測試會喺你講單字嗰陣聆聽，以便檢查。"
+          }
+        },
+        "zh" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发音测试会在你说单词时聆听，以便检查。"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "發音測驗會在你說單字時聆聽，以便檢查。"
+          }
+        }
+      }
+    },
+    "NSSpeechRecognitionUsageDescription" : {
+      "comment" : "iOS permission prompt for the pronunciation test (shown in the app's language).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحوّل اختبار النطق ما تقوله إلى نص لمقارنته بالكلمة."
+          }
+        },
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тестът за произношение превръща казаното в текст, за да го сравни с думата."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "উচ্চারণ পরীক্ষা তোমার কথা লেখায় রূপান্তর করে শব্দের সাথে মেলায়।"
+          }
+        },
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La prova de pronunciació converteix el que dius en text per comparar-ho amb la paraula."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test výslovnosti převádí, co říkáš, na text, aby to porovnal se slovem."
+          }
+        },
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Udtaletesten laver det, du siger, om til tekst for at sammenligne det med ordet."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Aussprachetest wandelt das Gesagte in Text um, um es mit dem Wort zu vergleichen."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Το τεστ προφοράς μετατρέπει όσα λες σε κείμενο, για να τα συγκρίνει με τη λέξη."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The pronunciation test turns what you say into text, to compare it with the word."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La prueba de pronunciación convierte lo que dices en texto para compararlo con la palabra."
+          }
+        },
+        "eu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ahoskera probak esaten duzuna testu bihurtzen du hitzarekin alderatzeko."
+          }
+        },
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "آزمون تلفظ گفته‌ات را به متن تبدیل می‌کند تا با واژه مقایسه کند."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ääntämistesti muuttaa puheesi tekstiksi verratakseen sitä sanaan."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le test de prononciation transforme ce que tu dis en texte pour le comparer au mot."
+          }
+        },
+        "gl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A proba de pronuncia converte o que dis en texto para comparalo coa palabra."
+          }
+        },
+        "gu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ઉચ્ચાર પરીક્ષણ તમે જે બોલો તેને લખાણમાં ફેરવીને શબ્દ સાથે સરખાવે છે."
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "מבחן ההגייה הופך את מה שאתה אומר לטקסט כדי להשוות אותו למילה."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "उच्चारण परीक्षण तुम्हारी बात को टेक्स्ट में बदलकर शब्द से मिलाता है।"
+          }
+        },
+        "hr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test izgovora pretvara ono što kažeš u tekst kako bi ga usporedio s riječi."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiejtésteszt szöveggé alakítja, amit mondasz, hogy összevesse a szóval."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tes pelafalan mengubah ucapanmu menjadi teks untuk dibandingkan dengan katanya."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il test di pronuncia trasforma ciò che dici in testo per confrontarlo con la parola."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "発音テストは、話した内容をテキストにして単語と比べます。"
+          }
+        },
+        "kk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Айтылым тесті айтқаныңды мәтінге айналдырып, сөзбен салыстырады."
+          }
+        },
+        "kn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ಉಚ್ಚಾರಣೆ ಪರೀಕ್ಷೆ ನೀವು ಹೇಳಿದ್ದನ್ನು ಪಠ್ಯವಾಗಿ ಮಾಡಿ ಪದದೊಂದಿಗೆ ಹೋಲಿಸುತ್ತದೆ."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "발음 테스트는 말한 내용을 텍스트로 바꿔 단어와 비교해요."
+          }
+        },
+        "lt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tarimo testas paverčia tai, ką sakai, tekstu ir palygina su žodžiu."
+          }
+        },
+        "ml" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ഉച്ചാരണ പരീക്ഷ നിങ്ങൾ പറയുന്നത് വാചകമാക്കി വാക്കുമായി താരതമ്യം ചെയ്യുന്നു."
+          }
+        },
+        "mr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "उच्चार चाचणी तुम्ही जे बोलता ते मजकुरात बदलून शब्दाशी तुलना करते."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ujian sebutan menukar apa yang anda sebut kepada teks untuk dibandingkan dengan perkataan."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uttaletesten gjør det du sier om til tekst for å sammenligne det med ordet."
+          }
+        },
+        "ne" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "उच्चारण परीक्षणले तपाईंले भनेको कुरालाई पाठमा बदलेर शब्दसँग तुलना गर्छ।"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De uitspraaktest zet wat je zegt om in tekst om het met het woord te vergelijken."
+          }
+        },
+        "or" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ଉଚ୍ଚାରଣ ପରୀକ୍ଷା ଆପଣ ଯାହା କୁହନ୍ତି ତାହାକୁ ଲେଖାରେ ବଦଳାଇ ଶବ୍ଦ ସହ ତୁଳନା କରେ।"
+          }
+        },
+        "pa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ਉਚਾਰਨ ਟੈਸਟ ਤੁਹਾਡੀ ਗੱਲ ਨੂੰ ਲਿਖਤ ਵਿੱਚ ਬਦਲ ਕੇ ਸ਼ਬਦ ਨਾਲ ਮਿਲਾਉਂਦਾ ਹੈ।"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test wymowy zamienia to, co mówisz, na tekst, by porównać go ze słowem."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O teste de pronúncia transforma o que você fala em texto para comparar com a palavra."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O teste de pronúncia converte o que dizes em texto para o comparar com a palavra."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testul de pronunție transformă ce spui în text, ca să-l compare cu cuvântul."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тест произношения превращает сказанное в текст, чтобы сравнить его со словом."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test výslovnosti mení to, čo hovoríš, na text, aby ho porovnal so slovom."
+          }
+        },
+        "sl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test izgovorjave pretvori, kar rečeš, v besedilo in ga primerja z besedo."
+          }
+        },
+        "sq" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testi i shqiptimit e kthen atë që thua në tekst për ta krahasuar me fjalën."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uttalstestet gör om det du säger till text för att jämföra det med ordet."
+          }
+        },
+        "ta" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "உச்சரிப்புத் தேர்வு நீங்கள் சொல்வதை உரையாக மாற்றிச் சொல்லுடன் ஒப்பிடுகிறது."
+          }
+        },
+        "te" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ఉచ్చారణ పరీక్ష మీరు చెప్పినదాన్ని వచనంగా మార్చి పదంతో పోలుస్తుంది."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "แบบทดสอบการออกเสียงจะแปลงสิ่งที่คุณพูดเป็นข้อความเพื่อเทียบกับคำศัพท์"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telaffuz testi söylediğini metne çevirip kelimeyle karşılaştırır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тест вимови перетворює сказане на текст, щоб порівняти його зі словом."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bài kiểm tra phát âm chuyển lời bạn nói thành văn bản để so với từ."
+          }
+        },
+        "wuu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发音测试会把你说的话转成文字，与单词进行比较。"
+          }
+        },
+        "yue" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "發音測試會將你講嘅嘢轉成文字，同單字比較。"
+          }
+        },
+        "zh" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发音测试会把你说的话转成文字，与单词进行比较。"
+          }
+        },
+        "zh-TW" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "發音測驗會把你說的話轉成文字，與單字比較。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -142,6 +142,13 @@ struct SettingsView: View {
         }
         languageCard(title: "I want to learn", icon: "character.book.closed", selection: $requestModel.selectedLanguage)
       }
+      if !PronunciationService.isSupported(requestModel.selectedLanguage) {   // no pronunciation test for it
+        Label("The pronunciation test isn't available for this language yet, sorry. Everything else works as usual.",
+              systemImage: "mic.slash")
+          .font(.footnote)
+          .foregroundStyle(.orange)
+          .frame(maxWidth: .infinity, alignment: .leading)
+      }
 //MARK: - need to decide on making it accessable to everyone or only to paid users
       
       //.disabled(!hasAccess)                                         // free users can see but not change

@@ -14,9 +14,11 @@ Static support website for the app: plain HTML, one stylesheet and one small scr
 | `privacy.html` | Privacy Policy — what the app stores on the iPhone and sends to OpenAI, Firebase and Apple | `AppLinks.privacy` (Settings, setup screen, consent sheet) |
 | `terms.html` | Terms of Use ("usage regulations") — service, not-safety-training, AI content, free words, profession unlocks | `AppLinks.terms` |
 
+**French (since 1 November 2026, Québec law):** every page has a French twin in `fr/` (`fr/index.html` … `fr/terms.html`, live at `learnscrumble.com/fr/…`) and an **EN | FR** switch in the header. The French pages use root-based links (`/fr/privacy`, `/css/…`) because `/fr` is served without a trailing slash. Each page's `<head>` lists both versions with `hreflang`; `js/main.js` remembers the visitor's choice and offers French to French browsers. **Whenever an English page changes, change its French twin in the same commit** (and the language clause in the Terms stays: for Québec consumers the French version prevails). The app opens the French privacy and terms pages when its language is French (`AppLinks.page`).
+
 **After changing `css/style.css` or `js/main.js`:** raise the `?v=` number in the `<link>` and `<script>` lines of every page (e.g. `?v=2` → `?v=3`). Browsers keep those two files for a day, and the new number makes them fetch the new version straight away.
 
-Shared: `css/style.css` (dark look matching the app), `js/main.js` (phone menu, footer year, copy-email button, opens a FAQ answer from a `#link`). Everything still works with JavaScript off.
+Shared: `css/style.css` (dark look matching the app), `js/main.js` (phone menu, footer year, copy-email button, opens a FAQ answer from a `#link`, the EN/FR choice). Everything still works with JavaScript off.
 
 ## Before publishing
 
@@ -114,7 +116,8 @@ Apple asks what data the app "collects" (sends off the device and keeps longer t
   - *Diagnostics → Other Diagnostic Data*: Crashlytics non-fatal error reports (words couldn't be loaded), with the error type, a short technical description, the last steps, free memory and disk space — purpose: App Functionality.
   - *Identifiers → Device ID*: Firebase's random installation / app-instance ID (not the advertising ID) — purposes: App Functionality, Analytics.
   - *Usage Data → Product Interaction*: Analytics events, only with the user's consent — purpose: Analytics.
-- On-device data (settings, progress, Keychain counter) is not "collected" because it never leaves the device.
+- On-device data (settings, progress, Keychain counter, pronunciation results) is not "collected" because it never leaves the device.
+- *Audio Data*: **not collected** by us. The pronunciation test (since 1 November 2026) records only while listening and hands the audio to Apple's Speech framework, which may process it on Apple's servers; the app never sends audio or the recognised text to our server or anyone else, and keeps neither. Apple's own processing isn't declared by the app (like purchases). ⚠️ Confirm at sign-off.
 - Purchases are handled by Apple and aren't declared by the app.
 
 Revisit these answers whenever the table changes (for example, anonymous sign-in or server-side limits may make some data "linked").

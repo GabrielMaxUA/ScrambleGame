@@ -92,7 +92,8 @@ struct AnswerResultView: View {
 
 /// The checkmark or X in the middle, with the cat on wheels, raccoon, mouse and spider around it.
 /// Correct: they dance. Incorrect: they droop for a moment, then sadly leave the screen.
-private struct AnimalStage: View {
+/// Also used by the pronunciation test's result (SpeechResultView).
+struct AnimalStage: View {
   let isCorrect: Bool                                  // happy or sad show
   
   @Environment(\.accessibilityReduceMotion) private var reduceMotion

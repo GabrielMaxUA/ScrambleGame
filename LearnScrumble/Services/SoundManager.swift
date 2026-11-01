@@ -20,6 +20,10 @@ import SwiftUI
 //   speechStarting -> .playback (plays even on silent, lowers the user's music), then the word is spoken
 //   speechEnded    -> when no word is being spoken any more: back to .ambient, the user's music comes back up
 //   A tap sound made while a word is spoken is heard on silent too: only for that second or two.
+// And for the pronunciation test (PronunciationService), which needs the microphone:
+//   recordingStarting -> .playAndRecord, default mode: iOS keeps the microphone's automatic gain on, so a normal
+//                        voice is heard (measurement mode turned it off: the user had to shout)
+//   recordingEnded    -> back to .ambient, unless a word is being spoken right then (it keeps .playback)
 
 nonisolated final class SoundManager: @unchecked Sendable {        // @unchecked: `players` is only ever touched on `queue`
   static let shared = SoundManager()                               // one shared player for the whole app
@@ -92,6 +96,40 @@ nonisolated final class SoundManager: @unchecked Sendable {        // @unchecked
         Log.error("❌ Speech audio session error: \(error.localizedDescription)", .sound)
       }
       DispatchQueue.main.async { speak() }
+    }
+  }
+
+  // MARK: - recordingStarting()
+  // PronunciationService, before the microphone starts. Waits until the session records.
+  func recordingStarting() async {
+    await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+      queue.async {
+        do {
+          let session = AVAudioSession.sharedInstance()
+          try session.setCategory(.playAndRecord, mode: .default, options: [.duckOthers, .defaultToSpeaker])
+          try session.setActive(true)
+        } catch {
+          Log.error("❌ Recording audio session error: \(error.localizedDescription)", .sound)
+        }
+        done.resume()
+      }
+    }
+  }
+
+  // MARK: - recordingEnded()
+  // PronunciationService, after the microphone stopped: back to .ambient for the game's sounds (a word being spoken
+  // keeps .playback; speechEnded switches back after it).
+  func recordingEnded() {
+    queue.async { [self] in
+      guard wordsSpeaking == 0 else { return }
+      let session = AVAudioSession.sharedInstance()
+      try? session.setActive(false, options: .notifyOthersOnDeactivation)
+      do {
+        try session.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+        try session.setActive(true)
+      } catch {
+        Log.error("❌ Audio session error: \(error.localizedDescription)", .sound)
+      }
     }
   }
 

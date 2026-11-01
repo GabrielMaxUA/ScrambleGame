@@ -8,6 +8,8 @@ import SwiftUI
 //   WordVM records every answer here (correct / incorrect, lastSeen) and, the first time, the whole word:
 //   its job, both words, the picture prompt and the picture itself, so "My words" works without the server.
 //   PersistenceController reads it: seen words (not asked again), the job's word list, accuracy, learned count.
+//   The pronunciation test (WordCardOverlay, .speech) adds speechFirstTry / speechStruggled: a word said right on the
+//   first try counts as right; one that needed a second or third try, or was missed three times, is a struggle.
 //   Records saved before 28 Oct 2026 only have the counters (empty profession/targetWord): they still count as
 //   seen, but don't appear in "My words" or in the job's progress.
 
@@ -25,6 +27,8 @@ final class SwiftDataWordModel {
     var imagePrompt: String = ""            // GPT's picture description, kept so a missing picture could be redrawn
     @Attribute(.externalStorage) var imageData: Data?   // the picture, stored as a file next to the database
     var imageURL: String = ""               // the picture's link in Storage — sent with a report from the review
+    var speechFirstTry: Int = 0             // pronunciation tests said right on the first try
+    var speechStruggled: Int = 0            // pronunciation tests that needed a 2nd / 3rd try, or were missed
 
     static let learnedMinCorrect = 2        // "learned" = right at least twice…
     static let learnedMinAccuracy = 0.75    // …and right at least 75% of the time
@@ -56,6 +60,12 @@ final class SwiftDataWordModel {
 
     var isLearned: Bool {                   // counts toward the job's "words learned"
         correct >= Self.learnedMinCorrect && accuracy >= Self.learnedMinAccuracy
+    }
+
+    var speechTests: Int { speechFirstTry + speechStruggled }   // pronunciation tests of this word
+
+    var speechScore: Double {               // 0...1 share said right on the first try; untested words sit in the middle
+        speechTests > 0 ? Double(speechFirstTry) / Double(speechTests) : 0.5
     }
 
     var hasWord: Bool {                     // saved with the whole word (not an old counters-only record)

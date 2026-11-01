@@ -336,3 +336,48 @@ li { margin-bottom: 6px; }
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
+
+/* ---------- Language switch (EN | FR) and the "French version" hint ---------- */
+
+.site-nav .lang-switch {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px;
+}
+.site-nav .lang-switch .current,
+.site-nav .lang-switch a {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.site-nav .lang-switch .current { color: var(--bg); background: var(--text); }
+.site-nav .lang-switch a { color: var(--text-muted); }
+
+.lang-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: rgba(61, 151, 224, 0.18);
+  border-bottom: 1px solid rgba(61, 151, 224, 0.4);
+  font-size: 15px;
+}
+.lang-hint button {
+  background: none;
+  border: 0;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+@media (max-width: 720px) {
+  .site-nav .lang-switch { align-self: flex-start; margin: 8px 0 0; }
+}

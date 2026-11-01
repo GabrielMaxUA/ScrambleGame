@@ -4,11 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>How to play — LearnScrumble</title>
-  <meta name="description" content="Step-by-step guide to playing LearnScrumble: spell the word, fix mistakes, use the hint, the speaker and Settings.">
+  <meta name="description" content="Step-by-step guide to playing LearnScrumble: spell the word, fix mistakes, use the hint, the speaker, Settings and the pronunciation test.">
   <link rel="icon" type="image/png" href="images/favicon.png">
   <link rel="apple-touch-icon" href="images/app-icon.png">
-  <link rel="stylesheet" href="css/style.css?v=2">
-  <script src="js/main.js?v=2" defer></script>
+  <link rel="alternate" hreflang="en" href="https://learnscrumble.com/how-to-play">
+  <link rel="alternate" hreflang="fr" href="https://learnscrumble.com/fr/how-to-play">
+  <link rel="alternate" hreflang="x-default" href="https://learnscrumble.com/how-to-play">
+  <link rel="stylesheet" href="css/style.css?v=3">
+  <script src="js/main.js?v=3" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -24,6 +27,7 @@
           <li><a href="support.html">Support</a></li>
           <li><a href="privacy.html">Privacy</a></li>
           <li><a href="terms.html">Terms</a></li>
+          <li class="lang-switch" aria-label="Language"><span class="current" lang="en" aria-current="true">EN</span><a href="fr/how-to-play.html" lang="fr" hreflang="fr" data-set-lang="fr" title="Français">FR</a></li>
         </ul>
       </nav>
     </div>
@@ -84,14 +88,14 @@
 
         <li class="step two-shots">
           <div>
-            <h2>Hear the word, open Settings</h2>
+            <h2>Hear the word, find your way back</h2>
             <p class="tip">Tap the speaker to hear the word.</p>
             <p>The speaker at the top right reads the word aloud in the language you're learning. You can choose the speed (and, once a profession is unlocked, the voice) in Settings.</p>
-            <p>The gear at the top left opens <strong>Settings</strong>: your languages, your job, your daily reminder, audio, progress, purchases and help.</p>
+            <p>The arrow at the top left takes you back to the start screen — your answers are saved as you play. There, the gear opens <strong>Settings</strong>: your languages, your job, your daily reminder, audio, progress, purchases and help.</p>
           </div>
           <div class="shots">
             <img class="phone" src="images/how-to-play/07-speaker.jpg" alt="The pointer is on the speaker button at the top right.">
-            <img class="phone" src="images/how-to-play/08-settings.jpg" alt="The pointer is on the gear button at the top left, with the tip: The gear opens Settings: languages, job and your daily reminder.">
+            <img class="phone" src="images/how-to-play/08-settings.jpg" alt="The pointer is on the back arrow at the top left, with the tip: This arrow takes you back to the start screen. Settings are there, behind the gear.">
           </div>
         </li>
 
@@ -115,7 +119,7 @@
       <div class="step two-shots">
         <div>
           <h2>Your progress, and a flag for wrong pictures</h2>
-          <p>The start screen shows your profession, how many words you've learned, all your right and wrong answers, and your days in a row.</p>
+          <p>The start screen has two parts. <strong>My vocabulary</strong> holds a card for each profession and language you learn, with the words you've learned, all your right and wrong answers, and the buttons to continue or open My words. <strong>Pronunciation test</strong> holds the same cards for saying your words out loud. Each part shows its score in a ring; your days in a row are at the top.</p>
           <p>If a picture doesn't show its word, tap the flag in its top corner and confirm — you get a new picture right away, and we check it for everyone.</p>
         </div>
         <div class="shots">
@@ -131,7 +135,11 @@
         </div>
         <div class="card">
           <h3>My words</h3>
-          <p class="muted small">Every word you've played, with its picture and your right and wrong answers, hardest first. Tap <strong>Repeat all</strong> to play them again — it works without internet. Part of an unlocked profession.</p>
+          <p class="muted small">Every word you've played, with its picture and your right and wrong answers, hardest first. Tap a word to see it big and hear it; swipe for the next one. Tap <strong>Repeat all</strong> to play them again — it works without internet. Part of an unlocked profession.</p>
+        </div>
+        <div class="card">
+          <h3>Pronunciation test</h3>
+          <p class="muted small">Tap a word you've played, then <strong>Tap to speak</strong> and say it. You get 3 tries; right on the first try counts as right, and the hardest words come first next time. The app says the word after each test. Free with your played words, where iOS supports the language.</p>
         </div>
         <div class="card">
           <h3>Wrong picture?</h3>
@@ -151,7 +159,7 @@
 
   <footer class="site-footer">
     <div class="container">
-      <span>© <span data-year>2026</span> <span class="fill">[Developer or company name]</span></span>
+      <span>© <span data-year>2026</span> PawIT (Max Gabriel)</span>
       <ul>
         <li><a href="how-to-play.html">How to play</a></li>
         <li><a href="support.html">Support</a></li>

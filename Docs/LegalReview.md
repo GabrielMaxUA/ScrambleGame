@@ -8,7 +8,7 @@ lso.ca).
 **Status:** ✅ = done · ⬜ = to do · ❓ = decide
 
 **Who sells the app:** Max Gabriel, individual Apple developer account, Ontario. The name on the website (your own name or
-a business name) is decided later: every place is a yellow placeholder.
+a business name) is decided later: every place is a yellow placeholder. *(1 November 2026: decided — Max Gabriel, operating as PawIT.)*
 
 ---
 
@@ -16,15 +16,15 @@ a business name) is decided later: every place is a yellow placeholder.
 
 | Law | What it asks | Status |
 |---|---|---|
-| **PIPEDA** (federal privacy law; Ontario has no private-sector law of its own) | An accountable person (privacy officer), clear purposes, meaningful consent, collect only what's needed, safeguards, access to your data within 30 days, a record of every breach and reporting serious ones to the Privacy Commissioner | ✅ privacy page rewritten (29 Oct). ⬜ fill the privacy officer's name. ⬜ keep a breach record (section 3) |
-| **Québec Law 25** (the app is sold in Québec too) | A named person in charge of privacy, telling people their data leaves Québec, a privacy impact assessment before sending data outside Québec, privacy-friendly defaults | ✅ page says it; statistics are off by default. ⬜ the short assessment (section 3) |
-| **Charter of the French Language** (Québec, Bill 96) | Consumer contracts (our Terms) and the privacy policy given in French to Québec users; the app available in French | ✅ app has French. ⬜ **French Terms and Privacy pages** (section 4) |
+| **PIPEDA** (federal privacy law; Ontario has no private-sector law of its own) | An accountable person (privacy officer), clear purposes, meaningful consent, collect only what's needed, safeguards, access to your data within 30 days, a record of every breach and reporting serious ones to the Privacy Commissioner | ✅ privacy page rewritten (29 Oct). ✅ privacy officer: Max Gabriel (1 Nov). ✅ breach record: `Docs/BreachLog.md` (1 Nov) |
+| **Québec Law 25** (the app is sold in Québec too) | A named person in charge of privacy, telling people their data leaves Québec, a privacy impact assessment before sending data outside Québec, privacy-friendly defaults | ✅ page says it; statistics are off by default. ✅ assessment: `Docs/PrivacyImpactAssessment.md` (1 Nov); privacy §7 says it was done |
+| **Charter of the French Language** (Québec, Bill 96) | Consumer contracts (our Terms) and the privacy policy given in French to Québec users; the app available in French | ✅ app has French. ⬜ ✅ *(1 November 2026)* the whole website in French (`/fr/…`, EN/FR switch), a language clause in both Terms ("for consumers in Québec, the French version prevails"), the app opens the French pages when its language is French. ⬜ a French speaker's check |
 | **Ontario Consumer Protection Act** | No forced arbitration and no class-action waiver for consumers; consumer rights can't be signed away; the extra internet-agreement rules apply only above $50 (our price is $9.99) | ✅ terms rewritten (29 Oct). ❓ the new Consumer Protection Act, 2023 replaces it when it comes into force: ask the lawyer whether it's in force at launch |
 | **Competition Act** (misleading advertising) | Claims must be true in their general impression ("unlimited", "free") | ✅ no "unlimited" anywhere (30 Oct): app, website and terms say "the most-used workplace words for this profession", that each list has an end (usually a few hundred words, at most 500) and that new pictures are limited to 100 a day — shown on the setup screen, the paywall and right after buying |
 | **CASL** (anti-spam) | Consent before any marketing email or message | ✅ none sent. Don't add a newsletter without opt-in consent |
 | **GDPR / UK GDPR** (EU and UK users) | Legal bases, rights, transfer safeguards | ✅ kept in the privacy page. ⬜ accept the Firebase and OpenAI data processing terms (`WebsiteContent/TODO.md`) |
-| **Business Names Act** (Ontario) | Register a name you do business under if it isn't your own legal name | ❓ if the seller or website shows "LearnScrumble" (not "Max Gabriel"), register it with ServiceOntario (about $60 for 5 years) |
-| **Tax** (CRA) | Business income on your T1 (form T2125); GST/HST registration (required above $30,000 a year, Apple's form needs a Business Number) | ⬜ CRA Business Number (`remaining.md` §1). Apple collects the sales tax from buyers. Ask an accountant once |
+| **Business Names Act** (Ontario) | Register a name you do business under if it isn't your own legal name | ✅ *(1 November 2026)* registered in the Ontario Business Registry: business name **PAWIT** (the registry stores names in capitals; "PawIT" is the same name), sole proprietorship, Max Gabriel. Renew every 5 years. The OBR profile shows no Business Number linked yet ("N/A") |
+| **Tax** (CRA) | Business income on your T1 (form T2125); GST/HST registration (required above $30,000 a year, Apple's form needs a Business Number) | ✅ CRA registration active 1 November 2026 (Max Gabriel, PawIT); ⬜ the GST/HST account and Form 506 (`remaining.md` §1). Apple collects the sales tax from buyers. Ask an accountant once |
 | **AODA** (Ontario accessibility) | Customer-service rules once you have employees | ✅ not applicable now (no employees) |
 
 ## 2. Changes in the app
@@ -37,7 +37,7 @@ a business name) is decided later: every place is a yellow placeholder.
   the terms (§5). (Competition Act; all 53 languages.)
 - ⬜ *(recommended)* **Paywall:** small "Terms of Use · Privacy Policy" links under the button, so the terms are
   visible before buying. Apple doesn't require it for one-time purchases, but consumer law likes it.
-- ⬜ **French links:** once French pages exist, the app opens them when the app language is French (`AppLinks.swift`).
+- ✅ *(1 November 2026)* **French links:** the app opens `learnscrumble.com/fr/…` when its language is French (`AppLinks.page`).
 - ✅ *(30 October)* The limits before and after buying: the setup screen ("Up to 100 new pictures a day." and a Terms of
   Use link), the paywall small print, the "Unlocked! 🎉" confirmation after buying or restoring, and clear messages
   when a profession's list is played to the end or the daily limit is reached.
@@ -46,26 +46,27 @@ a business name) is decided later: every place is a yellow placeholder.
 
 ## 3. Privacy paperwork (you keep it, nobody publishes it)
 
-- ⬜ **Privacy officer:** you ("[Your name], owner" in `privacy.html` §1 and §12).
-- ⬜ **Breach record:** a simple document: date, what happened, data involved, people affected, what was done, whether
+- ✅ **Privacy officer:** Max Gabriel, owner (`privacy.html` §1 and §12, both languages).
+- ✅ *(1 November 2026, `Docs/BreachLog.md`)* **Breach record:** a simple document: date, what happened, data involved, people affected, what was done, whether
   the Privacy Commissioner was told. PIPEDA asks to keep it 24 months. Even "no breaches" is fine to start.
-- ⬜ **Privacy impact assessment for Québec** (Law 25, data sent to the United States): one or two pages — what goes
-  to Google and OpenAI, why, how it's protected (their data processing terms, encryption, minimum data). I can draft
-  it.
+- ✅ *(1 November 2026, `Docs/PrivacyImpactAssessment.md`)* **Privacy impact assessment for Québec** (Law 25, data
+  sent to the United States): what goes to Google, OpenAI and Apple, why, how it's protected; conclusion "adequate
+  protection". Review it before any change to what the app sends, and yearly.
 - ⬜ **Retention promises:** delete support emails after 12 months (privacy page §6 says so).
 - ⬜ **Requests:** answer privacy emails within 30 days.
 
 ## 4. French versions (Québec)
 
-- ⬜ `WebsiteContent/fr/privacy.html` and `fr/terms.html` (and ideally support), a language switch on the pages, and
-  the app linking to them in French. A machine translation is a start; have the French checked (the lawyer, or a
-  Québec translator) because the French version of a consumer contract counts.
+- ✅ *(1 November 2026)* All five pages in French under `WebsiteContent/fr/` (live at `learnscrumble.com/fr`), an
+  EN | FR switch on every page, `hreflang` tags, the app linking to the French privacy and terms pages in French.
+- ⬜ Have the French checked once (a Québec translator, or the lawyer): it's an AI translation, and the French
+  version of a consumer contract counts.
 
 ## 5. Before you sign anything with your name
 
-- ❓ **Name on the website and in the App Store:** your own name ("Max Gabriel") needs no registration; a business
-  name ("LearnScrumble") needs the Ontario business name registration first. The App Store already shows your legal
-  name as the seller (individual account).
+- ✅ *(1 November 2026)* **Name on the website:** "Max Gabriel, operating as PawIT" (sole proprietor), registered in the
+  Ontario Business Registry the same day. The App Store shows "Max Gabriel" as the seller (individual account); both
+  are fine together.
 - ❓ **Personal liability:** as a sole proprietor you are personally responsible. The terms limit liability as far as
   the law allows; a corporation or business insurance gives more protection. Ask the lawyer or an accountant.
 - ⬜ *(optional)* Trademark search for "LearnScrumble" on the Canadian (CIPO) and U.S. (USPTO) databases before launch.
@@ -84,7 +85,8 @@ a business name) is decided later: every place is a yellow placeholder.
   and the 100-pictures-a-day limit (30 October).
 - `index.html`: "the most-used workplace words of that profession" instead of "unlimited words" (30 October).
 - Placeholders left on purpose (29 October): **only** `[Developer or company name]`, `[Your name]`, `[Postal address]`
-  and the effective date `[DD Month YYYY]` (= the day the final pages are published). Minimum age is 16; the business
+  and the effective date `[DD Month YYYY]`. *(1 November: name and privacy officer filled — Max Gabriel, operating as
+  PawIT; left: `[Postal address]` and the effective dates.)* (= the day the final pages are published). Minimum age is 16; the business
   number line is removed (a sole proprietor doesn't need to show one). The App Store button on the home page waits for
   the app's store link.
 - Publish after review: `firebase deploy --only hosting` from the repository root.

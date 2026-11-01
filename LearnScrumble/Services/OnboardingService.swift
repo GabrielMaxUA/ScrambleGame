@@ -22,14 +22,14 @@ import Observation
 //   2. tap the LAST letter — it lands in the wrong slot on purpose
 //   3. tap that wrong letter in the answer to send it back to the tray
 //   4. tap ↻ to clear the whole answer
-//   5. tap the lightbulb (hint)  6. tap the speaker  7. tap the settings gear
+//   5. tap the lightbulb (hint)  6. tap the speaker  7. tap the back arrow (it explains the start screen and Settings)
 //   8. spell the whole word, letter by letter
 //   9. "Correct!" -> "Let's go!" -> the tutorial is done (`completed`)
 // The practice picture is the cat photo in the app bundle (ViewComponents/NewSVG/cat.png).
 // A letter the user puts in the wrong slot at any time -> "send it back" first (pointer on that slot).
 //
 //   OnboardingView: answer changed -> answerChanged(), hint opened/closed -> hintToggled(_:), ↻ -> resetTapped(),
-//                   speaker -> speakWord(), gear -> settingsTapped(), Skip / completed -> finish()
+//                   speaker -> speakWord(), back arrow -> settingsTapped(), Skip / completed -> finish()
 //   finish() saves seenKey ("hasSeenTutorial") -> RootView doesn't show the tutorial again
 //   (Settings' "How to play" can still replay it).
 //   Tiles, slots, ↻, the lightbulb and Next report where they are on screen through TutorialAnchorKey,
@@ -43,7 +43,7 @@ nonisolated enum TutorialTarget: Hashable {
   case hint                                        // the lightbulb on the picture
   case next                                        // Next on the right/wrong screen
   case speaker                                     // the tutorial's speaker button (top right, like the game)
-  case settings                                    // the tutorial's settings gear (top left, like the game)
+  case settings                                    // the tutorial's back arrow (top left, like the game; was the gear)
 }
 
 /// Collects where each TutorialTarget is on screen (MainView, GuessedLettersRow, ResultWordRow, ImageComponent,
@@ -64,7 +64,7 @@ final class OnboardingService {
     case reset                                      // tap ↻ to clear the answer
     case hint                                       // tap the lightbulb
     case speaker                                    // tap the speaker
-    case settings                                   // tap the settings gear
+    case settings                                   // tap the back arrow (start screen + where Settings are)
     case spellWord(String)                          // spell the whole word now, starting with this letter
     case now(String)                                // the next letter
     case finish                                     // "Correct!" screen: tap "Let's go!" to start playing
@@ -80,7 +80,7 @@ final class OnboardingService {
   private(set) var hintSeen = false                 // task 5 done: the hint was opened
   private(set) var hintOpen = false                 // the hint popover is on screen: no pointer meanwhile
   private(set) var wordHeard = false                // task 6 done: the speaker was tapped
-  private(set) var settingsSeen = false             // task 7 done: the gear was tapped
+  private(set) var settingsSeen = false             // task 7 done: the back arrow was tapped
   @ObservationIgnored private let word: String      // the practice word, e.g. "kot"
   @ObservationIgnored private let wordLanguage: String   // its language code, for the speaker voice
   @ObservationIgnored private let answer: [String]  // the word's letters, lowercased like WordVM's
@@ -171,14 +171,15 @@ final class OnboardingService {
   }
 
   // MARK: - speakWord
-  // The speaker: reads the practice word with the learning language's voice. After the hint -> next task: the gear.
+  // The speaker: reads the practice word with the learning language's voice. After the hint -> next task: the back arrow.
   func speakWord() {
     speech.speak(word, language: wordLanguage)
     if hintSeen { wordHeard = true }
   }
 
   // MARK: - settingsTapped
-  // The tutorial's gear: it only explains Settings (it doesn't leave the tutorial). After the speaker -> spell the word.
+  // The tutorial's back arrow: it only explains the start screen and Settings (it doesn't leave the tutorial).
+  // After the speaker -> spell the word.
   func settingsTapped() {
     if wordHeard { settingsSeen = true }
   }

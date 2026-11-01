@@ -69,6 +69,13 @@ struct EntryView: View {
               .foregroundStyle(.orange)
               .frame(maxWidth: .infinity, alignment: .leading)
           }
+          if !PronunciationService.isSupported(requestModel.selectedLanguage) {   // no pronunciation test for it
+            Label("The pronunciation test isn't available for this language yet, sorry. Everything else works as usual.",
+                  systemImage: "mic.slash")
+              .font(.footnote)
+              .foregroundStyle(.orange)
+              .frame(maxWidth: .infinity, alignment: .leading)
+          }
           
           FieldCard(title: reminderPick, icon: "bell") {        // reminder time + why we'll ask for notifications on Start
             VStack(alignment: .leading, spacing: 8) {

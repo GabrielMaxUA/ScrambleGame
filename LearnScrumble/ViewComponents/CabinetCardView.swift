@@ -17,6 +17,9 @@ import SwiftUI
 //     Continue learning -> onContinue (a game) · My words -> onWordList (bought, after the first word)
 //     Unlock -> onUnlock (not bought and the free words are used up)
 //     My words with a lock -> onUnlock (not bought, but words played: the list exists, the unlock opens it)
+// Pronunciation test section (mode .speech): the same card, with the speech numbers — words tested, said right on the
+// first try, struggles — and "Practise pronunciation" -> onSpeech (the job's played words; free words included, so no
+// lock). No words played yet -> a note instead of the button.
 // Solid colors (not see-through), by the card's place in the stack, so neighbouring cards always differ and don't
 // show through. The stack order never changes (CabinetVM: date added), so a card keeps its color.
 
@@ -29,6 +32,8 @@ struct CabinetCardView: View {
   var onContinue: () -> Void                             // "Continue learning"
   var onWordList: () -> Void                             // "My words"
   var onUnlock: () -> Void                               // "Unlock"
+  var mode: CabinetVM.Section = .vocabulary              // which section's card: the game's numbers or the speech test's
+  var onSpeech: () -> Void = {}                          // "Practise pronunciation" (mode .speech)
 
   static let stripHeight: CGFloat = 88                   // the strip; the next card covers its lowest 22 pt (WelcomeBackView)
 
@@ -68,7 +73,19 @@ struct CabinetCardView: View {
           .singleLine()
       }
       Spacer(minLength: 8)
-      if card.isLocked {
+      if mode == .speech {                               // words tested so far
+        HStack(spacing: 4) {
+          Image(systemName: "mic.fill")
+            .font(.caption)
+            .foregroundStyle(.white.opacity(0.85))
+          Text(card.speech.tested, format: .number)
+            .font(.title3.weight(.semibold))
+            .foregroundStyle(.white)
+            .monospacedDigit()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text("Words tested: \(card.speech.tested)"))
+      } else if card.isLocked {
         Image(systemName: "lock.fill")
           .font(.title3)
           .foregroundStyle(.white.opacity(0.85))
@@ -96,7 +113,39 @@ struct CabinetCardView: View {
 
   // MARK: - details
   // The open card: score, words played / free words left, buttons.
+  @ViewBuilder
   private var details: some View {
+    if mode == .speech { speechDetails } else { vocabularyDetails }
+  }
+
+  // MARK: - speechDetails
+  // The Pronunciation test's open card: words tested, right on the first try, struggles; then the button.
+  private var speechDetails: some View {
+    VStack(alignment: .leading, spacing: 14) {
+      HStack(spacing: 0) {
+        number(card.speech.tested, title: "Tested", icon: "mic.fill", tint: .white)
+        number(card.speech.firstTry, title: "First try", icon: "checkmark.circle.fill", tint: .green)
+        number(card.speech.struggled, title: "Struggled", icon: "arrow.counterclockwise.circle.fill", tint: .orange)
+      }
+      .padding(.vertical, 10)
+      .background(.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 12))
+
+      if card.played > 0 {
+        Label { Text("My words: \(card.played)") } icon: { Image(systemName: "list.bullet.rectangle") }
+          .singleLine()
+          .font(.footnote.weight(.semibold))
+          .foregroundStyle(.white.opacity(0.8))
+        button("Practise pronunciation", icon: "mic.fill", prominent: true, action: onSpeech)
+      } else {
+        Text("Play a few words first, then come back to say them.")
+          .font(.footnote)
+          .foregroundStyle(.white.opacity(0.75))
+      }
+    }
+  }
+
+  // MARK: - vocabularyDetails
+  private var vocabularyDetails: some View {
     VStack(alignment: .leading, spacing: 14) {
       HStack(spacing: 0) {
         number(card.learned, title: "Learned", icon: "star.fill", tint: .yellow)
@@ -186,13 +235,16 @@ struct CabinetCardView: View {
 #Preview {
   VStack(spacing: -18) {
     CabinetCardView(card: .init(job: .cook, language: .englishUS, learned: 23, played: 40, correct: 70, incorrect: 12,
-                                isOwned: true, isCurrent: false, isLocked: false, added: .now),
+                                isOwned: true, isCurrent: false, isLocked: false, added: .now,
+                                speech: .init(words: 40, tested: 12, firstTry: 9, struggled: 5), canTestSpeech: true),
                     isOpen: false, freeWordsLeft: 0, onOpen: {}, onContinue: {}, onWordList: {}, onUnlock: {})
     CabinetCardView(card: .init(job: .plumber, language: .polish, learned: 2, played: 6, correct: 8, incorrect: 3,
-                                isOwned: false, isCurrent: false, isLocked: true, added: .now),
+                                isOwned: false, isCurrent: false, isLocked: true, added: .now,
+                                speech: .init(words: 6, tested: 0, firstTry: 0, struggled: 0), canTestSpeech: true),
                     isOpen: false, freeWordsLeft: 0, onOpen: {}, onContinue: {}, onWordList: {}, onUnlock: {})
     CabinetCardView(card: .init(job: .baker, language: .ukrainian, learned: 3, played: 10, correct: 15, incorrect: 4,
-                                isOwned: true, isCurrent: true, isLocked: false, added: .now),
+                                isOwned: true, isCurrent: true, isLocked: false, added: .now,
+                                speech: .init(words: 10, tested: 4, firstTry: 3, struggled: 2), canTestSpeech: true),
                     isOpen: true, freeWordsLeft: 4, onOpen: {}, onContinue: {}, onWordList: {}, onUnlock: {})
   }
   .padding()
