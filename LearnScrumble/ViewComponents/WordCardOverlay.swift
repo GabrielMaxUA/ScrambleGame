@@ -29,7 +29,9 @@ import SwiftData
 //   -> the word is read only when the speaker is tapped (not on its own when a card opens or turns: that was annoying)
 //   -> swipe left / right (or tap a side card): next / previous word, the wheel turns
 //   -> ✕ or a tap on the darkened background: onClose (MyWordsView animates the picture back into its row)
-//   -> flag -> "Report this picture?" -> onReport (AppManager.reportSavedPicture): a new picture replaces the saved one
+//   -> flag -> "What's wrong?": "Wrong picture" -> "Report this picture?" -> onReport (AppManager.reportSavedPicture):
+//      a new picture replaces the saved one; "Wrong word or translation" -> WordReportSheet -> onReportWord
+//      (AppManager.reportSavedWord): the user's correction goes to the developer, nothing changes on the phone
 // Pictures are decoded once (WordImages) and shared with the list's rows, not on every frame of a swipe.
 // Pronunciation test (mode .speech): the same carousel; each card shows ✕, the picture (no flag), the word, and
 // "Tap to speak" (PronunciationService listens in `language`):
@@ -65,9 +67,11 @@ struct WordCardOverlay: View {
   let testAll: Bool                                      // .speech / .listening: run through every word by itself
   var speak: (String) -> Void                            // MyWordsView's SpeechManager
   var onReport: (SwiftDataWordModel) async -> RequestModel.ReportResult
+  var onReportWord: (SwiftDataWordModel, RequestModel.WordCorrection) async -> RequestModel.ReportResult
   var onClose: () -> Void
 
   @State private var report: PictureReport = .idle       // the front word's report; back to idle on the next word
+  @State private var reportingWord: SwiftDataWordModel?  // the word in WordReportSheet; nil = closed
   @State private var position: Double                    // the wheel: 0 = first word in front, 1.5 = between 2nd and 3rd
   @State private var dragStart: Double?                  // `position` when the finger came down; nil = not dragging
   @State private var listener = PronunciationService()   // .speech: the microphone and the check
@@ -102,7 +106,9 @@ struct WordCardOverlay: View {
   init(words: [SwiftDataWordModel], index: Binding<Int>, heroID: PersistentIdentifier?, namespace: Namespace.ID,
        images: WordImages, mode: CabinetVM.Section = .vocabulary, language: Languages? = nil, testAll: Bool = false,
        speak: @escaping (String) -> Void,
-       onReport: @escaping (SwiftDataWordModel) async -> RequestModel.ReportResult, onClose: @escaping () -> Void) {
+       onReport: @escaping (SwiftDataWordModel) async -> RequestModel.ReportResult,
+       onReportWord: @escaping (SwiftDataWordModel, RequestModel.WordCorrection) async -> RequestModel.ReportResult = { _, _ in .failed },
+       onClose: @escaping () -> Void) {
     self.words = words
     self._index = index
     self.heroID = heroID
@@ -113,6 +119,7 @@ struct WordCardOverlay: View {
     self.testAll = testAll
     self.speak = speak
     self.onReport = onReport
+    self.onReportWord = onReportWord
     self.onClose = onClose
     self._position = State(initialValue: Double(index.wrappedValue))
     self._options = State(initialValue: mode == .listening ? Self.makeOptions(for: words) : [])
@@ -206,6 +213,13 @@ struct WordCardOverlay: View {
       listener.stop()
       autoNext?.cancel()
     }
+    .sheet(item: $reportingWord) { word in               // "Wrong word or translation"
+      WordReportSheet(targetLanguage: Languages(rawValue: word.targetLanguage),
+                      originLanguage: Languages(rawValue: word.originLanguage),
+                      targetWord: word.targetWord, originWord: word.originWord) { correction in
+        await onReportWord(word, correction)
+      }
+    }
   }
 
   // MARK: - visiblePositions
@@ -297,6 +311,7 @@ struct WordCardOverlay: View {
     if flag {
       ImageComponent(image: images.image(for: word), hint: word.originWord, showsHint: false, framed: false,
                      report: report, onReport: { Task { await sendReport(for: word) } },
+                     onReportWord: { reportingWord = word },
                      maxSide: width - 32)
     } else {
       ImageComponent(image: images.image(for: word), hint: word.originWord, showsHint: false, framed: false,

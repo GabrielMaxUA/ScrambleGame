@@ -12,6 +12,8 @@ import SwiftUI
 //   MainView: every slot filled -> WordVM.checkAnswer() sets guessResult -> MainView overlays AnswerResultView
 //   -> correct: green title, the animals dance; incorrect: red title + the correct word, the animals droop and walk off
 //   -> "Next" -> onNext -> WordVM.nextWord() (which may fire a checkpoint -> ResultView).
+//   -> "Wrong word?" (small, under the result; only when onReportWord is set: not in the tutorial) -> onReportWord
+//      (MainView opens WordReportSheet). Offered here, after the answer, so the form never gives the word away.
 //   AnimalStage (below) draws the icon + animals and plays the success / incorrect sound.
 //   Tutorial (OnboardingView): a custom button title ("Let's go!") and a highlighted note (the 10 free words);
 //   Next reports its place through TutorialAnchorKey for the pointer.
@@ -22,6 +24,7 @@ struct AnswerResultView: View {
   let onNext: () -> Void                     // WordVM.nextWord
   var nextTitle: LocalizedStringKey = "Next" // the button's text — the tutorial's last screen says "Let's go!"
   var note: LocalizedStringKey? = nil        // optional highlighted line under the title (tutorial: the 10 free words)
+  var onReportWord: (() -> Void)? = nil      // "Wrong word?"; nil = hidden
   
   private var isCorrect: Bool { result == .correct }   // shortcut used all over the view
   
@@ -70,6 +73,16 @@ struct AnswerResultView: View {
         }
       }
       .multilineTextAlignment(.center)
+      
+      if let onReportWord {
+        Button(action: onReportWord) {
+          Label("Wrong word?", systemImage: "flag")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.white.opacity(0.7))
+            .frame(minHeight: 44)
+        }
+        .buttonStyle(.plain)
+      }
       
       Spacer()
       

@@ -13,6 +13,9 @@ import SwiftUI
 //   -> no picture yet: a placeholder icon
 //   -> lightbulb tap -> popover with the hint; it closes by itself when the word changes.
 //   -> flag tap (top-left, only when onReport is set) -> "Report this picture?" -> onReport -> WordVM.reportPicture()
+//      With onReportWord set (My words' card) the flag first asks what's wrong: "Wrong picture" (the question above)
+//      or "Wrong word or translation" -> onReportWord (the card opens WordReportSheet). In the game the word choice
+//      isn't offered here: the word would show before it's spelled (AnswerResultView has it after the answer).
 //      report = WordVM.pictureReport: .sending dims the picture with a spinner; the outcome shows as a note
 //      at the bottom of the card until the word changes. A failed report shows the flag again.
 //   Tutorial (OnboardingView): onHintToggled reports the hint opening/closing; the lightbulb reports its place for the pointer.
@@ -25,9 +28,11 @@ struct ImageComponent: View {
     var onHintToggled: (Bool) -> Void = { _ in }   // tutorial only: tells OnboardingService the hint opened (true) / closed (false)
     var report: PictureReport = .idle           // where this word's picture report stands
     var onReport: (() -> Void)? = nil           // sends the report; nil = no flag (tutorial)
+    var onReportWord: (() -> Void)? = nil       // "Wrong word or translation"; nil = the flag reports the picture only
     var maxSide: CGFloat = 280                  // the card's biggest size; larger on an opened iPhone Duo (MainView.splitLayout)
     @State private var showHint = false         // is the hint popover open
     @State private var confirmReport = false    // the "Report this picture?" alert is open
+    @State private var chooseReport = false     // "What's wrong?" (picture or word), when onReportWord is set
 
     var body: some View {
         ZStack {
@@ -85,6 +90,10 @@ struct ImageComponent: View {
         .foldAlert("Report this picture?", isPresented: $confirmReport,
                    message: "If the picture doesn't show this word, we'll draw a new one for you and check it for everyone.",
                    confirmTitle: "Report") { onReport?() }
+        .confirmationDialog("What's wrong?", isPresented: $chooseReport, titleVisibility: .visible) {
+            Button("Wrong picture") { confirmReport = true }
+            Button("Wrong word or translation") { onReportWord?() }
+        }
         .onChange(of: hint) { showHint = false }                        // close a leftover popover when the word changes
         .onChange(of: showHint) { _, shown in onHintToggled(shown) }    // tutorial: hint opened / closed
     }
@@ -101,14 +110,14 @@ struct ImageComponent: View {
 
     private var reportButton: some View {                               // flag button, asks first
         Button {
-            confirmReport = true
+            if onReportWord != nil { chooseReport = true } else { confirmReport = true }
         } label: {
             Image(systemName: "flag.fill")
                 .font(.body.weight(.semibold))
                 .foregroundStyle(.white)                                 // same as the lightbulb, so it's easy to spot
                 .frame(width: 44, height: 44)                           // Apple's minimum tap size
         }
-        .accessibilityLabel("Report a wrong picture")
+        .accessibilityLabel(onReportWord == nil ? "Report a wrong picture" : "Report a problem")
     }
 
     private var hintButton: some View {                                 // lightbulb button + its hint popover

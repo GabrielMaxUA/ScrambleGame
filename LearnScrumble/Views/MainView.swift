@@ -12,6 +12,8 @@ import SwiftUI
 //   RootView shows it for phase .playing(vm)
 //   -> reads WordVM: image + hint, guessedWord (slots), scrumbledWord (tiles), guessResult
 //   -> taps go back to WordVM: selectLetter / deselectLetter / resetGuess; the picture's flag -> reportPicture
+//   -> the right/wrong screen's "Wrong word?" (only after the answer, so the word isn't given away; not in the
+//      tutorial) -> WordReportSheet -> AppManager.reportWord
 //   -> every slot filled (vm.isComplete) -> vm.checkAnswer() -> guessResult set -> AnswerResultView overlay
 //   -> "next" on that overlay -> vm.nextWord()
 //   No current word yet (next batch still loading) -> LoadingView instead.
@@ -22,12 +24,13 @@ import SwiftUI
 
 struct MainView: View {
     let vm: WordVM                                                     // the running session: words, letters, answers
-    let manager: AppManager                                            // only used for the loading progress
+    let manager: AppManager                                            // the loading progress, and word reports
     var topInset: CGFloat = 72                                         // room above the picture: RootView's top buttons, or the tutorial's instructions (OnboardingView)
     var onHintToggled: (Bool) -> Void = { _ in }                       // tutorial only: the hint popover opened (true) / closed (false)
     var onReset: () -> Void = {}                                       // tutorial only: ↻ was tapped (after the answer is cleared)
     var resultButtonTitle: LocalizedStringKey = "Next"                 // tutorial only: the right/wrong screen's button ("Let's go!")
     var resultNote: LocalizedStringKey? = nil                          // tutorial only: highlighted line on the right/wrong screen
+    @State private var reportingWord: WordModel?                       // the answered word in WordReportSheet; nil = closed
     @Environment(\.foldLayout) private var foldLayout                 // opened iPhone Duo (RootView), for the result pop-up
     @Environment(\.topButtonsPadding) private var topButtons          // .isFolded = the folded iPhone Duo (RootView)
     private let minTile: CGFloat = 40                                  // smallest tray tile (the size every tile used to be)
@@ -86,10 +89,20 @@ struct MainView: View {
                     correctAnswer: vm.word?.targetWord ?? "",
                     onNext: { vm.nextWord() },
                     nextTitle: resultButtonTitle,
-                    note: resultNote
+                    note: resultNote,
+                    onReportWord: vm.canReport ? { reportingWord = vm.word } : nil
                 )
                 }
                 .background(foldLayout == nil ? Color.clear : Color.black.opacity(0.92))   // the other half dims too
+            }
+        }
+        .sheet(isPresented: Binding(get: { reportingWord != nil }, set: { if !$0 { reportingWord = nil } })) {
+            if let word = reportingWord {                                // "Wrong word or translation"
+                WordReportSheet(targetLanguage: manager.requestModel.selectedLanguage,
+                                originLanguage: manager.requestModel.nativeLanguage,
+                                targetWord: word.targetWord, originWord: word.originWord) { correction in
+                    await manager.reportWord(word, correction: correction)
+                }
             }
         }
         .onChange(of: vm.isComplete) { _, complete in                    // last slot filled -> check the answer

@@ -13,6 +13,7 @@ import FirebaseFunctions
 //                                     builds the very first batch of questions
 //   generateMore(excluding:)      <- called by WordVM whenever it needs a new batch
 //   reportPicture(...)            <- called by WordVM when the user reports the current picture (flag on the picture)
+//   reportWord(...)               <- the flag's "Wrong word or translation" form (WordReportSheet): the user's correction
 //
 // Internal chain for building ANY batch:
 //   nextBatch(excluding:countJob:) -> getWords (server: word bank first, GPT only for the missing number)
@@ -343,6 +344,37 @@ class RequestModel {
         }
     }
 
+    // MARK: - reportWord(toolName:targetLanguage:originLanguage:shown:correction:)
+    // The user says the word or its translation is wrong and typed the right one (WordReportSheet). Calls reportWord on
+    // the server (functions/src/index.ts): recorded for the developer with OpenAI's opinion, in the daily email.
+    // Nothing changes on this phone; the bank (and everyone's next games) changes only when the developer approves.
+    // .received, or .tooMany (the day's reports, pictures and words together, are used up), or .failed.
+    @MainActor
+    func reportWord(toolName: String, targetLanguage: String, originLanguage: String,
+                    shown: (target: String, origin: String), correction: WordCorrection) async -> ReportResult {
+        guard let job = Occupation.listed(proffession) else { return .failed }
+        do {
+            let _: WordReportReply = try await callFunction("reportWord", WordReportRequest(
+                toolName: toolName, profession: job.rawValue, target: targetLanguage, origin: originLanguage,
+                targetWord: shown.target, originWord: shown.origin,
+                suggestedTarget: correction.target, suggestedOrigin: correction.origin, note: correction.note
+            ), timeout: 60)
+            Log.info("🚩 reportWord — received", .words, private: "'\(toolName)'")
+            return .received
+        } catch is TooManyReports {
+            return .tooMany
+        } catch {
+            Log.error("🚩 reportWord failed: \(error)", .words)
+            return .failed
+        }
+    }
+
+    struct WordCorrection {
+        let target: String?             // the word in the language being learned, as the user typed it; nil = unchanged
+        let origin: String?             // the translation in the user's language; nil = unchanged
+        let note: String                // optional "why", may be empty
+    }
+
     enum ReportResult {
         case newPicture(Data, String)   // a picture drawn for this user, or the already-fixed shared one: its bytes and link
         case received                   // recorded; a person will check it
@@ -420,7 +452,7 @@ class RequestModel {
         }
     }
 
-    private struct TooManyReports: Error {}                            // reportPicture: the user's reports for today are used up
+    private struct TooManyReports: Error {}                            // reportPicture / reportWord: today's reports are used up
 
     // MARK: - Server shapes
     // Requests and replies of the functions, field for field as in functions/src/index.ts.
@@ -448,6 +480,15 @@ class RequestModel {
         let outcome: String                                            // "drawn" (for this user) | "replaced" (already fixed for everyone)
         let imageURL: String
     }
+    nonisolated private struct WordReportRequest: Encodable, Sendable {
+        let toolName: String
+        let profession: String
+        let target: String, origin: String                             // language codes
+        let targetWord: String, originWord: String                     // what the user saw
+        let suggestedTarget: String?, suggestedOrigin: String?         // what they typed; nil -> left out
+        let note: String
+    }
+    nonisolated private struct WordReportReply: Decodable, Sendable { let outcome: String }
     nonisolated private struct WordsReply: Decodable, Sendable {
         let job: String?                                               // getWords: the bank key used (nil for a typed job GPT called "invalid")
         let words: [ServerWord]

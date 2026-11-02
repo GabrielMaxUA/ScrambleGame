@@ -1,7 +1,8 @@
 # LearnScrumble — developer notes
 
 iOS app (SwiftUI, iOS 18+) that teaches the words people use at work, with words and pictures made by AI.
-Plans and status live in `Docs/`: `remaining.md` (what's left before the App Store), `LegalReview.md`, `checklist.md`, `AppStoreReadiness.md`.
+Plans and status live in `Docs/`: `AppStoreReadiness.md` (everything left before the App Store, the one to-do file),
+`LegalReview.md`, and the privacy records `PrivacyImpactAssessment.md` and `BreachLog.md`.
 The full app flow and the notes for App Review are in **App Store review guide** below.
 The website is in `WebsiteContent/` (its own README).
 
@@ -35,7 +36,7 @@ One switch decides which Firebase project a build uses: **Build Settings → Use
 | `Dev` (Debug only) | ▶︎ Run | `scrumblegame-dev` | dev default bucket |
 
 - The **Copy Firebase plist** build phase reads `FIREBASE_ENV` and copies `FirebaseConfig/Prod/` or `FirebaseConfig/Dev/` into the app. Release (Archive, TestFlight, App Store) is **always** Prod, whatever the setting says. The build log shows "Copied Prod plist" or "Copied Dev plist".
-- The app calls the Cloud Functions of the project it's connected to (`getWords`, `getPicture`, `reportPicture`, region `us-central1`; `getReviewWords` is still deployed but no longer called), so dev builds use the dev functions and the dev word bank. Deploy function changes to `scrumblegame-dev` first (`functions/README.md`).
+- The app calls the Cloud Functions of the project it's connected to (`getWords`, `getPicture`, `reportPicture`, `reportWord`, region `us-central1`; `getReviewWords` is still deployed but no longer called), so dev builds use the dev functions and the dev word bank. Deploy function changes to `scrumblegame-dev` first (`functions/README.md`).
 - Firestore and Storage rules are closed to phones (`allow read, write: if false`, since 27 October): only the functions write, and pictures load through their download links. A link with an outdated token gets a 403; `getPicture` repairs it (`functions/README.md`).
 - To test against dev again (e.g. risky experiments): set `FIREBASE_ENV` to `Dev` for **Debug** only. Debug-only features (Settings → Debug → "Reset free words") work with either.
 - With `Prod`, crash reports and statistics from your test runs land in the production project too; keep test crashes on `Dev`.
@@ -76,7 +77,8 @@ One switch decides which Firebase project a build uses: **Build Settings → Use
 
 Everything App Review needs to understand the app, in the order a new user meets it. The paste-ready notes are first;
 the detailed flow below is the reference for answering a reviewer's questions. *(Written 1 November 2026, build 6
-plus the pronunciation test. Update it whenever a screen, a permission or a purchase changes.)*
+plus the pronunciation test, the listening test, Test all and word reports. Update it whenever a screen, a permission
+or a purchase changes.)*
 
 **Seller:** Max Gabriel (individual Apple Developer account, team `7XZJ4BCPR6`), a sole proprietor operating as
 **PawIT** (Ontario, Canada; CRA business registration active 1 November 2026). Support: support@learnscrumble.com,
@@ -85,32 +87,39 @@ https://learnscrumble.com/support · Privacy: https://learnscrumble.com/privacy 
 ### Notes for the reviewer (App Store Connect → App Review Information → Notes)
 
 > LearnScrumble teaches the vocabulary of the user's job in another language: the app shows a picture, the user spells
-> the word from scrambled letters, and can then practise saying it. Words and pictures are created with AI on our server
+> the word from scrambled letters, and can then practise saying it and recognising it by ear. Words and pictures are created with AI on our server
 > (OpenAI, only after the user agrees on the setup screen); most come from a prepared word bank, so a round loads in a
 > few seconds, a new picture can take up to 30 seconds. An internet connection is needed, except for "My words" and the
-> pronunciation test, which use words saved on the phone. No account or sign-in screen: the app signs in anonymously in
+> pronunciation and listening tests, which use words saved on the phone. No account or sign-in screen: the app signs in anonymously in
 > the background.
 >
 > Suggested test: I speak English, profession "Cook", I want to learn Polish, tick "I agree", Start Learning. A short
-> "How to play" tutorial runs while the first words load (Skip is top right). The first 10 words are free, once per
+> "How to play" tutorial runs while the first words load (Skip is top right); it ends with a demo of both tests. The first 10 words are free, once per
 > install. After them the app offers a one-time in-app purchase that unlocks the chosen profession (US$9.99,
 > non-consumable, no subscription) — please buy "Cook" with the sandbox account to test more words, "My words" and the
 > voice picker (Settings → Audio). Restore purchases: Settings → Purchases, and on the purchase screen.
 >
-> Start screen ("Welcome back"): two cards. "My vocabulary" opens one card per profession + language with the score,
+> Start screen ("Welcome back"): three cards. "My vocabulary" opens one card per profession + language with the score,
 > Continue learning and My words (a list of played words; tap a word for a big swipeable card with a speaker and a flag
-> to report a wrong picture). "Pronunciation test" opens the same cards with "Practise pronunciation": tap a word, then
+> to report a wrong picture or a wrong word/translation). "Pronunciation test" opens the same cards with "Practise pronunciation": tap a word, then
 > "Tap to speak" and say the word shown. iOS asks for the microphone and speech recognition the first time; the app
 > uses them only while the button shows "Listening…", never stores or sends the audio, and works fully without them.
 > 3 tries per word; the result is shown with an animation and the word is read aloud. The test works with the words
 > already played, including the 10 free ones (no purchase needed), and only for languages iOS speech recognition
 > supports (Polish is supported). Please test it on a device; the iOS Simulator can't run speech recognition.
+> "Listening test" (appears once a profession has 4 played words, so within the free words; no purchase needed): the
+> app reads a word and shows 4 pictures; the user taps the matching one (first tap counts). No microphone. Both tests
+> have "Test all", which runs through every word by itself.
+>
+> Reporting AI content: the flag on a picture reports a wrong picture; "Wrong word?" (after an answer) or the flag in
+> My words reports a wrong word or translation, with the correct version typed by the user. Reports reach us daily
+> and are fixed for everyone after a human check.
 >
 > Each profession's word list has an end (its most-used workplace words); when every word is played the app says so.
 > New pictures are limited to 100 a day per user. The arrow at the top left of the game returns to the start screen;
 > the gear there opens Settings.
 
-*(About 2,300 characters; the field allows 4,000. Check before submitting that the word bank has "Cook" words with
+*(About 3,000 characters; the field allows 4,000. Check before submitting that the word bank has "Cook" words with
 Polish translations, and that the 32 products are attached to the version.)*
 
 ### The app flow in detail
@@ -138,7 +147,10 @@ Arabic, Hebrew and Farsi), independent of the iPhone's language.
 A pointer walks through a practice word: tap letters in order, tap a placed letter to send it back, ↻ starts the word
 over, the lightbulb shows the word in the user's language, the speaker reads it aloud, the back arrow explains the start
 screen and that Settings are there (gear),
-then the whole word → the "Correct!" screen with the note "You get 10 free words to try the app" → **Let's go!**.
+then the whole word → the "Correct!" screen with the note "You get 10 free words to try the app" → **Next** → two short
+pages: the **Pronunciation test** (a demo of "Tap to speak" — the microphone is not used here) → **Next** → the
+**Listening test** (a working demo: the speaker, 4 pictures, first tap counts) → **Let's go!**. Both pages say the tests
+are on the start screen once a few words are played, with Test all.
 
 **4. The game.** Rounds of 10 words.
 - Top: **back arrow** (left; ends the round — every answer is already saved — and returns to the start screen) and
@@ -148,6 +160,8 @@ then the whole word → the "Correct!" screen with the note "You get 10 free wor
   in the user's language.
 - Answer slots and scrambled **letter tiles**; ↻ resets the word. Long answers fit by shrinking the tiles.
 - All slots filled → **Correct!** (animals dance) or **Incorrect** + the correct word (animals walk off) → Next.
+  Under the result, **Wrong word?** opens the correction form (see 7); it's offered only after the answer, so the form
+  never gives the word away.
 - After 10 words → **round result**: right answers this round, the profession's progress (words learned = right at
   least twice and 3 times out of 4, all right and wrong answers), days in a row → Continue / My words / Exit.
 
@@ -159,11 +173,13 @@ Privacy links are in Settings and on the setup screen; not required for one-time
 gives that profession's word list, My words and the voice picker. Locked features show a lock and lead to this screen.
 
 **6. Start screen ("Welcome back").** The owl (celebrates at 80% right or more), "Welcome back!", the streak.
-- **Top level** (when at least one of the user's languages supports speech recognition): two cards with a score ring
-  and its label under it:
+- **Top level** (when a card can take a test): up to three cards with a score ring and its label under it:
   - **My vocabulary** — ring: right answers out of all answers in the game.
-  - **Pronunciation test** — ring: tests said right on the first try out of all tests ("—" before the first).
-  The gear (top left) opens Settings. If no language can be tested, there's no top level: the vocabulary cards show
+  - **Pronunciation test** — ring: tests said right on the first try out of all tests ("—" before the first). Only
+    when one of the user's languages supports speech recognition.
+  - **Listening test** — ring: right pictures out of all listening tests. Only when a profession + language has at
+    least 4 played words with pictures.
+  The gear (top left) opens Settings. If no card can take a test, there's no top level: the vocabulary cards show
   straight away, as before 1 November.
 - **My vocabulary** → the back arrow (top left) and a wallet-style stack, one card per profession + language the user
   learns, oldest at the top. Tapping a card's top strip opens it and makes it the current profession and language.
@@ -172,11 +188,16 @@ gives that profession's word list, My words and the voice picker. Locked feature
   My words with a lock (not bought).
 - **Pronunciation test** → the same stack, only languages that can be tested, each card with words tested, right on
   the first try and struggled, and **Practise pronunciation** (needs at least one played word; no purchase needed).
+- **Listening test** → the same stack, only cards with 4+ words with pictures, each with words tested, right and wrong,
+  and **Practise listening** (no purchase needed).
 
 **7. My words** (bought professions). Every word played for the profession and language, hardest first, with its
 picture and right / wrong counts. Tap a word → its picture grows into a **card carousel** over the list: ✕, speaker,
 the picture with the report flag, the word, its translation, right / wrong; swipe or tap a side card for the next
-word; ✕ or tapping outside shrinks it back into its row. **Continue learning** and **Repeat all** (the same words as a
+word; ✕ or tapping outside shrinks it back into its row. The flag asks **What's wrong?**: **Wrong picture** (as in the
+game) or **Wrong word or translation** → a form with the word and its translation filled in; the user corrects the
+wrong one (Send stays off until something changed), adds an optional note and sends it. Nothing changes on the phone;
+the report is emailed to us the next morning with OpenAI's opinion, and an approved fix reaches everyone. **Continue learning** and **Repeat all** (the same words as a
 game in rounds of 10, offline) at the bottom.
 
 **8. Pronunciation test.** The list of played words, the hardest to say first, with ✓ (right on the first try) and ↻
@@ -193,6 +214,18 @@ game in rounds of 10, offline) at the bottom.
 - Checking: the recognised text matches the word after tidying case and punctuation, inside a phrase ("the
   blender"), joined or split ("wine glass" / "wineglass"), or one letter off for words of 8+ letters (two for 16+).
 - Recognition runs on the iPhone or on Apple's servers, as iOS decides; nothing goes to our server.
+- **Test all** (button at the bottom of the list): starts at the first word and runs by itself — no swiping; after each
+  result the next word comes (about 2.8 s, after the word is read); the result has no "Again". After the last word: a
+  summary ("8 / 10 right") with Again / Done. ✕ or tapping outside stops it; every answer is already saved.
+
+**8b. Listening test.** The played words with pictures, misses first, with ✓ / ✗ counts. Tap a word → the carousel,
+each card with ✕, **4 pictures** (the word's and 3 others of the profession, shuffled) and a big **speaker** button:
+- The pictures are dimmed until the word has played once. The first tap is final: right → green ✓; wrong → the tapped
+  picture red ✗ and the right one green. Success / incorrect sound and a haptic. No result screen: the word and its
+  translation appear under the grid, with a small speaker and **Next word** (Done on the last).
+- **Test all**: the word plays 0.5 s after each card comes to the front; 1.5 s after the answer the next card comes;
+  no swiping; summary at the end, as in the pronunciation test.
+- Saved per word on the phone: right / wrong taps. No microphone, works offline.
 
 **9. Settings** (the gear on the start screen): languages and profession (with the same warnings as setup), audio
 (voice — bought — and speech speed with "Try it"), daily reminder, progress (reset the current language), purchases
@@ -201,7 +234,7 @@ statistics). Debug tools exist only in Debug and tester builds, never in the App
 
 **10. Other screens.** No internet → an offline screen that retries by itself; server errors → a message with the
 right button (try again, change profession, back); a profession whose word list is finished → a message, with My
-words and the pronunciation test still available. The opened iPhone Duo shows the game, pop-ups and alerts on one half
+words and both tests still available. The opened iPhone Duo shows the game, pop-ups and alerts on one half
 of the fold; the folded Duo uses smaller top buttons and asks to unfold for answers too long for the outer screen.
 
 ### Permissions and data at a glance
@@ -209,11 +242,12 @@ of the fold; the folded Duo uses smaller top buttons and asks to unfold for answ
 | What | When | Without it |
 |---|---|---|
 | Notifications | Start Learning on the setup screen | No reminder; everything else works |
-| Speech recognition + microphone | First "Tap to speak" | No pronunciation test; everything else works |
+| Speech recognition + microphone | First "Tap to speak" | No pronunciation test; everything else works (the listening test needs neither) |
 | Agreement to send the job to OpenAI | Setup screen ("I agree"), or a one-time sheet for older installs | No new words (explained on screen) |
 | Usage statistics | Optional switch, off by default | Nothing is sent |
 
-No tracking, no ads, no account; progress and pronunciation results stay on the phone. Details: `WebsiteContent/privacy.html`,
+No tracking, no ads, no account; progress and pronunciation and listening results stay on the phone. A word report
+sends the word, the job, the two language codes, what the user saw and typed, and an optional note (no identity). Details: `WebsiteContent/privacy.html`,
 the App Store privacy answers in `WebsiteContent/README.md`, `LearnScrumble/PrivacyInfo.xcprivacy`.
 
 ### Review test path (on a real iPhone, App Store build)
@@ -223,7 +257,9 @@ the App Store privacy answers in `WebsiteContent/README.md`, `LearnScrumble/Priv
 3. After the 10th word: the unlock screen → buy with sandbox → "Unlocked!" → more words.
 4. Start screen → My vocabulary → My words → open a word, swipe, close; Repeat all with flight mode on.
 5. Start screen → Pronunciation test → Practise pronunciation → allow speech + microphone → say a word right, then one
-   wrong three times; check the rings and counts afterwards.
+   wrong three times; check the rings and counts afterwards. Then Test all, and stop it with ✕.
+5b. Start screen → Listening test → Practise listening → tap a word, the speaker, a picture; then Test all to the end.
+5c. After an answer in the game: Wrong word? → correct the translation → Send → "Thanks!". Also from the flag in My words.
 6. Settings: Restore purchases, voice picker, reminder time, reset progress, the legal links.
 7. Change "I want to learn" to Lithuanian in Settings: the note under it appears, and a Lithuanian card shows under
    My vocabulary but not under Pronunciation test.

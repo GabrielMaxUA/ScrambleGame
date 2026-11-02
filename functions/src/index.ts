@@ -10,9 +10,12 @@
 //                      ("My words" replays the words saved on the phone); kept for older builds.
 //   reportPicture   -> a user says a word's picture is wrong: a new picture is drawn for THAT user only, and the
 //                      report is recorded for the developer (daily email). The bank changes only on approval.
+//   reportWord      -> a user says a word or its translation is wrong and types the right one: recorded with
+//                      OpenAI's opinion for the developer (daily email). The bank changes only on approval.
 // Background functions:
 //   prepareProfession -> fills the bank with ~100 English words + pictures per menu job ("prepare" collection).
 //   reviewReport      -> you set a report's status to "approve" / "reject" in the console (reports.ts)
+//   reviewWordReport  -> the same for a word report: "approve" writes its `fix` into the bank (reports.ts)
 //   mailReports       -> once a day, an email to support@learnscrumble.com with the new reports (reports.ts)
 //   mailAlert         -> an email right away when OpenAI credits run out or a user hits the daily picture cap (alerts.ts)
 //
@@ -33,18 +36,19 @@ import * as logger from "firebase-functions/logger";
 import * as openai from "./openai";
 import { fetchBank, fetchWords, saveWord, savePicture, repairPictureLink, countProfession, WordDoc,
          countReport, countPicture, picturesToday, userCode, isJobComplete, completeJob, saveReportPicture, recordReport, parsePictureURL,
-         samePicture } from "./store";
+         samePicture, recordWordReport } from "./store";
 import { raiseAlert } from "./alerts";
 import { noWords, refused, badInput, notSignedIn, tooManyReports, jobComplete, pictureLimit } from "./errors";
 export { prepareProfession } from "./prepare";                  // background bank filling (prepare.ts)
-export { reviewReport, mailReports } from "./reports";           // approve/reject a report, the daily report email
+export { reviewReport, reviewWordReport, mailReports } from "./reports";   // approve/reject a report, the daily report email
 export { mailAlert } from "./alerts";                            // an email right away: OpenAI credits used up, picture cap reached
 
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 setGlobalOptions({ region: "us-central1", maxInstances: 10 });
 
 const BATCH = 5;                   // words per batch, as in the app
-const REPORTS_PER_DAY = 10;        // reports one user can send per day — each one draws a picture, so this caps the cost
+const REPORTS_PER_DAY = 10;        // reports one user can send per day (pictures and words together) — a picture report
+                                   // draws a picture, so this caps the cost
 const MAX_WORDS_PER_JOB = 500;     // a menu job's vocabulary never grows past this (cost safety; GPT usually ends earlier)
 const MIN_WORDS_BEFORE_COMPLETE = 100;   // GPT's "exhausted" only counts once the job has this many (the prepared bank)
 const PICTURES_PER_DAY = 100;      // new pictures getPicture draws for one user per day (bank pictures don't count): caps
@@ -334,6 +338,58 @@ export const reportPicture = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds:
   await recordReport(doc, uid, job, { url: picture.url, path: picture.path, imagePrompt: description });
   logger.info("reportPicture: drew a picture for the reporter", { word: name, job });
   return { outcome: "drawn", imageURL: picture.url };
+});
+
+// MARK: - reportWord
+// Input:  { toolName, profession, target, origin, targetWord, originWord, suggestedTarget?, suggestedOrigin?, note? }
+//   target / origin           = the language being learned / the user's own language (codes, e.g. "uk-UA")
+//   targetWord / originWord   = what the user saw (the phone's copy)
+//   suggestedTarget / -Origin = what the user typed instead; at least one, different from what they saw
+// Output: { outcome: "received" }
+// 1. Checks: signed in, valid input, the same daily limit as picture reports (resource-exhausted "tooManyReports").
+// 2. Each changed language: OpenAI reviews the bank's current text for this job (reviewTranslations, as the
+//    translation check tool does) — its fix, if any, goes into the email as a second opinion; a failed review is
+//    left out, the report still counts. -> recordWordReport (store.ts): grouped per word + language.
+// Nothing changes for anyone, the reporter included, until the developer approves the report (reports.ts).
+// Privacy: as reportPicture, plus the user's suggestion and optional note (short texts about the word).
+export const reportWord = onCall({ secrets: [OPENAI_API_KEY], timeoutSeconds: 60, enforceAppCheck: true }, async (request) => {
+  const uid = requireUser(request);
+  const d = request.data ?? {};
+  if (!isText(d.toolName, 60)) throw badInput("toolName");
+  if (!isText(d.profession, 40)) throw badInput("profession");
+  if (!isLang(d.target) || !isLang(d.origin)) throw badInput("language");
+  const clean = (v: unknown) => (isText(v, 60) ? openai.plainSpaces(v) : "");
+  const changes = [
+    { lang: d.target as string, saw: clean(d.targetWord), typed: clean(d.suggestedTarget) },
+    { lang: d.origin as string, saw: clean(d.originWord), typed: clean(d.suggestedOrigin) },
+  ].filter((c) => c.typed && c.typed !== c.saw);
+  if (changes.length === 0) throw badInput("suggestion");
+  const note = typeof d.note === "string" ? d.note.trim().slice(0, 200) : "";
+  const name = d.toolName.trim().toLowerCase();
+  const job = d.profession.trim().toLowerCase();
+
+  if (await countReport(uid) > REPORTS_PER_DAY) {
+    logger.info("reportWord: daily report limit reached");
+    throw tooManyReports();
+  }
+  const doc = (await fetchWords([name])).get(name);
+  if (!doc) throw badInput("unknownWord");
+
+  const apiKey = OPENAI_API_KEY.value();
+  for (const c of changes) {
+    const current = doc.translation?.[c.lang] ?? c.saw;
+    let ai: { fix: string; reason: string } | null = null;
+    try {
+      const review = await openai.reviewTranslations(apiKey, [{ word: name, jobs: [job], translations: { [c.lang]: current } }]);
+      const wrong = review.wrong.find((w) => w.lang === c.lang);
+      ai = wrong ? { fix: wrong.fix, reason: wrong.reason } : { fix: "", reason: "looks right to OpenAI" };
+    } catch (error) {
+      logger.warn("reportWord: OpenAI review failed, recorded without it", { error: String(error) });
+    }
+    await recordWordReport(doc, uid, job, c.lang, current, c.typed, note, ai);
+  }
+  logger.info("reportWord: recorded", { word: name, langs: changes.map((c) => c.lang) });
+  return { outcome: "received" };
 });
 
 // MARK: - shuffle

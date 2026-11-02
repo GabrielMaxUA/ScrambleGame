@@ -136,6 +136,7 @@ struct RootView: View {
                 onContinue: { withConsent { Task { await manager.startGame() } } },
                 onRepeat: { manager.startReview() },
                 onReport: { await manager.reportSavedPicture($0) },
+                onReportWord: { await manager.reportSavedWord($0, correction: $1) },
                 onBack: { manager.exitToWelcome() })
             case .speechList:                                    // the pronunciation test: the job's played words
               MyWordsView(

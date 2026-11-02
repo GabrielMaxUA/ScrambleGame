@@ -30,7 +30,8 @@ The privacy page now says these are in place, so they have to be:
 ## Before App Review
 
 - ⬜ **Retake `images/how-to-play/08-settings.jpg`** (tutorial step 7): since 1 November the tutorial points at the back arrow, not the gear; the page text and alt text already say so. Then raise its `?v=`.
-- ⬜ **Retake `images/app/progress.jpg`** (how-to-play "After the tutorial"): the start screen now has the My vocabulary and Pronunciation test cards with rings (1 November 2026); the text already describes it. Also consider a screenshot of the pronunciation card.
+- ✅ *(1 November 2026)* **Start screen screenshot:** replaced by `images/app/start-screen.jpg` (three cards with rings); the unused `progress.jpg`, `report-picture.jpg` and `how-to-play/10-lets-go.jpg` were deleted (`10-next.jpg` replaces the last).
+- ✅ *(1 November 2026, deployed)* **Listening test, Test all, tutorial test pages and word reports** on the pages: how-to-play (two new tutorial steps, start screen, Test all step), support FAQ (listening test, Test all, wrong word in the app), home cards, privacy (listening results, word reports) — EN and FR.
 - ✅ *(1 November 2026, not deployed)* **Pronunciation test** on the pages: privacy §2 (results on the phone), §3 (Apple speech recognition, microphone), §4, §5, §6 and the summary box; terms §1, §3 and §4; support FAQ (how it works, unsupported languages, "Do you record my voice?", My words' big card); home page cards; how-to-play (start screen, back arrow, pronunciation card).
 
 - ✅ **Paywall.** *(28 October: built as one-time profession unlocks, $9.99, after 10 free words once. `terms.html` §4–5, `support.html` ("Free words and unlocking a profession"), `index.html` ("Try 10 words free") and `how-to-play.html` match it. The 32 products still have to be created in App Store Connect with the IDs from `StoreKit/LearnScrumble.storekit`.)*

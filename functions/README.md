@@ -2,7 +2,7 @@
 
 Server code for the app (TypeScript, Node 22, region `us-central1`). The app calls these instead of OpenAI,
 so the OpenAI key never ships inside the app and only the server writes to the shared word bank.
-What's left: `Docs/remaining.md` §3. (The server migration plan was finished and removed on 30 Oct 2026; see git history.)
+What's left: `Docs/AppStoreReadiness.md` §6.3. (The server migration plan was finished and removed on 30 Oct 2026; see git history.)
 
 | Function | What it does | Replaces in the app |
 |---|---|---|
@@ -11,6 +11,8 @@ What's left: `Docs/remaining.md` §3. (The server migration plan was finished an
 | `getReviewWords` | Known words with translations and picture links. Not used by the app since 28 Oct 2026 ("My words" plays from the phone) | `RequestModel.generateStruggleReview`'s Firestore read |
 | `reportPicture` | A user flags a wrong picture: a new picture is drawn for that user only, and the report is recorded (see "Reported pictures") | — (new) |
 | `reviewReport` | Firestore trigger: you set a report's `status` to `approve` or `reject` | — (new) |
+| `reportWord` | A user says a word or its translation is wrong and types the right one: recorded in `wordReports/{word|lang}` with OpenAI's opinion, into the daily email. Nothing changes until you approve | — (new, 1 Nov 2026) |
+| `reviewWordReport` | Firestore trigger: you set a word report's `status` to `approve` (its `fix` becomes the translation for everyone, logged in `translationFixes`; edit `fix` first if needed) or `reject` | — (new, 1 Nov 2026) |
 | `mailReports` | Every morning: email to support@learnscrumble.com with the new reports | — (new) |
 | `mailAlert` | Right away, at most once per kind per day: email when OpenAI credits are used up or a user hits the daily picture cap (`alerts.ts`) | — (new) |
 

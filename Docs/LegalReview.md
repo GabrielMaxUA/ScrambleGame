@@ -22,9 +22,9 @@ a business name) is decided later: every place is a yellow placeholder. *(1 Nove
 | **Ontario Consumer Protection Act** | No forced arbitration and no class-action waiver for consumers; consumer rights can't be signed away; the extra internet-agreement rules apply only above $50 (our price is $9.99) | ✅ terms rewritten (29 Oct). ❓ the new Consumer Protection Act, 2023 replaces it when it comes into force: ask the lawyer whether it's in force at launch |
 | **Competition Act** (misleading advertising) | Claims must be true in their general impression ("unlimited", "free") | ✅ no "unlimited" anywhere (30 Oct): app, website and terms say "the most-used workplace words for this profession", that each list has an end (usually a few hundred words, at most 500) and that new pictures are limited to 100 a day — shown on the setup screen, the paywall and right after buying |
 | **CASL** (anti-spam) | Consent before any marketing email or message | ✅ none sent. Don't add a newsletter without opt-in consent |
-| **GDPR / UK GDPR** (EU and UK users) | Legal bases, rights, transfer safeguards | ✅ kept in the privacy page. ⬜ accept the Firebase and OpenAI data processing terms (`WebsiteContent/TODO.md`) |
+| **GDPR / UK GDPR** (EU and UK users) | Legal bases, rights, transfer safeguards | ✅ kept in the privacy page. ✅ Firebase and OpenAI data processing terms in place (1 November 2026, `WebsiteContent/TODO.md`) |
 | **Business Names Act** (Ontario) | Register a name you do business under if it isn't your own legal name | ✅ *(1 November 2026)* registered in the Ontario Business Registry: business name **PAWIT** (the registry stores names in capitals; "PawIT" is the same name), sole proprietorship, Max Gabriel. Renew every 5 years. The OBR profile shows no Business Number linked yet ("N/A") |
-| **Tax** (CRA) | Business income on your T1 (form T2125); GST/HST registration (required above $30,000 a year, Apple's form needs a Business Number) | ✅ CRA registration active 1 November 2026 (Max Gabriel, PawIT); ⬜ the GST/HST account and Form 506 (`remaining.md` §1). Apple collects the sales tax from buyers. Ask an accountant once |
+| **Tax** (CRA) | Business income on your T1 (form T2125); GST/HST registration (required above $30,000 a year, Apple's form needs a Business Number) | ✅ CRA registration active 1 November 2026 (Max Gabriel, PawIT); ⬜ the GST/HST account and Form 506 (`AppStoreReadiness.md` §6.1). Apple collects the sales tax from buyers. Ask an accountant once |
 | **AODA** (Ontario accessibility) | Customer-service rules once you have employees | ✅ not applicable now (no employees) |
 
 ## 2. Changes in the app
@@ -69,7 +69,11 @@ a business name) is decided later: every place is a yellow placeholder. *(1 Nove
   are fine together.
 - ❓ **Personal liability:** as a sole proprietor you are personally responsible. The terms limit liability as far as
   the law allows; a corporation or business insurance gives more protection. Ask the lawyer or an accountant.
-- ⬜ *(optional)* Trademark search for "LearnScrumble" on the Canadian (CIPO) and U.S. (USPTO) databases before launch.
+- ✅ *(1 November 2026)* Trademark search, Canadian (CIPO) and U.S. (USPTO) databases: **"LearnScrumble" — no results in
+  either.** "SCRUMBLE" alone: one pending application in each, both by Monday International Limited (Hong Kong; US serial
+  50074845, filed 27 Aug 2026; CIPO 2496615), only for **Nice class 3** (perfumes, soaps, hair care) — a different
+  field from apps (class 9) and education (class 41). Not legal advice; a lawyer can confirm. Optional later: register
+  "LearnScrumble" yourself (classes 9 and 41) for protection.
 
 ## 6. Website changes made on 29 October (not deployed yet)
 

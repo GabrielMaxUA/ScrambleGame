@@ -39,6 +39,7 @@ struct MyWordsView: View {
   var onContinue: () -> Void                             // new words for this job and language
   var onRepeat: () -> Void                               // start the review
   var onReport: (SwiftDataWordModel) async -> RequestModel.ReportResult = { _ in .failed }   // the card's flag
+  var onReportWord: (SwiftDataWordModel, RequestModel.WordCorrection) async -> RequestModel.ReportResult = { _, _ in .failed }   // its word choice
   var onBack: () -> Void                                 // back to WelcomeBackView
   @State private var speechManager = SpeechManager()     // reads the word on the card
   @State private var openIndex: Int?                     // the word shown on WordCardOverlay; nil = closed
@@ -52,6 +53,7 @@ struct MyWordsView: View {
   init(job: Occupation?, targetLanguage: String, mode: CabinetVM.Section = .vocabulary,
        onContinue: @escaping () -> Void, onRepeat: @escaping () -> Void,
        onReport: @escaping (SwiftDataWordModel) async -> RequestModel.ReportResult = { _ in .failed },
+       onReportWord: @escaping (SwiftDataWordModel, RequestModel.WordCorrection) async -> RequestModel.ReportResult = { _, _ in .failed },
        onBack: @escaping () -> Void) {
     self.job = job
     self.targetLanguage = targetLanguage
@@ -59,6 +61,7 @@ struct MyWordsView: View {
     self.onContinue = onContinue
     self.onRepeat = onRepeat
     self.onReport = onReport
+    self.onReportWord = onReportWord
     self.onBack = onBack
     let store = PersistenceController.shared
     let profession = job?.rawValue ?? ""
@@ -176,6 +179,7 @@ struct MyWordsView: View {
                         testAll: testingAll,
                         speak: { speechManager.speak($0, language: targetLanguage) },
                         onReport: onReport,
+                        onReportWord: onReportWord,
                         onClose: closeCard)
       }
     }

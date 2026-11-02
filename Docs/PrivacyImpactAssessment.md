@@ -14,8 +14,8 @@ This is an internal document. It isn't published; the privacy policy (`WebsiteCo
 
 | Recipient (country) | What is communicated | Purpose |
 |---|---|---|
-| Google LLC — Firebase Cloud Functions, Firestore, Storage, Authentication, App Check (United States) | Job from the menu, the two languages, English names of practised words, picture reports (word + job + picture link), a random anonymous sign-in ID with two daily counters, IP address and technical data needed to serve requests | Run the service: create and reuse words and pictures, limit misuse |
-| OpenAI, L.L.C. (United States), through our server only | Job, the two languages, English names of practised words, short picture descriptions | Create words, translations and pictures (only after the user's express "I agree") |
+| Google LLC — Firebase Cloud Functions, Firestore, Storage, Authentication, App Check (United States) | Job from the menu, the two languages, English names of practised words, picture reports (word + job + picture link), word reports (word, job, the two language codes, the text seen, the correction and optional note the user typed — since 1 November 2026), a random anonymous sign-in ID with two daily counters, IP address and technical data needed to serve requests | Run the service: create and reuse words and pictures, limit misuse |
+| OpenAI, L.L.C. (United States), through our server only | Job, the two languages, English names of practised words, short picture descriptions, and for a word report the word's current translation (a second opinion; not the user's note) | Create words, translations and pictures (only after the user's express "I agree") |
 | Google — Firebase Crashlytics (United States) | Crash and error reports: code location, error type, the two languages, last technical steps, device model, OS and app version, random installation ID | Find and fix bugs |
 | Google — Analytics for Firebase (United States) | Only if the user switches statistics on: app events, the two languages, the job, device and approximate country, random app-instance ID | Improve the app |
 | Apple (United States / Ireland) | Pronunciation test audio, if iOS uses Apple's servers for recognition; App Store purchases | Speech recognition; payments (Apple acts under its own policy) |
@@ -33,7 +33,7 @@ user's own iOS permission.
 ## 3. Purposes
 
 Each communication is necessary for a feature the user asked for (words and pictures, the shared word library, the
-pronunciation test) or to keep the service working and secure (sign-in ID, App Check, limits, crash reports).
+pronunciation test, reporting a wrong word or picture) or to keep the service working and secure (sign-in ID, App Check, limits, crash reports).
 Statistics are optional and off by default. No other use, no sale, no advertising, no profiling.
 
 ## 4. Protection measures (including contractual)

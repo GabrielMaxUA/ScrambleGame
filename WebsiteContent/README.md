@@ -111,12 +111,13 @@ Apple asks what data the app "collects" (sends off the device and keeps longer t
 - **Data not linked to the user** (the same as `LearnScrumble/PrivacyInfo.xcprivacy`):
   - *User Content → Other User Content*: the profession text sent to OpenAI — purposes: App Functionality, and Analytics (its English name is counted to improve the job menu).
   - *Usage Data → Other Usage Data*: the names of words already practised, sent to our server and OpenAI so they aren't repeated, the server's daily report count, and picture reports (word + job) — purpose: App Functionality.
+  - *User Content → Other User Content* also covers **word reports** (since 1 November 2026): the correction and optional note the user types, with the word, job and language codes — purpose: App Functionality.
   - *Identifiers → User ID*: the random anonymous Firebase sign-in ID — purpose: App Functionality.
   - *Diagnostics → Crash Data*: Crashlytics crash reports — purpose: App Functionality.
   - *Diagnostics → Other Diagnostic Data*: Crashlytics non-fatal error reports (words couldn't be loaded), with the error type, a short technical description, the last steps, free memory and disk space — purpose: App Functionality.
   - *Identifiers → Device ID*: Firebase's random installation / app-instance ID (not the advertising ID) — purposes: App Functionality, Analytics.
   - *Usage Data → Product Interaction*: Analytics events, only with the user's consent — purpose: Analytics.
-- On-device data (settings, progress, Keychain counter, pronunciation results) is not "collected" because it never leaves the device.
+- On-device data (settings, progress, Keychain counter, pronunciation and listening results) is not "collected" because it never leaves the device.
 - *Audio Data*: **not collected** by us. The pronunciation test (since 1 November 2026) records only while listening and hands the audio to Apple's Speech framework, which may process it on Apple's servers; the app never sends audio or the recognised text to our server or anyone else, and keeps neither. Apple's own processing isn't declared by the app (like purchases). ⚠️ Confirm at sign-off.
 - Purchases are handled by Apple and aren't declared by the app.
 

@@ -247,6 +247,22 @@ final class AppManager {
     return await requestModel.reportPicture(toolName: word.concept, imageURL: word.imageURL)
   }
 
+  // MARK: - reportWord(_:correction:) / reportSavedWord(_:correction:)
+  // "Wrong word or translation" (WordReportSheet): the game's current word (after it was answered, AnswerResultView)
+  // in the languages being played, or a word saved on the phone (My words' card) in the languages it was saved in.
+  func reportWord(_ word: WordModel, correction: RequestModel.WordCorrection) async -> RequestModel.ReportResult {
+    await requestModel.reportWord(toolName: word.toolName,
+                                  targetLanguage: requestModel.selectedLanguage.rawValue,
+                                  originLanguage: requestModel.nativeLanguage.rawValue,
+                                  shown: (word.targetWord, word.originWord), correction: correction)
+  }
+
+  func reportSavedWord(_ word: SwiftDataWordModel, correction: RequestModel.WordCorrection) async -> RequestModel.ReportResult {
+    await requestModel.reportWord(toolName: word.concept, targetLanguage: word.targetLanguage,
+                                  originLanguage: word.originLanguage.isEmpty ? requestModel.nativeLanguage.rawValue : word.originLanguage,
+                                  shown: (word.targetWord, word.originWord), correction: correction)
+  }
+
   // MARK: - showFailure(fallback:)
   // Single place that decides which failure screen to show.
   // Offline wins if RequestModel saw it, OR if the phone has no connection right now —

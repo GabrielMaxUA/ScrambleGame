@@ -11,6 +11,9 @@
 //       status: "new" | "approve" | "reject" (set by you) | "approved" | "rejected", notified, approvedAt? }
 //     reports/{id}/reporters/{code}  one per reporting user (one-way hash of the anonymous ID), to count people
 //   reportUsage/{uid} reports sent per anonymous user per day — capped (REPORTS_PER_DAY in index.ts)
+//   wordReports/{id}  a word's translation reported as wrong in one language (reportWord), id "<word>|<lang>": the
+//                     current text, every suggestion players typed, OpenAI's opinion, `fix` (what approving writes),
+//                     status "new" -> you set "approve" / "reject" (reviewWordReport, reports.ts); in the daily email
 //   pictureUsage/{uid} new pictures drawn per anonymous user per day — capped (PICTURES_PER_DAY in index.ts)
 //   jobs/{key}        a menu job's vocabulary (getWords): { status: "open" | "complete", words, reason, completedAt }.
 //                     No document = open. "complete" = no new GPT words for this job any more (set status "open" in
@@ -312,14 +315,74 @@ export async function approveReport(id: string): Promise<void> {
   await ref.set({ status: "approved", approvedAt: FieldValue.serverTimestamp(), approvedImage: url, bankImage: url }, { merge: true });
 }
 
-// MARK: - pendingReports / markNotified
-// The daily email (reports.ts): reports not mailed yet, then flagged as mailed.
-export async function pendingReports(): Promise<FirebaseFirestore.QueryDocumentSnapshot[]> {
-  return (await db.collection("reports").where("notified", "==", false).get()).docs;
+// MARK: - recordWordReport
+// One player's correction of a word in one language, in one transaction:
+//   wordReports/{word|lang}            word, lang, jobs, current (the bank text now), reports (+1), users (+1 for a new
+//                                      reporter), suggestions (each: text, note, job, time), fix (what approving writes:
+//                                      the most common suggestion), aiFix / aiReason (OpenAI's opinion, may be empty),
+//                                      status "new", notified false (-> the daily email)
+//   wordReports/{id}/reporters/{code}  one doc per reporter, a one-way hash of the anonymous sign-in ID, as for pictures
+// A new report reopens an approved or rejected one (status back to "new").
+export async function recordWordReport(doc: WordDoc, uid: string, job: string, lang: string, current: string,
+                                       suggestion: string, note: string,
+                                       ai: { fix: string; reason: string } | null): Promise<void> {
+  const ref = db.collection("wordReports").doc(docID(`${doc.word}|${lang}`));
+  const reporter = ref.collection("reporters").doc(createHash("sha256").update(uid).digest("hex").slice(0, 32));
+  await db.runTransaction(async (tx) => {
+    const isNew = !(await tx.get(reporter)).exists;
+    const existing = (await tx.get(ref)).data();
+    const suggestions = [...((existing?.suggestions ?? []) as { text: string }[]),
+                         { text: suggestion, note, job, at: new Date().toISOString() }];
+    const counts = new Map<string, number>();
+    for (const s of suggestions) counts.set(s.text, (counts.get(s.text) ?? 0) + 1);
+    const fix = [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];      // the most common suggestion
+    if (isNew) tx.set(reporter, { at: FieldValue.serverTimestamp() });
+    tx.set(ref, {
+      word: doc.word,
+      lang,
+      jobs: FieldValue.arrayUnion(job),
+      current,
+      reports: FieldValue.increment(1),
+      ...(isNew ? { users: FieldValue.increment(1) } : {}),
+      lastReport: FieldValue.serverTimestamp(),
+      suggestions,
+      fix,
+      ...(ai ? { aiFix: ai.fix, aiReason: ai.reason } : {}),
+      status: "new",
+      notified: false,
+    }, { merge: true });
+  });
 }
-export async function markNotified(ids: string[]): Promise<void> {
+
+// MARK: - approveWordReport
+// The developer set status "approve" on wordReports/{id} (reviewWordReport trigger, reports.ts): the report's `fix`
+// (edit it in the console first if needed) becomes the word's translation in that language for everyone, logged in
+// "translationFixes" like the translation check tool's fixes. No usable fix -> "rejected" with a note.
+// Phones keep their saved copy until the word is played again from the bank.
+export async function approveWordReport(id: string): Promise<void> {
+  const ref = db.collection("wordReports").doc(id);
+  const report = (await ref.get()).data();
+  const fix = typeof report?.fix === "string" ? report.fix.trim() : "";
+  if (!report?.word || !report?.lang || !fix || fix.length > 60) {
+    await ref.set({ status: "rejected", note: "nothing to approve" }, { merge: true });
+    return;
+  }
+  const doc = (await fetchWords([report.word])).get(report.word);
+  const from = doc?.translation?.[report.lang] ?? report.current ?? "";
+  await db.collection("words").doc(docID(report.word)).update(new FieldPath("translation", report.lang), fix);
+  await db.collection("translationFixes").add({ word: report.word, kind: "translation", lang: report.lang, from, to: fix,
+                                                reason: "player report", at: FieldValue.serverTimestamp() });
+  await ref.set({ status: "approved", approvedAt: FieldValue.serverTimestamp(), current: fix }, { merge: true });
+}
+
+// MARK: - pendingReports / markNotified
+// The daily email (reports.ts): reports not mailed yet, then flagged as mailed ("reports" pictures, "wordReports" words).
+export async function pendingReports(collection = "reports"): Promise<FirebaseFirestore.QueryDocumentSnapshot[]> {
+  return (await db.collection(collection).where("notified", "==", false).get()).docs;
+}
+export async function markNotified(ids: string[], collection = "reports"): Promise<void> {
   const batch = db.batch();
-  for (const id of ids) batch.update(db.collection("reports").doc(id), { notified: true });
+  for (const id of ids) batch.update(db.collection(collection).doc(id), { notified: true });
   await batch.commit();
 }
 
