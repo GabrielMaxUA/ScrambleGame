@@ -270,17 +270,14 @@ the App Store privacy answers in `WebsiteContent/README.md`, `LearnScrumble/Priv
 name LearnScrumble, bundle ID `com.MaxGabriel.LearnScrumble`, team `7XZJ4BCPR6` (Max Gabriel, individual), primary
 language English (U.S.). Business: Max Gabriel, sole proprietor operating as **PawIT** (CRA registration active 1 November 2026).
 
-**Account status (Business page):**
+**Account status (Business page, 1 November 2026):**
 - Free Apps Agreement: Active → builds can be uploaded and tested in TestFlight.
-- Paid Apps Agreement: signed 29 October, **Pending User Info** until all of this is done; until it's Active the
-  $9.99 profession unlocks can't be bought, not even in TestFlight:
-  - Bank account (RBC, CAD): added, Apple is verifying it.
-  - U.S. tax form W-8BEN: individual, Canada, SIN as the foreign tax ID, treaty benefits for Canada.
-  - Canadian GST/HST Form 506: needs a **CRA Business Number + RT number**. *(1 November 2026: the business — Max
-    Gabriel operating as PawIT — is registered with CRA; use its Business Number, with the GST/HST account `RT0001`
-    if it was opened, then finish Form 506.)*
-- EU trader status (Digital Services Act): still to answer; traders' contact details are shown on the EU App Store.
-- App Store Small Business Program: apply after signing (15% commission instead of 30%).
+- Paid Apps Agreement: signed 29 October; until it's **Active** the $9.99 profession unlocks can't be bought, not even
+  in TestFlight. Everything it needs is submitted and waiting for Apple: bank account (RBC, CAD), U.S. tax form W-8BEN
+  (individual, Canada, SIN, treaty benefits), Canadian GST/HST Form 506 (CRA Business Number of PawIT + `RT0001`), and
+  the EU trader status (Digital Services Act).
+- App Store Small Business Program (15% commission instead of 30%): steps in `Docs/AppStoreReadiness.md` §6.1.
+Current status of each item: `Docs/AppStoreReadiness.md` §6.1.
 
 **Upload a build to TestFlight:**
 1. Xcode toolbar → destination **Any iOS Device (arm64)** → **Product → Archive** (Release = production Firebase,
@@ -309,10 +306,26 @@ code *inside* those frameworks; our own code is symbolicated (and Crashlytics ge
 uses `FirebaseAnalyticsCore` (no advertising-ID / ad-conversion frameworks) and no longer links Firestore or Storage
 (all their reads and writes go through the Cloud Functions), which removed the other seven warnings.
 
-**Still to do before submitting** (details in `Docs/AppStoreReadiness.md`): the 32 profession products
-(`StoreKit/LearnScrumble.storekit` has the exact IDs), store listing and screenshots, App Privacy answers
-(`WebsiteContent/README.md`), age rating, notes for the reviewer, the website's legal placeholders, App Check
-enforcement after TestFlight shows verified requests.
+**Submit for review** (once the Paid Apps Agreement is Active and a TestFlight round on a real iPhone passed;
+`Docs/AppStoreReadiness.md` has the status of each item):
+1. **The review build:** a **normal** Product → Archive (not the tester script — a tester build shows the Debug
+   section), with a higher build number → Distribute App → App Store Connect. Wait until it's processed.
+2. App Store Connect → the app → **iOS App → the version (1.0)**:
+   - **Build:** pick the review build.
+   - **In-App Purchases and Subscriptions:** add **all 32** profession products (each must show "Ready to Submit";
+     exact IDs in `StoreKit/LearnScrumble.storekit`). They're reviewed together with the app.
+   - **Store listing:** screenshots (6.9" iPhone, required), promotional text, description, keywords, support URL
+     `https://learnscrumble.com/support`, marketing URL `https://learnscrumble.com`, copyright "2026 Max Gabriel".
+   - **App Review Information:** sign-in **not** required; contact name, phone and email; **Notes** = the text from
+     "Notes for the reviewer" above, pasted **without** the `>` marks and line breaks (one paragraph per block).
+     Check first that the bank has "Cook" words with Polish translations.
+   - **Version release:** manual or automatic after approval (manual lets you pick the launch day).
+3. App Store Connect → the app → **App Information:** category Education, age rating questionnaire (AI-generated
+   content: yes; user content: corrections only reach us, nothing unmoderated is shown to others), and the
+   **Privacy Policy URL** `https://learnscrumble.com/privacy`.
+4. **App Privacy:** the answers from `WebsiteContent/README.md` (the same as `PrivacyInfo.xcprivacy`).
+5. Version page → **Add for Review** → **Submit for Review**. Review usually takes 1–3 days; Apple emails the result.
+   A rejection explains why in App Store Connect → Resolution Center: fix it, upload a new build, resubmit.
 
 ## Git
 
