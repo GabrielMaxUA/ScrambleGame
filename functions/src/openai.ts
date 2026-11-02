@@ -88,6 +88,7 @@ Rules:
 - The "toolName" must name the item exactly as a ${profession} means it. If the plain word has another common meaning, or means a different thing in another job, make it specific to this job: for an auto mechanic "motor oil", not "oil"; for a cook "cooking oil", not "oil"; for a carpenter "spirit level", not "level"; for a plumber "plumbing pipe", not "pipe". Words with only one meaning stay plain ("hammer", "drill").
 - "originWord" must be the natural, commonly used word a ${profession} uses for this item in ${origin}.
 - "targetWord" must be the natural, commonly used word a ${profession} uses for this item in ${target}. Use the job's own term, not a word for the item's other meaning (for an auto mechanic in Ukrainian "моторна олива", not "олія", which is cooking oil).
+- Never translate the English name word for word. When an item has no fixed name of its own in a language, use what workers there actually call it (for "butcher paper" in Ukrainian "крафт-папір", not "м'ясницький папір"). If nobody in that language would recognise the word, it's wrong.
 - Keep every name short, as workers really say it: at most 2 words in every language, and the shortest common term a worker uses rather than a long technical compound (German "Dichtmittel", not "Rohrleitungsdichtungsmittel"; "Akkuschrauber", not "Akku-Bohrschrauber-Set"). The words are played as a letter puzzle on a phone, so long names don't fit.
 - "imagePrompt" must be a short, UNAMBIGUOUS visual description of the SPECIFIC ${profession}-context object, disambiguated from any other common meaning of the word. For example, for "level" write "a carpenter's spirit level tool with a bubble vial, NOT a level in a video game"; for "pipe" write "a plumbing/construction pipe, a hollow cylindrical tube, NOT a smoking pipe". Always name the disambiguation explicitly when the word has another common meaning.
 - Do not include explanations, descriptions, categories, or definitions in toolName/originWord/targetWord.
@@ -197,6 +198,7 @@ export async function translate(apiKey: string, profession: string, toolNames: s
 Items (English): ${toolNames.join(", ")}.
 Rules:
 - For each item and each language, give the natural, commonly used word for that item at work, matching the meaning a ${profession} would mean (for example "level" is the spirit level tool, not a game level).
+- Never translate the English name word for word. When an item has no fixed name of its own in a language, use what workers there actually call it (for "butcher paper" in Ukrainian "крафт-папір", not "м'ясницький папір"). If nobody in that language would recognise the word, it's wrong.
 - Only the word itself: no explanations, articles only where the language always uses them, no alternatives.
 - The shortest common term a worker says, at most 2 words (German "Dichtmittel", not "Rohrleitungsdichtungsmittel"): the words are played as a letter puzzle on a phone.
 - Keep "toolName" exactly as given.
@@ -340,6 +342,7 @@ ${list}
 1. "wrong": for every translation decide: is it the natural word a person in THESE jobs uses for this item, in that language? It is wrong when it:
    - names another meaning of the English word (for an auto mechanic, Ukrainian "олія" is cooking oil; motor oil is "моторна олива"),
    - is not a real or natural word in that language, is in another language or script, or is misspelled,
+   - is a word-for-word translation of the English name that people in that language don't actually say (for "butcher paper", Ukrainian "м'ясницький папір" is a literal calque; workers say "крафт-папір"),
    - is far too general or too specific for the item.
    Do NOT mark a translation wrong for small style preferences, regional variants, or because another word would also be fine.
    Only mark what you are sure is wrong; if unsure, leave it out (a person checks every change you suggest).

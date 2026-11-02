@@ -10,6 +10,7 @@ import SwiftUI
 //   PersistenceController reads it: seen words (not asked again), the job's word list, accuracy, learned count.
 //   The pronunciation test (WordCardOverlay, .speech) adds speechFirstTry / speechStruggled: a word said right on the
 //   first try counts as right; one that needed a second or third try, or was missed three times, is a struggle.
+//   The listening test (WordCardOverlay, .listening) adds listenRight / listenWrong: the first tapped picture decides.
 //   Records saved before 28 Oct 2026 only have the counters (empty profession/targetWord): they still count as
 //   seen, but don't appear in "My words" or in the job's progress.
 
@@ -29,6 +30,8 @@ final class SwiftDataWordModel {
     var imageURL: String = ""               // the picture's link in Storage — sent with a report from the review
     var speechFirstTry: Int = 0             // pronunciation tests said right on the first try
     var speechStruggled: Int = 0            // pronunciation tests that needed a 2nd / 3rd try, or were missed
+    var listenRight: Int = 0                // listening tests: the right picture tapped
+    var listenWrong: Int = 0                // listening tests: another picture tapped
 
     static let learnedMinCorrect = 2        // "learned" = right at least twice…
     static let learnedMinAccuracy = 0.75    // …and right at least 75% of the time
@@ -66,6 +69,12 @@ final class SwiftDataWordModel {
 
     var speechScore: Double {               // 0...1 share said right on the first try; untested words sit in the middle
         speechTests > 0 ? Double(speechFirstTry) / Double(speechTests) : 0.5
+    }
+
+    var listenTests: Int { listenRight + listenWrong }          // listening tests of this word
+
+    var listenScore: Double {               // 0...1 share of right taps; untested words sit in the middle
+        listenTests > 0 ? Double(listenRight) / Double(listenTests) : 0.5
     }
 
     var hasWord: Bool {                     // saved with the whole word (not an old counters-only record)

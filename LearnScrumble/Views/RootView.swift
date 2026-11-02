@@ -78,6 +78,10 @@ struct RootView: View {
                   manager.cabinet.select(card)
                   manager.openSpeechList()
                 },
+                onListening: { card in                           // "Practise listening"
+                  manager.cabinet.select(card)
+                  manager.openListeningList()
+                },
                 onSettings: { manager.openSettings() })
             case .generating:                                    // words/images loading
                 LoadingView(progress: manager.requestModel.progress)
@@ -138,6 +142,14 @@ struct RootView: View {
                 job: manager.currentJob,
                 targetLanguage: manager.requestModel.selectedLanguage.rawValue,
                 mode: .speech,
+                onContinue: {},
+                onRepeat: {},
+                onBack: { manager.exitToWelcome() })
+            case .listeningList:                                 // the listening test: the job's played words with a picture
+              MyWordsView(
+                job: manager.currentJob,
+                targetLanguage: manager.requestModel.selectedLanguage.rawValue,
+                mode: .listening,
                 onContinue: {},
                 onRepeat: {},
                 onBack: { manager.exitToWelcome() })

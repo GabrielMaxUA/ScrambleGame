@@ -24,7 +24,8 @@ import Observation
 //   4. tap ↻ to clear the whole answer
 //   5. tap the lightbulb (hint)  6. tap the speaker  7. tap the back arrow (it explains the start screen and Settings)
 //   8. spell the whole word, letter by letter
-//   9. "Correct!" -> "Let's go!" -> the tutorial is done (`completed`)
+//   9. "Correct!" -> "Next" -> the practice game is done (`completed`); OnboardingView then shows the two test pages
+//      (pronunciation, listening) and their "Let's go!" ends the tutorial
 // The practice picture is the cat photo in the app bundle (ViewComponents/NewSVG/cat.png).
 // A letter the user puts in the wrong slot at any time -> "send it back" first (pointer on that slot).
 //
@@ -85,6 +86,8 @@ final class OnboardingService {
   @ObservationIgnored private let wordLanguage: String   // its language code, for the speaker voice
   @ObservationIgnored private let answer: [String]  // the word's letters, lowercased like WordVM's
   @ObservationIgnored private let speech = SpeechManager()   // reads the word for the speaker task
+
+  var practiceWord: String { word }                 // the test pages show it (OnboardingView)
 
   var wrongSlot: Int? {                                                // first placed letter in the wrong slot
     vm.guessedWord.indices.first { vm.guessedWord[$0] != nil && vm.guessedWord[$0]?.letter != answer[$0] }
@@ -177,6 +180,12 @@ final class OnboardingService {
     if hintSeen { wordHeard = true }
   }
 
+  // MARK: - sayWord
+  // The test pages' speaker (OnboardingView): only reads the word.
+  func sayWord() {
+    speech.speak(word, language: wordLanguage)
+  }
+
   // MARK: - settingsTapped
   // The tutorial's back arrow: it only explains the start screen and Settings (it doesn't leave the tutorial).
   // After the speaker -> spell the word.
@@ -218,7 +227,7 @@ final class OnboardingService {
   // MARK: - catImage
   // The practice picture: cat.png from the app bundle (added in ViewComponents/NewSVG), as raw PNG bytes —
   // the same kind of data a real word's picture is. Missing file -> nil (the picture card shows its placeholder).
-  private static func catImage() -> Data? {
+  static func catImage() -> Data? {
     Bundle.main.url(forResource: "cat", withExtension: "png").flatMap { try? Data(contentsOf: $0) }
   }
 }

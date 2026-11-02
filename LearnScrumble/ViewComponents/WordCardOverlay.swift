@@ -40,6 +40,19 @@ import SwiftData
 //   -> SpeechResultView, over the front card only (the carousel stays around it): "Next word" (or "Done" on the
 //      last one) / "Again" (the same word, 3 new tries)
 //   Swiping or closing stops the microphone.
+// Listening test (mode .listening): the same carousel; each card shows ✕, 4 pictures in a 2×2 grid — the word's and
+// 3 other words of the job, shuffled once when the screen opens (`options`) — and a speaker button at the bottom.
+// The word itself is hidden until the answer.
+//   -> speaker -> the word is read; the pictures are dimmed and can't be tapped until it has played once
+//   -> tap a picture: the first tap is final (PersistenceController.recordListening). Right: green with ✓. Wrong: red
+//      with ✗, and the right one turns green. Success / incorrect sound and a haptic. No result screen: the word and
+//      its hint appear under the grid, the speaker gets small and "Next word" (or "Done" on the last one) appears.
+// Test all (testAll, MyWordsView's "Test all" button, .speech and .listening): starts on the first word and runs by
+// itself — no swiping, no tapping the side cards. Listening: the word plays 0.5 s after each card comes to the front;
+// 1.5 s after the answer the wheel turns to the next word. Speech: the user taps "Tap to speak" as usual (the
+// microphone never starts by itself); the result screen has no "Again" and the next word comes once the word has been
+// read out. "Next word" skips the wait. After the last word: a summary ("8 / 10 right") with Again / Done.
+// ✕ or a tap on the background stops it at any point; every answer is already saved.
 
 struct WordCardOverlay: View {
   let words: [SwiftDataWordModel]                        // the list as shown (hardest first)
@@ -47,8 +60,9 @@ struct WordCardOverlay: View {
   let heroID: PersistentIdentifier?                      // the word whose picture flies between its row and the card
   let namespace: Namespace.ID                            // shared with the rows' pictures
   let images: WordImages                                 // decoded pictures, shared with MyWordsView's rows
-  let mode: CabinetVM.Section                            // .vocabulary: My words; .speech: the pronunciation test
+  let mode: CabinetVM.Section                            // .vocabulary: My words; .speech / .listening: the tests
   let language: Languages?                               // the language being learned (the speech test listens in it)
+  let testAll: Bool                                      // .speech / .listening: run through every word by itself
   var speak: (String) -> Void                            // MyWordsView's SpeechManager
   var onReport: (SwiftDataWordModel) async -> RequestModel.ReportResult
   var onClose: () -> Void
@@ -60,6 +74,15 @@ struct WordCardOverlay: View {
   @State private var tries = 0                           // .speech: tries used on the front word (3 at most)
   @State private var speechNote: SpeechNote?             // .speech: the line under "Tap to speak"
   @State private var speechResult: Bool?                 // .speech: the result screen (true = right); nil = none
+  @State private var options: [[Int]]                    // .listening: per word, the 4 words whose pictures are shown
+  @State private var heard = false                       // .listening: the front word has been played (pictures unlock)
+  @State private var picked: Int?                        // .listening: the word whose picture was tapped; nil = no answer
+  @State private var rightTaps = 0                       // .listening: haptic triggers
+  @State private var wrongTaps = 0
+  @State private var answers: [Int: Bool] = [:]          // test all: word -> counted as right
+  @State private var showSummary = false                 // test all: the last word is done
+  @State private var round = 0                           // test all: +1 on Again, so the first word plays again
+  @State private var autoNext: Task<Void, Never>?        // test all: the wait before the next word
 
   enum SpeechNote: Equatable {
     case tryAgain(heard: String)                         // heard something else
@@ -68,13 +91,16 @@ struct WordCardOverlay: View {
     case unavailable                                     // the recogniser can't be used right now
   }
   private static let maxTries = 3
+  private static let playDelay = Duration.milliseconds(500)        // test all: card in front -> the word plays
+  private static let listeningNext = Duration.milliseconds(1500)   // test all: listening answer -> next word
+  private static let speechNext = Duration.milliseconds(2800)      // test all: speech result (word read at 0.9 s) -> next
 
   private static let settle = Animation.spring(duration: 0.45, bounce: 0.12)   // the wheel coming to rest
   private static let buttonSize: CGFloat = 50            // the game's top-row buttons (ButtonsTopRow)
   private static let cardColor = Color.black            // the card: solid black, the rim shows its edge
 
   init(words: [SwiftDataWordModel], index: Binding<Int>, heroID: PersistentIdentifier?, namespace: Namespace.ID,
-       images: WordImages, mode: CabinetVM.Section = .vocabulary, language: Languages? = nil,
+       images: WordImages, mode: CabinetVM.Section = .vocabulary, language: Languages? = nil, testAll: Bool = false,
        speak: @escaping (String) -> Void,
        onReport: @escaping (SwiftDataWordModel) async -> RequestModel.ReportResult, onClose: @escaping () -> Void) {
     self.words = words
@@ -84,10 +110,22 @@ struct WordCardOverlay: View {
     self.images = images
     self.mode = mode
     self.language = language
+    self.testAll = testAll
     self.speak = speak
     self.onReport = onReport
     self.onClose = onClose
     self._position = State(initialValue: Double(index.wrappedValue))
+    self._options = State(initialValue: mode == .listening ? Self.makeOptions(for: words) : [])
+  }
+
+  // MARK: - makeOptions(for:)
+  // .listening: for every word, its own index and 3 other words (not spelled the same), in a random order.
+  private static func makeOptions(for words: [SwiftDataWordModel]) -> [[Int]] {
+    words.indices.map { item in
+      let target = words[item].targetWord.lowercased()
+      let others = words.indices.filter { $0 != item && words[$0].targetWord.lowercased() != target }.shuffled().prefix(3)
+      return ([item] + others).shuffled()
+    }
   }
 
   var body: some View {
@@ -101,19 +139,23 @@ struct WordCardOverlay: View {
           .onTapGesture(perform: onClose)
           .accessibilityHidden(true)
 
+        if showSummary {
+          summary(width: cardWidth)
+            .transition(.scale(scale: 0.9).combined(with: .opacity))
+        } else {
         VStack(spacing: 18) {
           Spacer(minLength: 0)
           ZStack {
             ForEach(visiblePositions, id: \.self) { item in
               let isFront = item == index
-              card(for: words[item], isFront: isFront, width: cardWidth)
+              card(for: words[item], at: item, isFront: isFront, width: cardWidth)
                 .modifier(CarouselCard(distance: Double(item) - position, spacing: spacing))
-                .onTapGesture { if !isFront { turn(to: item) } }   // a side card brings itself to the front
+                .onTapGesture { if !isFront && !testAll { turn(to: item) } }   // a side card brings itself to the front
             }
           }
           .frame(maxWidth: .infinity)
           .contentShape(Rectangle())
-          .gesture(
+          .gesture(                                      // test all: no swiping, the wheel turns by itself
             DragGesture(minimumDistance: 12)
               .onChanged { value in
                 let start = dragStart ?? position
@@ -126,7 +168,8 @@ struct WordCardOverlay: View {
                 let flung = start - value.predictedEndTranslation.width / spacing       // where a flick would go
                 let target = min(max(flung.rounded(), start.rounded() - 1), start.rounded() + 1)   // one word at a time
                 turn(to: Int(min(max(target, 0), Double(words.count - 1))))
-              }
+              },
+            including: testAll ? .subviews : .all
           )
 
           VStack(spacing: 4) {
@@ -135,7 +178,7 @@ struct WordCardOverlay: View {
               .foregroundStyle(.white.opacity(0.7))
               .monospacedDigit()
               .contentTransition(.numericText())
-            if words.count > 1 {
+            if words.count > 1 && !testAll {
               Text("Swipe for the next word")
                 .font(.footnote)
                 .foregroundStyle(.white.opacity(0.5))
@@ -143,13 +186,26 @@ struct WordCardOverlay: View {
           }
           Spacer(minLength: 0)
         }
+        }
       }
     }
-    .onChange(of: index) {                               // a new word: its own report state and tries
+    .onChange(of: index) {                               // a new word: its own report state, tries and answer
       report = .idle
       resetSpeech()
+      resetListening()
     }
-    .onDisappear { listener.stop() }
+    .task(id: "\(round)|\(index)") {                     // test all, listening: the word plays by itself
+      guard testAll, mode == .listening, !showSummary else { return }
+      try? await Task.sleep(for: Self.playDelay)
+      guard !Task.isCancelled, picked == nil else { return }
+      play(words[index])
+    }
+    .sensoryFeedback(.success, trigger: rightTaps)
+    .sensoryFeedback(.error, trigger: wrongTaps)
+    .onDisappear {
+      listener.stop()
+      autoNext?.cancel()
+    }
   }
 
   // MARK: - visiblePositions
@@ -178,9 +234,27 @@ struct WordCardOverlay: View {
     }
   }
 
-  // MARK: - card(for:isFront:width:)
+  // MARK: - card(for:at:isFront:width:)
   // One word's card: buttons, picture, word, hint, right / wrong. Side cards look the same but can't be used.
-  private func card(for word: SwiftDataWordModel, isFront: Bool, width: CGFloat) -> some View {
+  // .listening: ✕, the 4 pictures and the speaker instead (listeningGrid / listeningSection).
+  @ViewBuilder
+  private func card(for word: SwiftDataWordModel, at item: Int, isFront: Bool, width: CGFloat) -> some View {
+    if mode == .listening {
+      VStack(spacing: 14) {
+        HStack {
+          circleButton("xmark", label: "Close", action: onClose)
+          Spacer()
+        }
+        listeningGrid(at: item, isFront: isFront, width: width)
+        listeningSection(word, isFront: isFront)
+      }
+      .modifier(CardShape(width: width, isFront: isFront))
+    } else {
+      wordCard(for: word, isFront: isFront, width: width)
+    }
+  }
+
+  private func wordCard(for word: SwiftDataWordModel, isFront: Bool, width: CGFloat) -> some View {
     VStack(spacing: 14) {
       HStack {                                           // close left, speaker right — as the game's top row
         circleButton("xmark", label: "Close", action: onClose)
@@ -204,25 +278,17 @@ struct WordCardOverlay: View {
         vocabularySection(word)
       }
     }
-    .padding(16)
-    .frame(width: width)
-    .background(Self.cardColor, in: RoundedRectangle(cornerRadius: 26))   // solid, the same moving and at rest
     .overlay {                                           // .speech: right / wrong, on the front card only
       if isFront, mode == .speech, let correct = speechResult {
-        SpeechResultView(isCorrect: correct, isLast: index == words.count - 1,
+        SpeechResultView(isCorrect: correct, isLast: index == words.count - 1, canRepeat: !testAll,
                          sayWord: { speak(word.targetWord) },
                          onNext: nextWord, onAgain: resetSpeech)
+          .padding(-16)                                  // over the whole card, not inside its padding
           .clipShape(RoundedRectangle(cornerRadius: 26))   // the animals walk off the card's edge, not the screen's
           .transition(.opacity)
       }
     }
-    .overlay {                                           // a light rim, so the black card's edge shows on the dark backdrop
-      RoundedRectangle(cornerRadius: 26)
-        .stroke(.white.opacity(0.25), lineWidth: 1)
-    }
-    .compositingGroup()                                  // one flat layer: darkens and fades as a whole (CarouselCard)
-    .allowsHitTesting(isFront)                           // side cards: only the tap that brings them forward (above)
-    .accessibilityHidden(!isFront)
+    .modifier(CardShape(width: width, isFront: isFront))
   }
 
   // MARK: - picture(_:flag:width:)
@@ -379,15 +445,40 @@ struct WordCardOverlay: View {
 
   // Saves the test (right only on the first try) and shows the result screen.
   private func finishSpeech(_ word: SwiftDataWordModel, correct: Bool) {
-    PersistenceController.shared.recordSpeech(word, firstTry: correct && tries == 1)
+    let firstTry = correct && tries == 1
+    PersistenceController.shared.recordSpeech(word, firstTry: firstTry)
     withAnimation(.easeInOut(duration: 0.25)) { speechResult = correct }
+    if testAll {
+      answers[index] = firstTry
+      nextLater(after: Self.speechNext)
+    }
   }
 
-  // MARK: - nextWord() / resetSpeech()
-  // The result screen's buttons: on to the next word (or close after the last), or the same word again.
+  // MARK: - nextWord() / nextLater(after:) / resetSpeech()
+  // The result screen's / listening card's buttons: on to the next word (after the last: close, or the summary in
+  // test all), or the same word again. nextLater: test all turns on by itself after a wait (cancelled by a tap on
+  // "Next word" or by closing).
   private func nextWord() {
+    autoNext?.cancel()
     withAnimation(.easeInOut(duration: 0.2)) { speechResult = nil }
-    if index < words.count - 1 { turn(to: index + 1) } else { onClose() }
+    if index < words.count - 1 {
+      turn(to: index + 1)
+    } else if testAll {
+      listener.stop()
+      withAnimation(.spring(duration: 0.4)) { showSummary = true }
+    } else {
+      onClose()
+    }
+  }
+
+  private func nextLater(after delay: Duration) {
+    autoNext?.cancel()
+    let shownIndex = index
+    autoNext = Task { @MainActor in
+      try? await Task.sleep(for: delay)
+      guard !Task.isCancelled, index == shownIndex, !showSummary else { return }
+      nextWord()
+    }
   }
 
   private func resetSpeech() {
@@ -395,6 +486,202 @@ struct WordCardOverlay: View {
     tries = 0
     speechNote = nil
     withAnimation(.easeInOut(duration: 0.2)) { speechResult = nil }
+  }
+
+  // MARK: - listeningGrid(at:isFront:width:)
+  // .listening: the 4 pictures, 2×2, in the square the single picture takes on the other cards.
+  private func listeningGrid(at item: Int, isFront: Bool, width: CGFloat) -> some View {
+    let gap: CGFloat = 10
+    let side = (width - 32 - gap) / 2
+    let choices = options.indices.contains(item) ? options[item] : [item]
+    return LazyVGrid(columns: [GridItem(.fixed(side), spacing: gap), GridItem(.fixed(side), spacing: gap)], spacing: gap) {
+      ForEach(Array(choices.enumerated()), id: \.element) { number, choice in
+        tile(choice, number: number + 1, target: item, isFront: isFront, side: side)
+      }
+    }
+  }
+
+  // One picture of the grid; after the answer: the tapped one green ✓ or red ✗, the right one green, the rest dim.
+  private func tile(_ choice: Int, number: Int, target: Int, isFront: Bool, side: CGFloat) -> some View {
+    let answer = isFront ? picked : nil
+    let isRight = answer != nil && choice == target
+    let isWrongPick = answer == choice && choice != target
+    let locked = !isFront || answer != nil || !heard
+    let tint: Color? = isRight ? .green : (isWrongPick ? .red : nil)
+    return Button { pick(choice) } label: {
+      Group {
+        if let image = images.image(for: words[choice]) {
+          Image(uiImage: image)
+            .resizable()
+            .scaledToFit()
+            .padding(10)
+        } else {
+          Image(systemName: "photo")
+            .font(.title)
+            .foregroundStyle(.white.opacity(0.3))
+        }
+      }
+      .frame(width: side, height: side)
+      .background(.white.opacity(0.9), in: RoundedRectangle(cornerRadius: 16))   // light, as the list's rows
+      .overlay {
+        RoundedRectangle(cornerRadius: 16)
+          .stroke(tint ?? .white.opacity(0.18), lineWidth: tint == nil ? 1 : 3)
+      }
+      .overlay(alignment: .topTrailing) {
+        if let tint {
+          Image(systemName: isRight ? "checkmark.circle.fill" : "xmark.circle.fill")
+            .font(.title2)
+            .symbolRenderingMode(.palette)
+            .foregroundStyle(.white, tint)
+            .padding(6)
+            .transition(.scale.combined(with: .opacity))
+        }
+      }
+      .opacity(isFront && (!heard || (answer != nil && tint == nil)) ? 0.4 : 1)   // before listening / not the answer
+      .animation(.easeInOut(duration: 0.2), value: answer)
+      .animation(.easeInOut(duration: 0.2), value: heard)
+    }
+    .buttonStyle(.plain)
+    .allowsHitTesting(!locked)                           // not .disabled: that greys the picture out on top of our own dimming
+    .accessibilityLabel(Text("Picture \(number)"))
+  }
+
+  // MARK: - listeningSection(_:isFront:)
+  // .listening, under the grid. Before the answer: the big speaker (pulsing until the word has played) and a line.
+  // After it: the word and its hint, a small speaker to hear it again and "Next word" / "Done".
+  private func listeningSection(_ word: SwiftDataWordModel, isFront: Bool) -> some View {
+    let answered = isFront && picked != nil
+    return VStack(spacing: 10) {
+      if answered {
+        VStack(spacing: 2) {
+          Text(verbatim: word.targetWord)
+            .font(.title2.bold())
+            .foregroundStyle(.white)
+          Text(verbatim: word.originWord)
+            .font(.body)
+            .foregroundStyle(.white.opacity(0.7))
+        }
+        .multilineTextAlignment(.center)
+        .minimumScaleFactor(0.6)
+        .lineLimit(1)
+        HStack(spacing: 10) {
+          circleButton("speaker.wave.2.fill", label: "Play the word") { play(word) }
+          Button(action: nextWord) {
+            Text(index == words.count - 1 ? "Done" : "Next word")
+              .font(.headline)
+              .foregroundStyle(.black)
+              .frame(maxWidth: .infinity)
+              .frame(height: Self.buttonSize)
+              .background(.white, in: Capsule())
+          }
+          .buttonStyle(.plain)
+        }
+        .transition(.opacity)
+      } else {
+        let waiting = isFront && !heard
+        Button { play(word) } label: {
+          Image(systemName: "speaker.wave.2.fill")
+            .font(.title)
+            .foregroundStyle(.black)
+            .frame(width: 72, height: 72)
+            .background(.white, in: Circle())
+            .scaleEffect(waiting ? 1.08 : 1)
+            .animation(waiting ? .easeInOut(duration: 0.8).repeatForever(autoreverses: true) : .default, value: waiting)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("Play the word"))
+        Text(isFront && heard ? "Which picture is it?" : "Tap to hear the word")
+          .font(.footnote)
+          .foregroundStyle(.white.opacity(0.7))
+      }
+    }
+    .frame(maxWidth: .infinity, minHeight: 112)
+  }
+
+  // MARK: - play(_:) / pick(_:) / resetListening()
+  // .listening: reads the word and unlocks the pictures; a tapped picture is the answer (see the flow above).
+  private func play(_ word: SwiftDataWordModel) {
+    speak(word.targetWord)
+    heard = true
+  }
+
+  private func pick(_ choice: Int) {
+    guard picked == nil, heard, words.indices.contains(index) else { return }
+    let right = choice == index
+    PersistenceController.shared.recordListening(words[index], right: right)
+    SoundManager.shared.play(right ? "success" : "incorrect")
+    if right { rightTaps += 1 } else { wrongTaps += 1 }
+    withAnimation(.easeInOut(duration: 0.25)) { picked = choice }
+    if testAll {
+      answers[index] = right
+      nextLater(after: Self.listeningNext)
+    }
+  }
+
+  private func resetListening() {
+    heard = false
+    picked = nil
+  }
+
+  // MARK: - summary(width:) / again()
+  // Test all is done: the animals (happy at half right or more), "8 / 10 right", Again (the whole list once more) /
+  // Done.
+  private func summary(width: CGFloat) -> some View {
+    let right = answers.values.filter { $0 }.count
+    let total = answers.count
+    return VStack(spacing: 14) {
+      AnimalStage(isCorrect: total > 0 && right * 2 >= total)
+        .scaleEffect(0.82)
+        .frame(height: 220)
+      Text("Test finished")
+        .font(.title2.bold())
+        .foregroundStyle(.white)
+      Text("\(right) / \(total) right")
+        .font(.largeTitle.bold())
+        .foregroundStyle(right * 2 >= total ? .green : .orange)
+        .monospacedDigit()
+      VStack(spacing: 10) {
+        Button(action: onClose) {
+          Text("Done")
+            .font(.headline)
+            .foregroundStyle(.black)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(.white, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        Button(action: again) {
+          Label("Again", systemImage: "arrow.counterclockwise")
+            .font(.headline)
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(.white.opacity(0.14), in: Capsule())
+        }
+        .buttonStyle(.plain)
+      }
+      .padding(.top, 6)
+    }
+    .padding(16)
+    .frame(width: width)
+    .background(Self.cardColor, in: RoundedRectangle(cornerRadius: 26))
+    .clipShape(RoundedRectangle(cornerRadius: 26))
+    .overlay { RoundedRectangle(cornerRadius: 26).stroke(.white.opacity(0.25), lineWidth: 1) }
+  }
+
+  private func again() {
+    answers = [:]
+    resetSpeech()
+    resetListening()
+    if mode == .listening { options = Self.makeOptions(for: words) }   // new pictures to pick from
+    var instant = Transaction()
+    instant.disablesAnimations = true
+    withTransaction(instant) {                           // straight back to the first word, without spinning the wheel
+      position = 0
+      index = 0
+    }
+    round += 1
+    withAnimation(.spring(duration: 0.4)) { showSummary = false }
   }
 
   // MARK: - sendReport(for:)
@@ -444,6 +731,28 @@ struct WordCardOverlay: View {
         .monospacedDigit()
     }
     .font(.headline)
+  }
+}
+
+// MARK: - CardShape
+// A card's frame: padding, solid black, a light rim (so the black card's edge shows on the dark backdrop), one flat
+// layer (darkens and fades as a whole, CarouselCard); side cards only take the tap that brings them forward.
+private struct CardShape: ViewModifier {
+  let width: CGFloat
+  let isFront: Bool
+
+  func body(content: Content) -> some View {
+    content
+      .padding(16)
+      .frame(width: width)
+      .background(Color.black, in: RoundedRectangle(cornerRadius: 26))   // solid, the same moving and at rest
+      .overlay {
+        RoundedRectangle(cornerRadius: 26)
+          .stroke(.white.opacity(0.25), lineWidth: 1)
+      }
+      .compositingGroup()
+      .allowsHitTesting(isFront)
+      .accessibilityHidden(!isFront)
   }
 }
 
@@ -509,6 +818,7 @@ final class WordImages {
 private struct SpeechResultView: View {
   let isCorrect: Bool
   let isLast: Bool
+  var canRepeat = true                                   // test all: no "Again", the next word comes by itself
   let sayWord: () -> Void
   let onNext: () -> Void
   let onAgain: () -> Void
@@ -533,15 +843,17 @@ private struct SpeechResultView: View {
             .background(.white, in: Capsule())
         }
         .buttonStyle(.plain)
-        Button(action: onAgain) {
-          Label("Again", systemImage: "arrow.counterclockwise")
-            .font(.headline)
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(.white.opacity(0.14), in: Capsule())
+        if canRepeat {
+          Button(action: onAgain) {
+            Label("Again", systemImage: "arrow.counterclockwise")
+              .font(.headline)
+              .foregroundStyle(.white)
+              .frame(maxWidth: .infinity)
+              .padding(.vertical, 14)
+              .background(.white.opacity(0.14), in: Capsule())
+          }
+          .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
       }
     }
     .padding(16)

@@ -24,18 +24,25 @@ import SwiftData
 // Pronunciation test (mode .speech, phase .speechList, from a Pronunciation test card): the same list, struggles
 // first (PersistenceController.speechWords), with each word's speech numbers (✓ right on the first try, ↻ struggles);
 // a tapped word opens WordCardOverlay in .speech (picture, word, Tap to speak). No Continue / Repeat buttons.
+// Listening test (mode .listening, phase .listeningList, from a Listening test card): the job's words with a picture,
+// misses first (PersistenceController.listeningWords), with each word's listening numbers (✓ right, ✗ wrong); a tapped
+// word opens WordCardOverlay in .listening (4 pictures, the speaker). Its picture doesn't fly into the card: that
+// would show which of the 4 it is.
+// Both tests: "Test all (N)" at the bottom -> WordCardOverlay from the first word with testAll: it runs through every
+// word by itself and ends with a summary.
 
 struct MyWordsView: View {
   @Environment(\.locale) private var locale              // the app's language, for the language's name
   let job: Occupation?                                   // the job whose words are listed
   let targetLanguage: String                             // the language being learned (Languages.rawValue)
-  let mode: CabinetVM.Section                            // .vocabulary: My words; .speech: the pronunciation test
+  let mode: CabinetVM.Section                            // .vocabulary: My words; .speech / .listening: the tests
   var onContinue: () -> Void                             // new words for this job and language
   var onRepeat: () -> Void                               // start the review
   var onReport: (SwiftDataWordModel) async -> RequestModel.ReportResult = { _ in .failed }   // the card's flag
   var onBack: () -> Void                                 // back to WelcomeBackView
   @State private var speechManager = SpeechManager()     // reads the word on the card
   @State private var openIndex: Int?                     // the word shown on WordCardOverlay; nil = closed
+  @State private var testingAll = false                  // the card was opened with "Test all"
   @State private var heroID: PersistentIdentifier?       // the word whose picture is on the card (its row shows a gap)
   @State private var scrolledID: PersistentIdentifier?   // scrolls the list to the front word before the card closes
   @State private var words: [SwiftDataWordModel]         // weakest first; read once, when the screen opens
@@ -54,15 +61,19 @@ struct MyWordsView: View {
     self.onReport = onReport
     self.onBack = onBack
     let store = PersistenceController.shared
-    _words = State(initialValue: mode == .speech
-                   ? store.speechWords(profession: job?.rawValue ?? "", targetLanguage: targetLanguage)
-                   : store.jobWords(profession: job?.rawValue ?? "", targetLanguage: targetLanguage))
+    let profession = job?.rawValue ?? ""
+    let list: [SwiftDataWordModel] = switch mode {
+    case .speech: store.speechWords(profession: profession, targetLanguage: targetLanguage)
+    case .listening: store.listeningWords(profession: profession, targetLanguage: targetLanguage)
+    case .vocabulary: store.jobWords(profession: profession, targetLanguage: targetLanguage)
+    }
+    _words = State(initialValue: list)
   }
 
   var body: some View {
     VStack(spacing: 16) {
       VStack(spacing: 4) {
-        Text(mode == .speech ? "Pronunciation" : "My words")
+        Text(title)
           .font(.largeTitle.bold())
           .foregroundStyle(.white)
         if let job {
@@ -81,16 +92,15 @@ struct MyWordsView: View {
 
       if words.isEmpty {
         Spacer()
-        Text(mode == .speech ? "Play a few words first, then come back to say them."
-                             : "Words you play for this profession will appear here.")
+        Text(mode == .vocabulary ? "Words you play for this profession will appear here."
+                                 : "Play a few words first, then come back to say them.")
           .font(.title3)
           .foregroundStyle(.white.opacity(0.7))
           .multilineTextAlignment(.center)
         Spacer()
         if mode == .vocabulary { continueButton }
       } else {
-        Text(mode == .speech ? "Hardest to say first. Tap a word, then say it out loud."
-                             : "Hardest words first. Tap a word to see it big.")
+        Text(note)
           .font(.footnote)
           .foregroundStyle(.white.opacity(0.6))
           .multilineTextAlignment(.center)
@@ -99,8 +109,7 @@ struct MyWordsView: View {
           LazyVStack(spacing: 10) {
             ForEach(Array(words.enumerated()), id: \.element.persistentModelID) { index, word in
               Button {
-                heroID = word.persistentModelID
-                withAnimation(.spring(duration: 0.35)) { openIndex = index }
+                open(at: index, testAll: false)
               } label: {
                 row(word, isOpen: openIndex != nil && heroID == word.persistentModelID)
               }
@@ -124,6 +133,17 @@ struct MyWordsView: View {
               .padding(.vertical, 14)
           }
           .glassCompat(in: .capsule, interactive: true)
+        } else {
+          Button { open(at: 0, testAll: true) } label: {
+            Label("Test all (\(words.count))", systemImage: "play.fill")
+              .font(.headline)
+              .foregroundStyle(.black)
+              .frame(maxWidth: .infinity)
+              .padding(.vertical, 14)
+              .background(.white, in: Capsule())
+          }
+          .buttonStyle(.plain)
+          .shadow(color: .black.opacity(0.5), radius: 12, y: 4)
         }
       }
     }
@@ -153,6 +173,7 @@ struct MyWordsView: View {
                         images: images,
                         mode: mode,
                         language: Languages(rawValue: targetLanguage),
+                        testAll: testingAll,
                         speak: { speechManager.speak($0, language: targetLanguage) },
                         onReport: onReport,
                         onClose: closeCard)
@@ -160,11 +181,37 @@ struct MyWordsView: View {
     }
   }
 
+  // MARK: - title / note
+  private var title: LocalizedStringKey {
+    switch mode {
+    case .vocabulary: "My words"
+    case .speech: "Pronunciation"
+    case .listening: "Listening"
+    }
+  }
+
+  private var note: LocalizedStringKey {
+    switch mode {
+    case .vocabulary: "Hardest words first. Tap a word to see it big."
+    case .speech: "Hardest to say first. Tap a word, then say it out loud."
+    case .listening: "Hardest to hear first. Tap a word, or test them all."
+    }
+  }
+
+  // MARK: - open(at:testAll:)
+  // A tapped row (one word) or "Test all" (from the first word). Listening: no hero, the picture stays in its row.
+  private func open(at index: Int, testAll: Bool) {
+    guard words.indices.contains(index) else { return }
+    testingAll = testAll
+    heroID = mode == .listening ? nil : words[index].persistentModelID
+    withAnimation(.spring(duration: 0.35)) { openIndex = index }
+  }
+
   // MARK: - closeCard
   // The front word becomes the hero and the list scrolls to its row, without animation (both are behind the dark
   // overlay); a moment later the card closes and its picture flies back into that row.
   private func closeCard() {
-    if let index = openIndex, words.indices.contains(index) {
+    if let index = openIndex, words.indices.contains(index), mode != .listening {
       var instant = Transaction()
       instant.disablesAnimations = true
       withTransaction(instant) {
@@ -241,6 +288,9 @@ struct MyWordsView: View {
         if mode == .speech {                             // the pronunciation test's numbers
           count(word.speechFirstTry, icon: "checkmark.circle.fill", tint: .green, label: "First try")
           count(word.speechStruggled, icon: "arrow.counterclockwise.circle.fill", tint: .orange, label: "Struggled")
+        } else if mode == .listening {                   // the listening test's numbers
+          count(word.listenRight, icon: "checkmark.circle.fill", tint: .green, label: "Right")
+          count(word.listenWrong, icon: "xmark.circle.fill", tint: .red, label: "Wrong")
         } else {
           count(word.correct, icon: "checkmark.circle.fill", tint: .green, label: "Right")
           count(word.incorrect, icon: "xmark.circle.fill", tint: .red, label: "Wrong")

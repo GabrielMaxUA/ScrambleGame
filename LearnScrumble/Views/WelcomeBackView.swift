@@ -10,18 +10,21 @@ import SwiftUI
 // MARK: - Flow of this file
 // The returning user's start screen (phase .welcomeBack): the user's "cabinet".
 //   Header: "Welcome back!", the streak (🔥 days in a row) and the owl (celebrates at 80% or more in the current language).
-//   Top level (CabinetVM.section nil, only when a card's language can be tested — CabinetVM.hasSpeechTest):
-//     two section cards, each with a ring of its score (all languages together):
-//       My vocabulary     -> section .vocabulary — ring: right answers out of all answers in the game
-//       Pronunciation test -> section .speech    — ring: words said right on the first try out of all tests
+//   Top level (CabinetVM.section nil, only when a card can take a test — CabinetVM.hasSpeechTest / hasListeningTest):
+//     the section cards, each with a ring of its score (all languages together):
+//       My vocabulary      -> section .vocabulary — ring: right answers out of all answers in the game
+//       Pronunciation test -> section .speech     — ring: words said right on the first try out of all tests
+//                             (only when a card's language can be recognised)
+//       Listening test     -> section .listening  — ring: right pictures out of all tests
+//                             (only when a card has at least 4 words with a picture)
 //   A section (or no top level at all: straight to the vocabulary stack, as before):
 //     the cards — one per profession + language (CabinetCardView), stacked like a wallet: oldest at the top, each
 //     newer card overlapping the one above so only its top strip shows. One card is open (pulled out, full height, with
 //     its score and buttons); the current one when the screen appears. The speech section shows only languages that
-//     can be tested, with the speech numbers.
+//     can be tested, with the speech numbers; the listening section only cards with 4+ pictures, with its numbers.
 //     -> tap a card's strip -> it opens (the open one closes) -> onOpen -> CabinetVM.select: the current job + language
 //     -> its buttons -> RootView: Continue learning -> a game; My words -> MyWordsView; Unlock -> PaywallView;
-//        Practise pronunciation -> MyWordsView in .speech
+//        Practise pronunciation -> MyWordsView in .speech; Practise listening -> MyWordsView in .listening
 //     -> back arrow (top left, instead of the gear) -> the top level
 //   -> gear (top, top level / no sections) -> onSettings -> AppManager.openSettings()
 //   No card yet (no job picked) -> a note pointing to Settings.
@@ -35,6 +38,7 @@ struct WelcomeBackView: View {
   var onWordList: (CabinetVM.Card) -> Void       // its "My words"
   var onUnlock: (CabinetVM.Card) -> Void         // its "Unlock"
   var onSpeech: (CabinetVM.Card) -> Void = { _ in }   // its "Practise pronunciation"
+  var onListening: (CabinetVM.Card) -> Void = { _ in }   // its "Practise listening"
   @State private var openID: String?             // the open card; nil = the current one (or the newest)
 
   private static let overlap: CGFloat = 22       // how much of a card's bottom the next card covers
@@ -47,9 +51,13 @@ struct WelcomeBackView: View {
 
   var body: some View {
     let all = cabinet.cards                      // read once per redraw (SwiftData fetches)
-    let hasSections = cabinet.hasSpeechTest(in: all)
+    let hasSections = cabinet.hasSpeechTest(in: all) || cabinet.hasListeningTest(in: all)
     let section: CabinetVM.Section? = hasSections ? cabinet.section : .vocabulary
-    let cards = section == .speech ? all.filter(\.canTestSpeech) : all
+    let cards = switch section {
+    case .speech: all.filter(\.canTestSpeech)
+    case .listening: all.filter(\.canTestListening)
+    default: all
+    }
     let streak = Streak.shared.current
 
     VStack(spacing: 16) {
@@ -105,11 +113,12 @@ struct WelcomeBackView: View {
     case nil: return "What would you like to practise?"
     case .vocabulary: return "My vocabulary"
     case .speech: return "Pronunciation test"
+    case .listening: return "Listening test"
     }
   }
 
   // MARK: - sections(_:)
-  // The top level: the two section cards, then room below.
+  // The top level: the section cards (a test only when a card can take it), then room below.
   private func sections(_ cards: [CabinetVM.Card]) -> some View {
     VStack(spacing: 14) {
       SectionCard(title: "My vocabulary", detail: "Your words, by profession and language.",
@@ -117,10 +126,19 @@ struct WelcomeBackView: View {
                   score: cabinet.vocabularyScore, scoreLabel: "Right answers") {
         open(.vocabulary)
       }
-      SectionCard(title: "Pronunciation test", detail: "Say your words out loud and check them.",
-                  icon: "mic.fill", tint: .teal,
-                  score: cabinet.speechScore(in: cards), scoreLabel: "Right on the first try") {
-        open(.speech)
+      if cabinet.hasSpeechTest(in: cards) {
+        SectionCard(title: "Pronunciation test", detail: "Say your words out loud and check them.",
+                    icon: "mic.fill", tint: .teal,
+                    score: cabinet.speechScore(in: cards), scoreLabel: "Right on the first try") {
+          open(.speech)
+        }
+      }
+      if cabinet.hasListeningTest(in: cards) {
+        SectionCard(title: "Listening test", detail: "Hear a word and tap its picture.",
+                    icon: "headphones", tint: .purple,
+                    score: cabinet.listeningScore, scoreLabel: "Right answers") {
+          open(.listening)
+        }
       }
       Spacer(minLength: 0)
     }
@@ -152,7 +170,8 @@ struct WelcomeBackView: View {
                             onWordList: { onWordList(card) },
                             onUnlock: { onUnlock(card) },
                             mode: section,
-                            onSpeech: { onSpeech(card) })
+                            onSpeech: { onSpeech(card) },
+                            onListening: { onListening(card) })
               .padding(.bottom, isLast ? 0 : (isOpen ? 14 : -Self.overlap))   // open: the next card waits below it
               .zIndex(Double(index))
               .id(card.id)
@@ -172,9 +191,13 @@ struct WelcomeBackView: View {
       }
     }
 
-    Text(section == .speech
-         ? "A word counts as right when you say it right on the first try. You get 3 tries."
-         : "A word is learned once you get it right at least twice, and 3 times out of 4.")
+    Group {
+      switch section {
+      case .speech: Text("A word counts as right when you say it right on the first try. You get 3 tries.")
+      case .listening: Text("Listen to the word and tap its picture. Your first tap counts.")
+      case .vocabulary: Text("A word is learned once you get it right at least twice, and 3 times out of 4.")
+      }
+    }
       .font(.footnote)
       .foregroundStyle(.white.opacity(0.6))
       .multilineTextAlignment(.center)

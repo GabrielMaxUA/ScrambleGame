@@ -175,6 +175,14 @@ final class AppManager {
     phase = .speechList
   }
 
+  // MARK: - openListeningList
+  // "Practise listening" on a Listening test card: the job's played words with a picture. No unlock needed, as above.
+  func openListeningList() {
+    guard currentJob != nil else { return }
+    activeVM = nil
+    phase = .listeningList
+  }
+
   // MARK: - startReview
   // "Repeat all" on MyWordsView — replays the job's saved words, no server call.
   // 1. The job's words in this language from SwiftData, weakest first (PersistenceController.jobWords), only those

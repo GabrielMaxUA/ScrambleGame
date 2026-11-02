@@ -33,10 +33,13 @@ import Observation
 //   The open card's buttons (WelcomeBackView -> RootView): Continue learning -> a game; My words (bought) ->
 //   MyWordsView; Unlock (locked: not bought, free words used up) -> PaywallView. Each selects the card first.
 //
-// Sections (section): the cabinet's top level has two cards, My vocabulary and Pronunciation test (each with a score
-// ring). My vocabulary opens the card stack above; Pronunciation test opens the same stack, only languages iOS can
-// recognise (PronunciationService.isSupported), with each card's speech numbers and "Practise pronunciation".
-// No card can be tested (hasSpeechTest false) -> no top level: the vocabulary stack straight away, as before.
+// Sections (section): the cabinet's top level has up to three cards, My vocabulary, Pronunciation test and Listening
+// test (each with a score ring). My vocabulary opens the card stack above; Pronunciation test opens the same stack,
+// only languages iOS can recognise (PronunciationService.isSupported), with each card's speech numbers and "Practise
+// pronunciation"; Listening test opens it with only the cards that have at least 4 words with a picture (4 pictures
+// to pick from, canTestListening), with each card's listening numbers and "Practise listening".
+// A test section card shows only when at least one card can take that test; neither -> no top level: the vocabulary
+// stack straight away, as before.
 // `section` lives here, not in the view, so leaving a word list or a game comes back to the same section.
 //
 // Reads Purchases.shared and FreeAllowance.shared (both @Observable), so the cards redraw by themselves after a
@@ -58,11 +61,14 @@ final class CabinetVM {
     let added: Date                           // when the card first appeared (see addedDate) — the stack order
     let speech: SpeechProgress                // the pronunciation test's numbers for this job + language
     let canTestSpeech: Bool                   // iOS recognises speech in this language (PronunciationService)
+    let listening: ListeningProgress          // the listening test's numbers for this job + language
+    var canTestListening: Bool { listening.words >= CabinetVM.listeningMinWords }   // 4 pictures to pick from
     var colorIndex = 0                        // its place in the stack: neighbouring cards get different colors
     var id: String { "\(job.rawValue)|\(language.rawValue)" }
   }
 
-  enum Section { case vocabulary, speech }
+  enum Section { case vocabulary, speech, listening }
+  static let listeningMinWords = 4              // the listening card shows 4 pictures: the word's and 3 others
   var section: Section?                         // the open section; nil = the top level (or no top level at all)
 
   private let requestModel: RequestModel       // the current job + language live here
@@ -117,6 +123,8 @@ final class CabinetVM {
       let owned = Purchases.shared.isUnlocked(pair.job)
       let speech = PersistenceController.shared.speechProgress(profession: pair.job.rawValue,
                                                               targetLanguage: pair.language.rawValue)
+      let listening = PersistenceController.shared.listeningProgress(profession: pair.job.rawValue,
+                                                                    targetLanguage: pair.language.rawValue)
       return Card(job: pair.job, language: pair.language,
                   learned: progress.learned, played: progress.played,
                   correct: progress.correct, incorrect: progress.incorrect,
@@ -125,7 +133,8 @@ final class CabinetVM {
                   isLocked: !owned && freeUsedUp,
                   added: Date(timeIntervalSince1970: added[id] ?? pair.since.timeIntervalSince1970),
                   speech: speech,
-                  canTestSpeech: PronunciationService.isSupported(pair.language))
+                  canTestSpeech: PronunciationService.isSupported(pair.language),
+                  listening: listening)
     }
     if changed { UserDefaults.standard.set(added, forKey: Self.addedKey) }
     return built
@@ -134,10 +143,12 @@ final class CabinetVM {
   }
 
   // MARK: - hasSpeechTest / scores
-  // The top level shows only when at least one card's language can be tested.
+  // The top level shows only when at least one card can take a test; each test's section card the same way.
   func hasSpeechTest(in cards: [Card]) -> Bool { cards.contains(where: \.canTestSpeech) }
+  func hasListeningTest(in cards: [Card]) -> Bool { cards.contains(where: \.canTestListening) }
 
   var vocabularyScore: Double? { PersistenceController.shared.vocabularyScore() }
+  var listeningScore: Double? { PersistenceController.shared.listeningScore() }
 
   func speechScore(in cards: [Card]) -> Double? {
     PersistenceController.shared.speechScore(languages: Set(cards.filter(\.canTestSpeech).map(\.language.rawValue)))

@@ -25,7 +25,9 @@ import Foundation
 //   overallAccuracy(targetLanguage:)   <- WordVM.overallAccuracy (ResultView) and WelcomeBackView's stats
 //   speechWords / speechProgress / recordSpeech <- the pronunciation test (MyWordsView .speech, WordCardOverlay,
 //                                         CabinetVM): the job's words struggles first, its numbers, one saved test
-//   vocabularyScore() / speechScore(languages:) <- the two rings on the cabinet's top cards (all languages together)
+//   listeningWords / listeningProgress / recordListening <- the listening test (MyWordsView .listening,
+//                                         WordCardOverlay, CabinetVM): the job's words with a picture, misses first
+//   vocabularyScore() / speechScore(languages:) / listeningScore() <- the rings on the cabinet's top cards (all languages together)
 //   resetProgress(targetLanguage:)     <- SettingsView "reset progress" for the current target language
 //   deleteAllProgress()                <- not called right now (AppManager's deleteAllData is commented out)
 //   debugPrintAllWords()               <- manual dev-console dump, not called by app logic
@@ -146,9 +148,36 @@ final class PersistenceController {
         Log.info("🎙️ recordSpeech — \(word.concept) [\(word.targetLanguage)] firstTry=\(firstTry)", .storage)
     }
 
-    // MARK: - vocabularyScore() / speechScore(languages:)
-    // The cabinet's two rings, every job and language together: right answers out of all answers in the game, and
-    // tests said right on the first try out of all tests (only languages with a pronunciation test).
+    // MARK: - listeningWords(profession:targetLanguage:)
+    // The job's words for the listening test: only those with a picture (the answers are pictures); misses first,
+    // then untested ones, then the ones always picked right; on a tie, the one practiced longest ago.
+    func listeningWords(profession: String, targetLanguage: String) -> [SwiftDataWordModel] {
+        jobWords(profession: profession, targetLanguage: targetLanguage)
+            .filter(\.hasPicture)
+            .sorted { ($0.listenScore, $0.lastSeen) < ($1.listenScore, $1.lastSeen) }
+    }
+
+    // MARK: - listeningProgress(profession:targetLanguage:)
+    func listeningProgress(profession: String, targetLanguage: String) -> ListeningProgress {
+        let records = jobWords(profession: profession, targetLanguage: targetLanguage).filter(\.hasPicture)
+        return ListeningProgress(words: records.count,
+                                 tested: records.filter { $0.listenTests > 0 }.count,
+                                 right: records.reduce(0) { $0 + $1.listenRight },
+                                 wrong: records.reduce(0) { $0 + $1.listenWrong })
+    }
+
+    // MARK: - recordListening(_:right:)
+    // One finished listening test: the first tapped picture was the right one, or not.
+    func recordListening(_ word: SwiftDataWordModel, right: Bool) {
+        if right { word.listenRight += 1 } else { word.listenWrong += 1 }
+        try? context.save()
+        Log.info("🎧 recordListening — \(word.concept) [\(word.targetLanguage)] right=\(right)", .storage)
+    }
+
+    // MARK: - vocabularyScore() / speechScore(languages:) / listeningScore()
+    // The cabinet's rings, every job and language together: right answers out of all answers in the game, tests
+    // said right on the first try out of all tests (only languages with a pronunciation test), and right pictures
+    // out of all listening tests.
     // nil = nothing played / tested yet.
     func vocabularyScore() -> Double? {
         let records = (try? context.fetch(FetchDescriptor<SwiftDataWordModel>())) ?? []
@@ -161,6 +190,12 @@ final class PersistenceController {
             .filter { languages.contains($0.targetLanguage) }
         let firstTry = records.reduce(0) { $0 + $1.speechFirstTry }, total = records.reduce(0) { $0 + $1.speechTests }
         return total > 0 ? Double(firstTry) / Double(total) : nil
+    }
+
+    func listeningScore() -> Double? {
+        let records = (try? context.fetch(FetchDescriptor<SwiftDataWordModel>())) ?? []
+        let right = records.reduce(0) { $0 + $1.listenRight }, total = records.reduce(0) { $0 + $1.listenTests }
+        return total > 0 ? Double(right) / Double(total) : nil
     }
 
     // MARK: - overallAccuracy(targetLanguage:)

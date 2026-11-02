@@ -23,4 +23,5 @@ enum GamePhase{
   case settings                   // SettingsView
   case wordList                   // MyWordsView — the job's saved words ("My words"), unlocked jobs only
   case speechList                 // MyWordsView in .speech — the pronunciation test for the job's played words
+  case listeningList              // MyWordsView in .listening — the listening test for the job's played words
 }

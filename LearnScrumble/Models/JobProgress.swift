@@ -12,7 +12,8 @@ import Foundation
 //   PersistenceController.jobProgress() adds them up from the saved words
 //   -> JobProgressCard shows them on WelcomeBackView and ResultView.
 // SpeechProgress: the same for the pronunciation test (PersistenceController.speechProgress) -> the Pronunciation
-// test's cabinet cards.
+// test's cabinet cards. ListeningProgress: the listening test's (PersistenceController.listeningProgress) -> the
+// Listening test's cabinet cards.
 
 struct JobProgress {
   let learned: Int        // words right at least twice and at least 75% of the time (SwiftDataWordModel.isLearned)
@@ -26,4 +27,11 @@ struct SpeechProgress: Equatable {
   let tested: Int         // of those, tested at least once
   let firstTry: Int       // all tests said right on the first try
   let struggled: Int      // all tests that needed a second or third try, or missed all three
+}
+
+struct ListeningProgress: Equatable {
+  let words: Int          // words that can be tested (the job's played words with a picture)
+  let tested: Int         // of those, tested at least once
+  let right: Int          // all tests where the right picture was tapped
+  let wrong: Int          // all tests where another picture was tapped
 }

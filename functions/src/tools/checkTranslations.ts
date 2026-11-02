@@ -14,6 +14,8 @@
 // 1. Dry run:
 //    - every word in Firestore "words" with at least one job, with its jobs and its translations (English left out:
 //      it's the word itself) -> GPT, 25 words per request (openai.reviewTranslations)
+//    - a batch whose GPT reply is garbled is tried 3 times, then skipped (its words are listed in "skipped" and printed;
+//      run again with --word for them); the plan is saved after every batch, so a stopped run keeps what it found
 //    - writes plans/translation-plan-<project>.json with three lists, each entry with "apply": true:
 //        fixes      — wrong translations: language, current word, the fix, the reason
 //        notForJob  — a job the word doesn't belong to (its tag would be removed)
@@ -34,9 +36,11 @@ import { options, configureFirebase, openAIKey, planPath as toolPlanPath, run } 
 interface Fix { word: string; lang: string; current: string; fix: string; reason: string; apply: boolean }
 interface NotForJob { word: string; job: string; reason: string; apply: boolean }
 interface Split { word: string; jobs: string[]; reason: string }
-interface Plan { project: string; created: string; checked: number; fixes: Fix[]; notForJob: NotForJob[]; split: Split[] }
+interface Plan { project: string; created: string; checked: number; fixes: Fix[]; notForJob: NotForJob[]; split: Split[];
+               skipped?: string[] }
 
 const BATCH = 25;                    // words per GPT request
+const TRIES = 3;                     // a garbled GPT reply is asked again this many times in all
 const planPath = (project: string) => toolPlanPath("translation-plan", project);
 
 // MARK: - main
@@ -67,18 +71,34 @@ async function dryRun(project: string, apiKey: string, store: typeof import("../
   const count = words.reduce((n, w) => n + Object.keys(w.translations).length, 0);
   console.log(`${snapshot.size} words in the bank; checking ${words.length} words with a job and ${count} translations…`);
 
-  const plan: Plan = { project, created: new Date().toISOString(), checked: words.length, fixes: [], notForJob: [], split: [] };
+  const plan: Plan = { project, created: new Date().toISOString(), checked: words.length, fixes: [], notForJob: [], split: [],
+                       skipped: [] };
   const jobsOf = new Map(words.map((w) => [w.word, w.jobs]));
+  const save = () => {
+    mkdirSync(path.dirname(planPath(project)), { recursive: true });
+    writeFileSync(planPath(project), JSON.stringify(plan, null, 2));
+  };
   for (let i = 0; i < words.length; i += BATCH) {
-    const review = await openai.reviewTranslations(apiKey, words.slice(i, i + BATCH));
-    plan.fixes.push(...review.wrong.map((f) => ({ ...f, apply: true })));
-    plan.notForJob.push(...review.notForJob.map((n) => ({ ...n, apply: true })));
-    plan.split.push(...review.split.map((s) => ({ ...s, jobs: jobsOf.get(s.word) ?? [] })));
+    const batch = words.slice(i, i + BATCH);
+    let review: Awaited<ReturnType<typeof openai.reviewTranslations>> | undefined;
+    for (let attempt = 1; attempt <= TRIES && !review; attempt++) {
+      try {
+        review = await openai.reviewTranslations(apiKey, batch);
+      } catch (error) {
+        if (String(error).includes("outOfCredits")) throw error;      // no point trying again
+        console.log(`  batch ${i + 1}–${i + batch.length}: try ${attempt} failed (${error instanceof Error ? error.message : error})`);
+      }
+    }
+    if (review) {
+      plan.fixes.push(...review.wrong.map((f) => ({ ...f, apply: true })));
+      plan.notForJob.push(...review.notForJob.map((n) => ({ ...n, apply: true })));
+      plan.split.push(...review.split.map((s) => ({ ...s, jobs: jobsOf.get(s.word) ?? [] })));
+    } else {
+      plan.skipped!.push(...batch.map((w) => w.word));
+    }
+    save();                                                         // a stopped run keeps what it found
     console.log(`  ${Math.min(i + BATCH, words.length)}/${words.length}`);
   }
-
-  mkdirSync(path.dirname(planPath(project)), { recursive: true });
-  writeFileSync(planPath(project), JSON.stringify(plan, null, 2));
 
   console.log(`\nWrong translations (${plan.fixes.length}):`);
   for (const f of plan.fixes) console.log(`  ${f.word} [${f.lang}]: ${f.current} -> ${f.fix}  (${f.reason})`);
@@ -86,6 +106,7 @@ async function dryRun(project: string, apiKey: string, store: typeof import("../
   for (const n of plan.notForJob) console.log(`  ${n.word} — ${n.job}  (${n.reason})`);
   console.log(`\nJobs mean different items, run splitSharedWords (${plan.split.length}):`);
   for (const s of plan.split) console.log(`  ${s.word}: ${s.jobs.join(", ")}  (${s.reason})`);
+  if (plan.skipped!.length) console.log(`\nNot checked, GPT kept failing (${plan.skipped!.length}): ${plan.skipped!.join(", ")}`);
   console.log(`\nPlan written to ${planPath(project)} — set "apply": false or change "fix" where you disagree, then run with --apply.`);
 }
 
