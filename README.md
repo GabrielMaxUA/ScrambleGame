@@ -76,7 +76,7 @@ One switch decides which Firebase project a build uses: **Build Settings → Use
 ## App Store review guide
 
 Everything App Review needs to understand the app, in the order a new user meets it. The paste-ready notes are first;
-the detailed flow below is the reference for answering a reviewer's questions. *(Written 1 November 2026, build 6
+the detailed flow below is the reference for answering a reviewer's questions. *(Written 1 November 2026, revised 2 November (free words across reinstalls), build 6
 plus the pronunciation test, the listening test, Test all and word reports. Update it whenever a screen, a permission
 or a purchase changes.)*
 
@@ -97,7 +97,10 @@ https://learnscrumble.com/support · Privacy: https://learnscrumble.com/privacy 
 > "How to play" tutorial runs while the first words load (Skip is top right); it ends with a demo of both tests. The first 10 words are free, once per
 > install. After them the app offers a one-time in-app purchase that unlocks the chosen profession (US$9.99,
 > non-consumable, no subscription) — please buy "Cook" with the sandbox account to test more words, "My words" and the
-> voice picker (Settings → Audio). Restore purchases: Settings → Purchases, and on the purchase screen.
+> voice picker (Settings → Audio). Restore purchases: Settings → Purchases, and on the purchase screen. The free words
+> are kept on the device even when the app is deleted and reinstalled (so they can't be taken again): if this device
+> already used them, setup leads to the start screen, where the Cook card shows "Unlock" — please buy it there with
+> the sandbox account.
 >
 > Start screen ("Welcome back"): three cards. "My vocabulary" opens one card per profession + language with the score,
 > Continue learning and My words (a list of played words; tap a word for a big swipeable card with a speaker and a flag
@@ -119,7 +122,7 @@ https://learnscrumble.com/support · Privacy: https://learnscrumble.com/privacy 
 > New pictures are limited to 100 a day per user. The arrow at the top left of the game returns to the start screen;
 > the gear there opens Settings.
 
-*(About 3,000 characters; the field allows 4,000. Check before submitting that the word bank has "Cook" words with
+*(About 3,300 characters; the field allows 4,000. Check before submitting that the word bank has "Cook" words with
 Polish translations, and that the 32 products are attached to the version.)*
 
 ### The app flow in detail
@@ -263,6 +266,7 @@ the App Store privacy answers in `WebsiteContent/README.md`, `LearnScrumble/Priv
 6. Settings: Restore purchases, voice picker, reminder time, reset progress, the legal links.
 7. Change "I want to learn" to Lithuanian in Settings: the note under it appears, and a Lithuanian card shows under
    My vocabulary but not under Pronunciation test.
+8. The same build on an iPad (compatibility mode): setup, a round, the purchase screen, both tests, Settings.
 
 ## Release: App Store Connect and TestFlight
 

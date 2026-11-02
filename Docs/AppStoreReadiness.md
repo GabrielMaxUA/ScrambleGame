@@ -284,18 +284,26 @@ reused after it's created.
 
 - ✅ *(2 November 2026)* App Privacy answers published (9 types; User ID and Other Usage Data linked; Privacy
   Policy URL set). The list is in `WebsiteContent/README.md`, the same as `PrivacyInfo.xcprivacy`.
-- ⬜ Age rating questionnaire (answer the AI-generated-content questions honestly).
-- ⬜ Store listing: subtitle, description, keywords, category Education, copyright "2026 Max Gabriel".
+- ✅ *(1 November 2026)* Age rating questionnaire.
+- ✅ *(1 November 2026)* Store listing: subtitle, description, keywords, category Education, copyright "2026 Max Gabriel".
 - ⬜ Screenshots: 6.9" iPhone (required).
-- ✅ Privacy URL set (2 November). ⬜ Support `https://learnscrumble.com/support`,
+- ⬜ **Pricing and Availability → turn off "Make this app available on Mac" (Apple silicon) and Apple Vision Pro.**
+  App Check uses App Attest, which doesn't work there: every server call would fail, so the app couldn't load words.
+- ✅ URLs: Privacy `https://learnscrumble.com/privacy` (2 November), Support `https://learnscrumble.com/support`,
   Marketing `https://learnscrumble.com`.
-- ⬜ Notes for the reviewer: the text is ready in the README, **App Store review guide** (1 November, with the
-  pronunciation test and the new start screen); the full app flow for any reviewer question is there too.
+- ⬜ Notes for the reviewer: the text is ready in the README, **App Store review guide** (revised 2 November: the
+  free words are kept across reinstalls, so on a reused review device setup leads to the start screen with "Unlock"); the full
+  app flow for any reviewer question is there too. Paste it when the review build is picked.
 - ✅ *(2 November 2026)* Audio Data not declared: Apple's speech recognition is Apple's data ("You are not responsible
   for disclosing data collected by Apple").
 
 ### 6.6 Testing
 
+- ⬜ **iPad once** (the app is iPhone-only, but App Review often runs it on an iPad in compatibility mode): setup,
+  a round, the purchase screen, both tests and Settings must work and fit. Install the TestFlight build on any iPad.
+- ⬜ **Reinstall with the free words used up** (what a reused review device sees): delete the app, install again, do the
+  setup. Expected: the start screen with "Unlock" on the card. Check the tutorial doesn't get stuck (it normally runs
+  over the loading game, which doesn't load here) and that Unlock → purchase → "Unlocked!" → Let's go! works.
 - ✅ *(1 November, fixed)* **The tutorial still taught the gear in the game** ("The gear opens Settings… Tap it.", `OnboardingView` /
   `OnboardingService`), but since 30 October the game shows a back arrow there and the gear is on the start screen.
   Now the tutorial shows the back arrow: "This arrow takes you back to the start screen. Settings are there, behind
