@@ -2,35 +2,41 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
   LearnScrumble privacy manifest (required by App Store Connect since May 2024).
-  Describes what THIS app's own code does; Firebase and SDWebImage ship their own manifests.
+  Describes what THIS app's own code does; Firebase ships its own manifests.
+  Matches the App Privacy label published in App Store Connect on 2 November 2026 (9 data types).
 
   - No tracking, no tracking domains.
-  - Collected data = what leaves the device (Apple's definition), all for App Functionality, none linked to the user:
-      * Other User Content: the profession the user picks or types, sent to our Cloud Functions (getWords), which pass it
-                            to OpenAI to choose the words. Also Analytics: the server counts its English name in Firestore
-                            "professions" (no user ID, no typed text) to improve the job menu.
-      * Other Usage Data:   the English names of words already practised, sent to getWords (and on to OpenAI) so they
-                            aren't repeated. The server also keeps today's word count per anonymous ID (usage/{uid}).
-    Settings, progress (SwiftData) and the daily free-word counter (Keychain) never leave the device -> not "collected".
-    New words / pictures written to the shared Firebase library contain no user data.
-      * Crash Data:          Firebase Crashlytics crash reports, sent on the next launch after a crash - App Functionality.
-      * Other Diagnostic Data: Crashlytics non-fatal error reports (when words couldn't be loaded) with the error type,
-                             a short technical description, the last steps (breadcrumbs), free memory and disk space - App Functionality.
-      * Device ID:           Firebase's random installation / app-instance ID (not the advertising ID) - App Functionality
-                             (Crashlytics) and Analytics (only with the user's consent).
-      * Product Interaction: Firebase Analytics events, only while "Share usage statistics" is on (off by default) - Analytics.
-      * User ID:             the random anonymous Firebase Authentication ID (AnonymousAuth.swift), sent with every Cloud
-                             Functions call; deleted by Firebase 30 days after it's created - App Functionality.
-                             Declared "not linked": it isn't tied to a name, email, phone or Apple ID. Confirm at release
-                             sign-off (WebsiteContent/README.md -> App Store privacy questions).
-      App Check tokens (App Attest) carry no personal data and aren't declared.
-    Firebase's own SDK manifests declare the same; listing them here keeps the app's report complete.
+  - Collected data = what leaves the device and is kept (Apple's definition):
+      * Other User Content (not linked; App Functionality, Analytics): the menu job and both languages sent to
+                             getWords (and on to OpenAI); the server counts the English job name in Firestore
+                             "professions" (no user ID). Word reports: the correction and optional note the user types,
+                             stored in wordReports with a one-way hash of the anonymous ID.
+      * Other Usage Data (LINKED; App Functionality): names of words already practised, sent to getWords so they aren't
+                             repeated; picture reports (word + job); the daily counts stored under the anonymous ID
+                             (reportUsage/{uid}, pictureUsage/{uid}) -> linked.
+      * User ID (LINKED; App Functionality): the random anonymous Firebase Authentication ID (AnonymousAuth.swift), sent
+                             with every Cloud Functions call; deleted by Firebase 30 days after it's created. An
+                             "assigned user ID" in Apple's terms, so declared linked (still not tracking).
+      * Device ID (not linked; App Functionality, Analytics): Firebase's random installation / app-instance ID (not the IDFA).
+      * Crash Data (not linked; App Functionality): Crashlytics crash reports.
+      * Other Diagnostic Data (not linked; App Functionality): Crashlytics non-fatal reports with the error type, a short
+                             technical description, the last steps (breadcrumbs: no job, no words), free memory and disk.
+      * Product Interaction (not linked; Analytics): Analytics events, only while "Share usage statistics" is on.
+      * Coarse Location (not linked; Analytics): Analytics derives the approximate location from the masked IP address,
+                             only while "Share usage statistics" is on.
+      * Purchase History (not linked; Analytics): Analytics records in-app purchases automatically (StoreKit: product,
+                             price) plus our job_unlocked event, only while "Share usage statistics" is on.
+    Not collected: settings, progress, pronunciation and listening results (SwiftData / UserDefaults) and the free-word
+    counter (Keychain) never leave the device. Audio: the pronunciation test hands audio to Apple's Speech framework;
+    data collected by Apple isn't the developer's to declare, and the app never sends or keeps audio or text.
+    New words / pictures in the shared Firebase library contain no user data. App Check tokens carry no personal data.
   - Required-reason API: UserDefaults (@AppStorage / UserDefaults.standard), reason CA92.1 = only this app reads/writes it.
   - Required-reason API: system boot time. FreeAllowance measures time passed since the internet-time check with
     clock_gettime_nsec_np(CLOCK_MONOTONIC) (time since the iPhone started), reason 35F9.1 = measuring elapsed time
     between events inside the app. Nothing about it leaves the device.
 
-  Keep in sync with WebsiteContent/privacy.html. Update before adding RevenueCat, accounts or access codes.
+  Keep in sync with WebsiteContent/privacy.html and the App Store answers in WebsiteContent/README.md.
+  Update before adding RevenueCat, accounts or access codes.
 -->
 <plist version="1.0">
 <dict>
@@ -57,12 +63,37 @@
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeOtherUsageData</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeUserID</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeDeviceID</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<false/>
 			<key>NSPrivacyCollectedDataTypeTracking</key>
 			<false/>
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+				<string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
 			</array>
 		</dict>
 		<dict>
@@ -91,19 +122,6 @@
 		</dict>
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
-			<string>NSPrivacyCollectedDataTypeDeviceID</string>
-			<key>NSPrivacyCollectedDataTypeLinked</key>
-			<false/>
-			<key>NSPrivacyCollectedDataTypeTracking</key>
-			<false/>
-			<key>NSPrivacyCollectedDataTypePurposes</key>
-			<array>
-				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
-				<string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
-			</array>
-		</dict>
-		<dict>
-			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeProductInteraction</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<false/>
@@ -116,14 +134,26 @@
 		</dict>
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
-			<string>NSPrivacyCollectedDataTypeUserID</string>
+			<string>NSPrivacyCollectedDataTypeCoarseLocation</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<false/>
 			<key>NSPrivacyCollectedDataTypeTracking</key>
 			<false/>
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
-				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+				<string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypePurchaseHistory</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
 			</array>
 		</dict>
 	</array>

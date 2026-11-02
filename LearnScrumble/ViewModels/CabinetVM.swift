@@ -165,7 +165,7 @@ final class CabinetVM {
       requestModel.selectedLanguage = card.language
       UserDefaults.standard.set(card.language.rawValue, forKey: "pickedLanguage")
     }
-    Log.info("🗂️ CabinetVM.select — \(card.job.rawValue) / \(card.language.rawValue)", .app)
+    Log.info("🗂️ CabinetVM.select — \(card.language.rawValue)", .app, private: "\(card.job.rawValue)")
   }
 
   // MARK: - loadAdded

@@ -102,26 +102,35 @@ Everything runs on the Mac, in Terminal, from the **repository root** (the folde
 **Update the policy before shipping** any of these (ideas for later): RevenueCat, business access codes, typed jobs coming back, the server enforcing the free words. *(Crashlytics, optional Analytics and the OpenAI consent were added to the policy on 15 October 2026; the Cloud Functions, anonymous sign-in, the daily count on the server and App Check on 27 October 2026; one-time unlocks, My words, the picture Report flag and the end of the time check and typed jobs on 28 October 2026;
 Ontario/Canada law, the daily picture count and the alert emails on 29 October 2026.)*
 
-## App Store privacy questions (suggestion)
+## App Store privacy answers (published 2 November 2026)
 
-Apple asks what data the app "collects" (sends off the device and keeps longer than needed to answer the request). Based on the table above, a reasonable starting point — confirm with whoever signs off the release:
+What App Store Connect → App Privacy says now (the same as `LearnScrumble/PrivacyInfo.xcprivacy`). Apple's "collect" =
+sent off the device and kept longer than needed to answer the request. "Linked" = stored with an ID that ties it to one
+user (Apple counts an "assigned user ID", like the anonymous sign-in ID), not "personal like a name".
 
-- **Tracking:** No.
-- **Data linked to the user:** None (no account; Firebase's random IDs, including the anonymous sign-in ID, aren't tied to a person). ⚠️ Confirm at sign-off: the server keeps a daily report count per anonymous ID (`reportUsage/{uid}`), and Apple may see that as "linked". If so, mark User ID and Other Usage Data as linked (still not tracking). (The daily word count `usage/{uid}` was removed on 28 October 2026.)
-- **Data not linked to the user** (the same as `LearnScrumble/PrivacyInfo.xcprivacy`):
-  - *User Content → Other User Content*: the profession text sent to OpenAI — purposes: App Functionality, and Analytics (its English name is counted to improve the job menu).
-  - *Usage Data → Other Usage Data*: the names of words already practised, sent to our server and OpenAI so they aren't repeated, the server's daily report count, and picture reports (word + job) — purpose: App Functionality.
-  - *User Content → Other User Content* also covers **word reports** (since 1 November 2026): the correction and optional note the user types, with the word, job and language codes — purpose: App Functionality.
-  - *Identifiers → User ID*: the random anonymous Firebase sign-in ID — purpose: App Functionality.
-  - *Diagnostics → Crash Data*: Crashlytics crash reports — purpose: App Functionality.
-  - *Diagnostics → Other Diagnostic Data*: Crashlytics non-fatal error reports (words couldn't be loaded), with the error type, a short technical description, the last steps, free memory and disk space — purpose: App Functionality.
-  - *Identifiers → Device ID*: Firebase's random installation / app-instance ID (not the advertising ID) — purposes: App Functionality, Analytics.
-  - *Usage Data → Product Interaction*: Analytics events, only with the user's consent — purpose: Analytics.
-- On-device data (settings, progress, Keychain counter, pronunciation and listening results) is not "collected" because it never leaves the device.
-- *Audio Data*: **not collected** by us. The pronunciation test (since 1 November 2026) records only while listening and hands the audio to Apple's Speech framework, which may process it on Apple's servers; the app never sends audio or the recognised text to our server or anyone else, and keeps neither. Apple's own processing isn't declared by the app (like purchases). ⚠️ Confirm at sign-off.
-- Purchases are handled by Apple and aren't declared by the app.
+- **Tracking:** No (no type is used for tracking).
+- **Privacy Policy URL:** `https://learnscrumble.com/privacy`.
 
-Revisit these answers whenever the table changes (for example, anonymous sign-in or server-side limits may make some data "linked").
+| Type | Purposes | Linked | What it is |
+|---|---|---|---|
+| Location → Coarse Location | Analytics | No | Analytics' approximate location from the masked IP; only with "Share usage statistics" on |
+| User Content → Other User Content | App Functionality, Analytics | No | The menu job + languages sent to `getWords`/OpenAI; the job counted in `professions`; word reports (typed correction + note, with a one-way hash of the anonymous ID) |
+| Identifiers → User ID | App Functionality | **Yes** | The anonymous Firebase sign-in ID, deleted after 30 days |
+| Identifiers → Device ID | App Functionality, Analytics | No | Firebase's random installation / app-instance ID (no IDFA) |
+| Purchases → Purchase History | Analytics | No | Analytics' automatic in-app purchase events (product, price) and `job_unlocked`; only with statistics on |
+| Usage Data → Product Interaction | Analytics | No | Analytics events; only with statistics on |
+| Usage Data → Other Usage Data | App Functionality | **Yes** | Already-practised word names sent to `getWords`; picture reports; daily counts under the uid (`reportUsage/{uid}`, `pictureUsage/{uid}`) |
+| Diagnostics → Crash Data | App Functionality | No | Crashlytics crash reports |
+| Diagnostics → Other Diagnostic Data | App Functionality | No | Crashlytics non-fatal reports (error type, short description, last steps without job or words, free memory and disk) |
+
+Not declared, on purpose:
+- On-device data (settings, progress, pronunciation and listening results, the Keychain counter): never leaves the iPhone.
+- *Audio Data*: the pronunciation test hands audio to Apple's Speech framework, which may process it on Apple's servers.
+  Apple: "You are not responsible for disclosing data collected by Apple." The app never sends or keeps audio or text.
+- Purchases through the App Store itself: handled by Apple.
+
+Revisit these answers (and the manifest) whenever the table above changes: accounts, RevenueCat, access codes, the
+server checking purchases, or anything new stored under the anonymous ID.
 
 ## Screenshots
 

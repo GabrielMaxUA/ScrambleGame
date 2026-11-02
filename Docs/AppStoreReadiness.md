@@ -263,19 +263,36 @@ reused after it's created.
 - ✅ `www.learnscrumble.com` redirects to learnscrumble.com (README "Hosting"). ⬜ Test every page once more before submitting.
 - ✅ *(1 November 2026)* Firebase data processing terms and OpenAI Data Processing Addendum in place.
 - ⬜ Legal review of `privacy.html` and `terms.html` (recommended).
+- ⬜ **Privacy policy gaps found in the 2 November data-flow audit** (EN + FR, then `firebase deploy --only hosting`):
+  1. **Server logs:** Cloud Logging keeps each function request (time, IP address, app version) and our `logger` lines
+     (word, job key, language codes, the one-way user code at the picture limit) for 30 days. Add to §3 after "Google
+     receives your IP address…": "Google Cloud keeps a technical log of each request to our server — the time, the IP
+     address, the app version and short notes such as the word, job and language codes involved — for 30 days, so we
+     can find and fix problems." Add to §6: "Server logs: 30 days, then deleted automatically by Google Cloud."
+     Check the `_Default` bucket says 30 days: https://console.cloud.google.com/logs/storage?project=scrumblegame
+     (`gcloud auth login` first if using the CLI).
+  2. **§6 daily counts:** says "pictures reported and new pictures drawn"; word reports count too → "pictures and
+     words reported, and new pictures drawn".
+  3. **Daily count documents are never deleted:** `reportUsage/{uid}` and `pictureUsage/{uid}` stay after the
+     anonymous ID is gone. Either add a Firestore TTL policy (field `updated`, e.g. delete after 2 days) or say in §6
+     that the last day's count stays.
+  4. **Anonymous ID "deleted after 30 days":** true only if Authentication's automatic clean-up of anonymous
+     accounts is on (needs the Identity Platform upgrade). Check Firebase console → Authentication → Settings; if
+     it's off, turn it on or change the policy (§3 and §6).
 
 ### 6.5 App Store Connect: the app page
 
-- ⬜ App Privacy answers (from `WebsiteContent/README.md`, the same as `PrivacyInfo.xcprivacy`).
+- ✅ *(2 November 2026)* App Privacy answers published (9 types; User ID and Other Usage Data linked; Privacy
+  Policy URL set). The list is in `WebsiteContent/README.md`, the same as `PrivacyInfo.xcprivacy`.
 - ⬜ Age rating questionnaire (answer the AI-generated-content questions honestly).
 - ⬜ Store listing: subtitle, description, keywords, category Education, copyright "2026 Max Gabriel".
 - ⬜ Screenshots: 6.9" iPhone (required).
-- ⬜ URLs: Privacy `https://learnscrumble.com/privacy`, Support `https://learnscrumble.com/support`,
+- ✅ Privacy URL set (2 November). ⬜ Support `https://learnscrumble.com/support`,
   Marketing `https://learnscrumble.com`.
 - ⬜ Notes for the reviewer: the text is ready in the README, **App Store review guide** (1 November, with the
   pronunciation test and the new start screen); the full app flow for any reviewer question is there too.
-- ⬜ App Privacy answers: Audio Data is not collected by us (Apple's speech recognition) — confirm at sign-off
-  (`WebsiteContent/README.md`).
+- ✅ *(2 November 2026)* Audio Data not declared: Apple's speech recognition is Apple's data ("You are not responsible
+  for disclosing data collected by Apple").
 
 ### 6.6 Testing
 

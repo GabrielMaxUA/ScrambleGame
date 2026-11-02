@@ -145,7 +145,7 @@ final class PersistenceController {
     func recordSpeech(_ word: SwiftDataWordModel, firstTry: Bool) {
         if firstTry { word.speechFirstTry += 1 } else { word.speechStruggled += 1 }
         try? context.save()
-        Log.info("🎙️ recordSpeech — \(word.concept) [\(word.targetLanguage)] firstTry=\(firstTry)", .storage)
+        Log.info("🎙️ recordSpeech — [\(word.targetLanguage)] firstTry=\(firstTry)", .storage, private: "\(word.concept)")
     }
 
     // MARK: - listeningWords(profession:targetLanguage:)
@@ -171,7 +171,7 @@ final class PersistenceController {
     func recordListening(_ word: SwiftDataWordModel, right: Bool) {
         if right { word.listenRight += 1 } else { word.listenWrong += 1 }
         try? context.save()
-        Log.info("🎧 recordListening — \(word.concept) [\(word.targetLanguage)] right=\(right)", .storage)
+        Log.info("🎧 recordListening — [\(word.targetLanguage)] right=\(right)", .storage, private: "\(word.concept)")
     }
 
     // MARK: - vocabularyScore() / speechScore(languages:) / listeningScore()

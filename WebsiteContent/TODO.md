@@ -38,7 +38,7 @@ The privacy page now says these are in place, so they have to be:
 - ✅ *(28 October)* **Retake `images/how-to-play/10-lets-go.jpg`**: the app's note now says "You get 10 free words to try the app." (then raise its `?v=` in `how-to-play.html`).
 - ⬜ **App Store button** (`index.html`): Apple's official "Download on the App Store" badge (Apple Marketing Resources, not a home-made button, not the app icon), linked to the app's App Store page once it exists in App Store Connect.
 - ⬜ **Legal review** of `privacy.html` and `terms.html` by someone qualified (GDPR, EU consumer law). They match the app as of 18 October 2026 but are drafts, not legal advice.
-- ⬜ **App Store Connect privacy answers:** enter them from "App Store privacy questions" in `README.md` (they match `PrivacyInfo.xcprivacy`, including Other Diagnostic Data and, since 27 October, User ID).
+- ✅ **App Store Connect privacy answers** published 2 November 2026 ("App Store privacy answers" in `README.md`, the same as `PrivacyInfo.xcprivacy`).
 - ⬜ **App Store Connect URLs:** Privacy Policy URL `https://learnscrumble.com/privacy`, Support URL `https://learnscrumble.com/support`, Marketing URL `https://learnscrumble.com`.
 
 ## When the app changes: update the pages in the same commit
