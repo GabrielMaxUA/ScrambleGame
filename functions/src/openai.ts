@@ -1,25 +1,35 @@
 // openai.ts — every OpenAI call, with the key from Secret Manager.
 //
 // Same requests the app used to make itself (RequestModel), moved here so the key never leaves the server:
-//   wordList(...)      -> gpt-4.1 chat: up to 5 workplace words for a job, named as THAT job means them ("motor oil",
+//   wordList(...)      -> gpt-6-luna chat: up to 5 workplace words for a job, named as THAT job means them ("motor oil",
 //                         not "oil", since 28 Oct 2026 — one bank entry per meaning), two languages, an image description each,
 //                         plus the job's common English name ("job") or "invalid", and "exhausted" when no common
 //                         everyday items are left (since 30 Oct 2026: the job's vocabulary has a natural end)
-//   checkWords(...)    -> gpt-4.1 chat: which new words really belong to the job and aren't a variant of a bank word
-//   translate(...)     -> gpt-4.1 chat: existing bank words (English names) into the player's languages
-//   describePicture()  -> gpt-4.1 chat: a new, unambiguous picture description for a word whose picture was reported
-//   meanings(...)      -> gpt-4.1 chat: does a word shared by several jobs mean the same thing in each? If not, a
+//   checkWords(...)    -> gpt-6-luna chat: which new words really belong to the job and aren't a variant of a bank word
+//   translate(...)     -> gpt-6-luna chat: existing bank words (English names) into the player's languages
+//   describePicture()  -> gpt-6-luna chat: a new, unambiguous picture description for a word whose picture was reported
+//   meanings(...)      -> gpt-6-luna chat: does a word shared by several jobs mean the same thing in each? If not, a
 //                         job-specific English name per job. Used only by the split tool (src/tools/splitSharedWords.ts)
-//   reviewTranslations()-> gpt-4.1 chat: are a word's translations right for its jobs, do its jobs mean the same item,
+//   reviewTranslations()-> gpt-6-luna chat: are a word's translations right for its jobs, do its jobs mean the same item,
 //                         does it belong to each job? Problems only, with fixes.
 //                         Used only by src/tools/checkTranslations.ts
-//   image(prompt)      -> gpt-image-1-mini, 1024×1024, low quality, transparent PNG -> raw PNG bytes
+//   image(prompt)      -> gpt-image-2.5-flare, 1024×1024, low quality, transparent PNG -> raw PNG bytes
 //   isFlagged(text)    -> moderation of the job text the user typed (free)
 // send() does the HTTP part for all three: 90 s timeout, retries 408/429/5xx twice (2 s, 4 s),
-// and turns any other failure into the errors in errors.ts. A 429 "insufficient_quota" (no OpenAI credits left) isn't
+// and turns any other failure into the errors in errors.ts. Pictures only (since 2 Nov 2026): when OpenAI's
+// images-per-minute limit is reached (429, not "no credits"), it waits and tries again for up to
+// PICTURE_LIMIT_WAIT_MS — the Retry-After OpenAI sends, else 5 s, 10 s, 15 s…, plus a random second so players who hit
+// the limit together don't all come back at once — instead of giving up after 6 s and skipping the word. A 429 "insufficient_quota" (no OpenAI credits left) isn't
 // retried: it becomes outOfCredits, not busy, and emails an alert (alerts.ts, once a day).
 
 import * as logger from "firebase-functions/logger";
+
+// The models (2 Nov 2026: gpt-4.1 shuts down 14 Jan 2027 and gpt-image-1-mini 1 Dec 2026 — OpenAI's replacements).
+// gpt-6-luna reasons before answering: the calls a player waits for (wordList, checkWords, translate, describePicture)
+// use reasoning_effort "low"; the tools (meanings, reviewTranslations) keep the default (medium) for quality.
+// gpt-image-2.5-flare: OpenAI's default image model, the fastest; low quality ≈ $0.006 a 1024×1024 picture.
+const TEXT_MODEL = "gpt-6-luna";
+const IMAGE_MODEL = "gpt-image-2.5-flare";
 import { busy, timedOut, serviceUnavailable, pictureRefused, outOfCredits, badResponse } from "./errors";
 import { raiseAlert } from "./alerts";
 
@@ -31,8 +41,12 @@ export interface GptWord {
 }
 
 // MARK: - send
+const PICTURE_LIMIT_WAIT_MS = 75_000;     // the app waits 180 s for a picture (getPicture); a picture takes ~10 s
+
 async function send(apiKey: string, path: string, body: unknown): Promise<any> {
   const delays = [2000, 4000];
+  const limitBudget = path === "images/generations" ? PICTURE_LIMIT_WAIT_MS : 0;
+  let waited = 0, limitTries = 0;
   for (let attempt = 0; ; attempt++) {
     let response: Response;
     try {
@@ -51,6 +65,18 @@ async function send(apiKey: string, path: string, body: unknown): Promise<any> {
     if (response.ok) return response.json();
     const detail = (await response.text()).slice(0, 300);           // OpenAI's error text — never user data
     const noCredits = response.status === 429 && /insufficient_quota/.test(detail);
+    if (response.status === 429 && !noCredits && limitBudget > 0) {       // pictures: wait for the per-minute limit
+      const hint = Number(response.headers.get("retry-after-ms")) || Number(response.headers.get("retry-after")) * 1000;
+      const wait = Math.min(hint > 0 ? hint : 5000 * (limitTries + 1), 20_000) + Math.floor(Math.random() * 1000);
+      if (waited + wait <= limitBudget) {
+        limitTries++;
+        waited += wait;
+        logger.info(`openai ${path}: picture limit reached, waiting`, { waitMs: wait, waitedMs: waited });
+        await sleep(wait);
+        attempt--;                                                       // a limit wait doesn't use up a retry
+        continue;
+      }
+    }
     const retryable = !noCredits && (response.status === 408 || response.status === 429 || response.status >= 500);
     if (retryable && attempt < delays.length) { await sleep(delays[attempt]); continue; }
     logger.error(`openai ${path}: status ${response.status}`, { detail });
@@ -111,7 +137,8 @@ Return exactly this shape:
   }`;
 
   const reply = await send(apiKey, "chat/completions", {
-    model: "gpt-4.1",
+    model: TEXT_MODEL,
+    reasoning_effort: "low",                             // a player is waiting
     messages: [{ role: "user", content: prompt }],
   });
   const content: unknown = reply?.choices?.[0]?.message?.content;
@@ -171,7 +198,8 @@ Keep a candidate only if ALL of these are true:
 - it is not the same item as a word the ${profession} already has, or as another candidate (a synonym, a variant, or the same thing with a different name).
 Respond ONLY with a JSON object, no markdown: {"keep": ["<candidate exactly as written>", ...]}`;
   const reply = await send(apiKey, "chat/completions", {
-    model: "gpt-4.1",
+    model: TEXT_MODEL,
+    reasoning_effort: "low",                             // a player is waiting
     messages: [{ role: "user", content: prompt }],
   });
   const content: unknown = reply?.choices?.[0]?.message?.content;
@@ -211,7 +239,8 @@ Return exactly this shape:
   }`;
 
   const reply = await send(apiKey, "chat/completions", {
-    model: "gpt-4.1",
+    model: TEXT_MODEL,
+    reasoning_effort: "low",                             // a player is waiting
     messages: [{ role: "user", content: prompt }],
   });
   const content: unknown = reply?.choices?.[0]?.message?.content;
@@ -253,7 +282,8 @@ Rules:
 - Respond ONLY with a JSON object, no markdown fences or additional text: { "imagePrompt": "<description>" }`;
 
   const reply = await send(apiKey, "chat/completions", {
-    model: "gpt-4.1",
+    model: TEXT_MODEL,
+    reasoning_effort: "low",                             // a player is waiting
     messages: [{ role: "user", content: prompt }],
   });
   const content: unknown = reply?.choices?.[0]?.message?.content;
@@ -291,7 +321,7 @@ Rules:
   { "words": [ { "word": "oil", "same": false, "names": { "cook": "cooking oil", "auto mechanic": "motor oil" }, "reason": "cooking oil vs engine oil" } ] }`;
 
   const reply = await send(apiKey, "chat/completions", {
-    model: "gpt-4.1",
+    model: TEXT_MODEL,                                    // default effort: a tool, nobody waits
     messages: [{ role: "user", content: prompt }],
   });
   const content: unknown = reply?.choices?.[0]?.message?.content;
@@ -357,7 +387,7 @@ Respond ONLY with a JSON object, no markdown fences or additional text:
 If nothing is wrong: { "wrong": [], "split": [], "notForJob": [] }`;
 
   const reply = await send(apiKey, "chat/completions", {
-    model: "gpt-4.1",
+    model: TEXT_MODEL,                                    // default effort: a tool, nobody waits
     messages: [{ role: "user", content: prompt }],
   });
   const content: unknown = reply?.choices?.[0]?.message?.content;
@@ -406,7 +436,7 @@ the entire object fully contained within the canvas boundaries,
 no text, no labels, transparent background.
 `;
   const reply = await send(apiKey, "images/generations", {
-    model: "gpt-image-1-mini",
+    model: IMAGE_MODEL,
     prompt,
     size: "1024x1024",
     quality: "low",

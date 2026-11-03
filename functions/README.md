@@ -186,4 +186,12 @@ belong to the spelling and are kept. English names are only reported, never rena
   setting itself up). Deploy just that function again: `firebase deploy --only functions:<name> --project <project>`.
 - The app needs nothing else: Firestore and Storage rules can stay closed to phones (`allow read, write: if false`),
   because the functions use the Admin SDK, which ignores rules.
-- `gpt-image-1-mini` is marked deprecated by OpenAI: plan the replacement model before it's switched off.
+- *(2 November 2026)* The server uses **`gpt-image-2.5-flare`** for pictures (low quality, about $0.006 each) and
+  **`gpt-6-luna`** for words, translations and checks — OpenAI's replacements for `gpt-image-1-mini` (shut down
+  1 December 2026) and `gpt-4.1` (14 January 2027). Both are set in one place: `TEXT_MODEL` / `IMAGE_MODEL` at the top
+  of `src/openai.ts`. Tested with the dev and prod keys, deployed to both. Check OpenAI's deprecations page now and
+  then (developers.openai.com → API docs → Deprecations).
+- *(2 November 2026)* **Picture limit:** OpenAI allows a number of new pictures per minute for your usage tier (Launch:
+  150; see platform.openai.com → Settings → Organization → Limits). When it's reached, `send()` in `src/openai.ts` waits
+  and tries again for up to 75 s (`PICTURE_LIMIT_WAIT_MS`) instead of skipping the word; the logs show "picture limit
+  reached, waiting".

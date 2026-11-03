@@ -98,7 +98,7 @@
 - ⬜ **to do** **Age rating questionnaire:** answer the questions about AI-generated content and user-created content honestly.
   *(Word reports: what a user types goes only to us for checking; other users only ever see a correction after a person
   approves it, so there's no unmoderated user content in the app.)*
-- ⬜ **to do** **Store listing:** name, subtitle, description, keywords, category (Education), copyright, and screenshots in the required iPhone sizes (the `WebsiteContent/images/how-to-play/` captures are a starting point, but App Store screenshots need the full device resolution).
+- ⬜ **to do** **Store listing:** name, subtitle, description, keywords, category (Education), copyright, and screenshots in the required iPhone sizes (the `WebsiteContent/images/how-to-play/` captures are a starting point, but App Store screenshots need the full device resolution). **Texts ready to paste: `Docs/AppStoreListing.md`** (2 November 2026; the fields were still empty).
 - ✅ **Internal notes ship inside the app:** `checklist.md`, `AppFlowIdeas.md` and this file sit in the `LearnScrumble/` folder, which is synced to the app target, so they're copied into the app and anyone can read them from the downloaded app (business plans, prices, feedback). Move them to a folder outside the app target, e.g. `Docs/` at the repository root. *(16 October: moved to `Docs/` at the repository root, so they stay in the repo but never ship in the app; the built app has no `.md` files)*
 - ⬜ **to do** **TestFlight round** on a real iPhone before submitting: first launch, tutorial, a full round, the 10 free words → paywall → sandbox purchase → more words, My words (also offline), Restore purchases, reporting a picture, reminder, offline screen, Settings. Also confirm **App Attest** works in the TestFlight build (Debug builds use App Check debug tokens since 28 October).
 
@@ -240,6 +240,15 @@ reused after it's created.
   TestFlight build with the app part.
 - ✅ *(30 October)* **App Store Connect:** the product **descriptions** said "Unlimited words, pictures and My words". Change every
   product already created to "Most-used work words, pictures and My words" (table below), and the review note.
+- ✅ *(2 November 2026)* **New OpenAI models** in dev and prod: `gpt-image-2.5-flare` (pictures, ~$0.006 each) and
+  `gpt-6-luna` (words), replacing `gpt-image-1-mini` (shut down 1 Dec 2026) and `gpt-4.1` (14 Jan 2027).
+- ✅ *(2 November 2026)* **OpenAI Launch tier** reached ($100 in total credit purchases): 150 new pictures a minute
+  (Build tier was 20). Not a monthly fee: the credits pay for normal use.
+- ✅ *(2 November 2026)* **The server waits for OpenAI's picture limit** instead of skipping words: on a 429 it waits
+  (Retry-After, else 5, 10, 15 s…) for up to 75 s per picture, then gives up with "busy" as before. Tested with faked
+  replies; dev and prod.
+- ⬜ *(optional)* Prefill the bank to ~200–300 words per profession (`prepareProfession`, about $40 once), so players
+  rarely wait for a new picture at all.
 - ⏸ **Later (decided 29 October): server checks who owns a job** (today only the phone checks). Not for 1.0:
   App Check and the picture cap keep the risk small. Options:
   - **Launch without it** (recommended for 1.0): App Check already blocks scripts and fake apps; only a hacked app on
@@ -285,7 +294,8 @@ reused after it's created.
 - ✅ *(2 November 2026)* App Privacy answers published (9 types; User ID and Other Usage Data linked; Privacy
   Policy URL set). The list is in `WebsiteContent/README.md`, the same as `PrivacyInfo.xcprivacy`.
 - ✅ *(1 November 2026)* Age rating questionnaire.
-- ✅ *(1 November 2026)* Store listing: subtitle, description, keywords, category Education, copyright "2026 Max Gabriel".
+- ⬜ Store listing: subtitle, description, keywords, category Education, copyright "2026 Max Gabriel" — the fields were
+  still empty in App Store Connect on 2 November; texts ready to paste in `Docs/AppStoreListing.md`.
 - ⬜ Screenshots: 6.9" iPhone (required).
 - ⬜ **Pricing and Availability → turn off "Make this app available on Mac" (Apple silicon) and Apple Vision Pro.**
   App Check uses App Attest, which doesn't work there: every server call would fail, so the app couldn't load words.

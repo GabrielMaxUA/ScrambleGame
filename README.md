@@ -2,6 +2,7 @@
 
 iOS app (SwiftUI, iOS 18+) that teaches the words people use at work, with words and pictures made by AI.
 Plans and status live in `Docs/`: `AppStoreReadiness.md` (everything left before the App Store, the one to-do file),
+`AppStoreListing.md` (the store page texts to paste),
 `LegalReview.md`, and the privacy records `PrivacyImpactAssessment.md` and `BreachLog.md`.
 The full app flow and the notes for App Review are in **App Store review guide** below.
 The website is in `WebsiteContent/` (its own README).

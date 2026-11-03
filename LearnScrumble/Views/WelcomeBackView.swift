@@ -27,10 +27,14 @@ import SwiftUI
 //        Practise pronunciation -> MyWordsView in .speech; Practise listening -> MyWordsView in .listening
 //     -> back arrow (top left, instead of the gear) -> the top level
 //   -> gear (top, top level / no sections) -> onSettings -> AppManager.openSettings()
+//   Folded iPhone Duo (topButtonsPadding.isFolded): the outer screen keeps its camera, clock and Wi-Fi ring in a column
+//   on the right, which iOS reserves as safe area. The screen uses the full width anyway (the column only takes the
+//   top, and the cards start below it), and the gear / back arrow sits in that column, under the Wi-Fi ring.
 //   No card yet (no job picked) -> a note pointing to Settings.
 
 struct WelcomeBackView: View {
   @Environment(\.topButtonsPadding) private var topButtons          // iPhone Duo: where the gear sits (RootView)
+  @Environment(\.layoutDirection) private var layoutDirection     // kept for everything but the folded Duo's gear
   let cabinet: CabinetVM                         // the cards, the open section and what a tap does
   let targetLanguage: String                     // current language being learned — the owl's mood
   var onOpen: (CabinetVM.Card) -> Void           // a card was opened (RootView -> CabinetVM.select)
@@ -81,7 +85,7 @@ struct WelcomeBackView: View {
         }
       }
       .multilineTextAlignment(.center)
-      .padding(.top, 48)                         // below the gear
+      .padding(.top, isFolded ? 16 : 48)         // below the gear (folded Duo: the gear is in the side column)
 
       if all.isEmpty {
         Spacer()
@@ -102,6 +106,7 @@ struct WelcomeBackView: View {
     .padding(.horizontal, 20)
     .padding(.bottom, 8)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .ignoresSafeArea(.container, edges: isFolded ? .horizontal : [])   // folded Duo: under the side column too
     .overlay { topButton(inSection: hasSections && section != nil) }
     .background(Color.black.opacity(0.92))
   }
@@ -205,6 +210,8 @@ struct WelcomeBackView: View {
 
   // MARK: - topButton(inSection:)
   // Top left: the gear (top level, or no sections), or the back arrow to the top level inside a section.
+  private var isFolded: Bool { topButtons?.isFolded == true }
+
   private func topButton(inSection: Bool) -> some View {
     let size: CGFloat = topButtons?.isFolded == true ? 40 : 44     // folded Duo: smaller
     return Button {
@@ -218,10 +225,17 @@ struct WelcomeBackView: View {
     }
     .glassCompat(in: .circle, interactive: true)
     .accessibilityLabel(Text(inSection ? "Back" : "Settings"))
-    .padding(.horizontal, topButtons?.horizontal ?? 20)   // iPhone Duo: like the in-game button
-    .padding(.top, topButtons?.top ?? 8)
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    .padding(.horizontal, isFolded ? Self.foldedColumnInset : (topButtons?.horizontal ?? 20))   // iPhone Duo: like the in-game button
+    .padding(.top, isFolded ? Self.foldedColumnTop : (topButtons?.top ?? 8))
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isFolded ? .topTrailing : .topLeading)
+    .ignoresSafeArea(.container, edges: isFolded ? .all : [])
+    .environment(\.layoutDirection, isFolded ? .leftToRight : layoutDirection)   // the column is on the physical right
   }
+
+  // Folded Duo: the gear sits in the side column, centred under the camera and the Wi-Fi ring (whose bottom is about
+  // 150 pt down; the column's centre is about 48 pt in from the right edge, so 48 − 40 / 2).
+  private static let foldedColumnInset: CGFloat = 28
+  private static let foldedColumnTop: CGFloat = 162
 }
 
 // MARK: - SectionCard
