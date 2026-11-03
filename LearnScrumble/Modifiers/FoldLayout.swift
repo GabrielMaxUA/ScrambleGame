@@ -32,8 +32,8 @@ enum FoldLayout {
 
   // MARK: - topButtonsPadding(_:safeTop:)
   // The round top buttons (settings, sound): RootView works this out once and passes it down (\.topButtonsPadding).
-  //   opened, side by side -> a row, in from the big round corners, level with the system's clock and Wi-Fi ring in
-  //                           the top right (its centre is about 77 pt down; the buttons are 50 pt)
+  //   opened, side by side -> the side column, as the folded Duo (.openedWide): the system's clock and Wi-Fi ring sit
+  //                           in the top right, the ring ends about 97 pt down; the buttons go under it
   //   opened, stacked      -> a row, in from the corners, just under the status bar
   //   folded Duo           -> its outer screen shows the front camera, the clock and the Wi-Fi ring in a column on the
   //                           right, outside the app's safe area (safe area top 0) (.folded): a row like a phone's,
@@ -44,7 +44,7 @@ enum FoldLayout {
   //   phones               -> nil: as before (16 / 0 in RootView's top row, 20 / 8 for WelcomeBackView's gear)
   static func topButtonsPadding(_ layout: FoldLayout?, safeTop: CGFloat) -> TopButtonsPadding? {
     switch layout {
-    case .sideBySide: TopButtonsPadding(horizontal: 36, top: 52)
+    case .sideBySide: .openedWide                                  // the same side column as the folded Duo, shorter
     case .stacked: TopButtonsPadding(horizontal: 36, top: 12)
     case nil: safeTop < 20 ? .folded : nil
     }
@@ -56,8 +56,12 @@ struct TopButtonsPadding: Equatable {
   var top: CGFloat
   var isFolded = false                                             // the folded Duo's outer screen
   var buttonSize: CGFloat = 50                                     // round buttons; 40 on the folded Duo
+  var ringBottom: CGFloat = 150                                    // isFolded: where the Wi-Fi ring ends (the side column's buttons start below)
 
+  // isFolded = the side-column layout (FoldedDuo): the folded Duo's outer screen, and the opened Duo held wide, whose
+  // clock and Wi-Fi ring sit in the same place (48 pt in from the right edge) in a shorter column with no camera.
   static let folded = TopButtonsPadding(horizontal: 16, top: 12, isFolded: true, buttonSize: 40)
+  static let openedWide = TopButtonsPadding(horizontal: 36, top: 52, isFolded: true, buttonSize: 40, ringBottom: 97)
 }
 
 private struct FoldLayoutKey: EnvironmentKey {
@@ -231,20 +235,19 @@ struct FoldAlertCard: View {
 }
 
 // MARK: - FoldedDuo
-// The folded iPhone Duo's outer screen (TopButtonsPadding.isFolded). iOS keeps its camera, clock and Wi-Fi ring in a
-// column on the physical right and reserves that side as safe area; the app uses the full width anyway (RootView) and
-// follows one layout on every screen:
+// The side-column layout (TopButtonsPadding.isFolded): the folded iPhone Duo's outer screen, and the opened Duo held
+// wide. iOS keeps its clock and Wi-Fi ring (and, folded, the camera) in a column on the physical right and reserves
+// that side as safe area; the app uses the full width anyway (RootView) and follows one layout on every screen:
 //   - the screen's round buttons (back, speaker, settings, close) go in that column, under the Wi-Fi ring, one below
-//     the other (SideButtons)
-//   - the screen's title sits on the line of the first button: its middle level with the button's middle (titleTop)
-//   - what runs the full width starts below the column's top part (clock, ring and buttons), so nothing runs under it
+//     the other (SideButtons); the ring ends at TopButtonsPadding.ringBottom
+//   - content starts at the top; what's beside the column flows around it (FlowCardShape, clearsSideColumn)
 enum FoldedDuo {
   static let buttonSize: CGFloat = 40              // as TopButtonsPadding.folded
-  static let columnTop: CGFloat = 162              // the first button's top: the Wi-Fi ring ends about 150 pt down
   static let columnInset: CGFloat = 28             // from the physical right edge: centred under the ring (48 − 40 / 2)
   static let buttonGap: CGFloat = 10
 
-  static var firstButtonMid: CGFloat { columnTop + buttonSize / 2 }
+  // The first button's top: just under the Wi-Fi ring (`ring`, TopButtonsPadding.ringBottom: 150 pt folded, 97 opened).
+  static func columnTop(ring: CGFloat) -> CGFloat { ring + 12 }
   // How far a title stays from each edge: the column and its gap (as the cards, columnRoom), on both sides so a
   // centred title stays centred. Counted from inside the screens' usual 20 pt margin.
   static let titleSideRoom: CGFloat = columnInset + buttonSize + columnInset - 20
@@ -252,21 +255,15 @@ enum FoldedDuo {
   // screen edge (columnInset), counted from inside the screens' usual 20 pt margin.
   static let columnRoom: CGFloat = columnInset + buttonSize + columnInset - 20
   // Where the column ends: the Wi-Fi ring (about 150 pt down) or the screen's lowest button, plus a small gap.
-  static func columnBottom(buttons: Int) -> CGFloat {
-    (buttons == 0 ? 150 : buttonsBottom(buttons)) + 8
+  static func columnBottom(buttons: Int, ring: CGFloat) -> CGFloat {
+    (buttons == 0 ? ring : buttonsBottom(buttons, ring: ring)) + 8
   }
 
   // The bottom of `count` side buttons: full-width content starts below it.
-  static func buttonsBottom(_ count: Int) -> CGFloat {
-    columnTop + CGFloat(count) * buttonSize + CGFloat(max(0, count - 1)) * buttonGap
+  static func buttonsBottom(_ count: Int, ring: CGFloat) -> CGFloat {
+    columnTop(ring: ring) + CGFloat(count) * buttonSize + CGFloat(max(0, count - 1)) * buttonGap
   }
 
-  // The top padding for a header whose title (in `style`, at the user's text size) comes after `above` points of other
-  // header content (an owl, an icon…): the title's middle lands on the first button's middle. Worked out, not
-  // measured — measuring and moving a header made it redraw in a loop.
-  static func titleTop(above: CGFloat = 0, style: UIFont.TextStyle = .largeTitle) -> CGFloat {
-    max(0, firstButtonMid - above - UIFont.preferredFont(forTextStyle: style).lineHeight / 2)
-  }
 }
 
 // MARK: - SideButtons
@@ -275,12 +272,13 @@ enum FoldedDuo {
 struct SideButtons<Content: View>: View {
   @ViewBuilder var content: Content
   @Environment(\.layoutDirection) private var layoutDirection
+  @Environment(\.topButtonsPadding) private var topButtons
 
   var body: some View {
     let rtl = layoutDirection == .rightToLeft
     VStack(spacing: FoldedDuo.buttonGap) { content }
       .padding(rtl ? .leading : .trailing, FoldedDuo.columnInset)
-      .padding(.top, FoldedDuo.columnTop)
+      .padding(.top, FoldedDuo.columnTop(ring: topButtons?.ringBottom ?? 150))
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: rtl ? .topLeading : .topTrailing)
       .ignoresSafeArea()
   }
@@ -297,11 +295,11 @@ extension FoldedDuo {
   // as the column to the screen edge) everywhere: straight beside the column, then around the lowest button (or the
   // Wi-Fi ring) on a circle with the button's centre, then a small fillet where that circle meets the card's own
   // edge. Measured from the card's usual trailing edge (the screen's 20 pt margin). No corners anywhere.
-  static func flowIndent(at y: CGFloat, buttons: Int) -> CGFloat {
+  static func flowIndent(at y: CGFloat, buttons: Int, ring: CGFloat) -> CGFloat {
     let c = columnInset + buttonSize / 2 - 20                     // the button's centre, inside the card's usual edge
     let R = buttonSize / 2 + columnInset                           // the curve: the button plus the gap
     let f = flowFillet
-    let d = y - ((buttons == 0 ? 150 : buttonsBottom(buttons)) - buttonSize / 2)   // below the button's centre
+    let d = y - ((buttons == 0 ? ring : buttonsBottom(buttons, ring: ring)) - buttonSize / 2)   // below the button's centre
     let filletMid = ((R + f) * (R + f) - (c - f) * (c - f)).squareRoot()   // the fillet's centre (and the curve's end)
     let touch = filletMid * R / (R + f)                            // where the circle hands over to the fillet
     if d <= 0 { return c + R }                                     // beside the column: columnRoom
@@ -317,15 +315,16 @@ extension FoldedDuo {
 struct FlowCardShape: Shape {
   var top: CGFloat?
   var buttons: Int
+  var ring: CGFloat = 150                                          // TopButtonsPadding.ringBottom
   var rtl: Bool
   var radius: CGFloat = 14
 
   func path(in rect: CGRect) -> Path {
     let w = rect.width, h = rect.height, r = min(radius, h / 2)
-    guard let top, FoldedDuo.flowIndent(at: top, buttons: buttons) > 0.5 else {
+    guard let top, FoldedDuo.flowIndent(at: top, buttons: buttons, ring: ring) > 0.5 else {
       return RoundedRectangle(cornerRadius: radius).path(in: rect)
     }
-    let edge = { (y: CGFloat) in w - FoldedDuo.flowIndent(at: top + y, buttons: buttons) }   // the trailing edge at height y
+    let edge = { (y: CGFloat) in w - FoldedDuo.flowIndent(at: top + y, buttons: buttons, ring: ring) }   // the trailing edge at height y
     let slope = { (y: CGFloat) in min(max(edge(y + 1) - edge(y), -2), 2) }   // sideways per point down (kept gentle for the corners)
     let k: CGFloat = 0.5523                                        // a quarter circle from a cubic curve
     // The corners keep the usual rounding and meet the curve in its own direction: no point where they join.
@@ -367,7 +366,7 @@ private struct ClearsSideColumn: ViewModifier {
   func body(content: Content) -> some View {
     if topButtons?.isFolded == true {
       content
-        .padding(layoutDirection == .rightToLeft ? .leading : .trailing, FoldedDuo.flowIndent(at: top, buttons: buttons))   // the physical right
+        .padding(layoutDirection == .rightToLeft ? .leading : .trailing, FoldedDuo.flowIndent(at: top, buttons: buttons, ring: topButtons?.ringBottom ?? 150))   // the physical right
         .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { top = $0 }
     } else {
       content
@@ -402,7 +401,8 @@ private struct FlowCard<Fill: ShapeStyle>: ViewModifier {
 
   func body(content: Content) -> some View {
     let folded = topButtons?.isFolded == true
-    let shape = FlowCardShape(top: folded ? top : nil, buttons: buttons, rtl: layoutDirection == .rightToLeft, radius: radius)
+    let shape = FlowCardShape(top: folded ? top : nil, buttons: buttons, ring: topButtons?.ringBottom ?? 150,
+                              rtl: layoutDirection == .rightToLeft, radius: radius)
     content
       .background(fill, in: shape)
       .overlay { if let stroke { shape.stroke(stroke, lineWidth: lineWidth) } }

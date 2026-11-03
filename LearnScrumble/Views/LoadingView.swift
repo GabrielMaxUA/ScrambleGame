@@ -45,7 +45,7 @@ struct LoadingView: View {
 
   var body: some View {
     ZStack {
-      Color.black.opacity(0.7)
+      Color.black                                // solid: see-through showed the system's grey behind the app on the iPhone Duo
         .ignoresSafeArea()
 
       // Reduce Motion: paused — one still frame. Otherwise capped at 30fps to spare the battery.

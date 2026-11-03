@@ -32,7 +32,8 @@ struct FieldCard<Content: View>: View {
 
   var body: some View {
     let folded = topButtons?.isFolded == true
-    let shape = FlowCardShape(top: folded ? boxTop : nil, buttons: sideButtons, rtl: layoutDirection == .rightToLeft)
+    let shape = FlowCardShape(top: folded ? boxTop : nil, buttons: sideButtons, ring: topButtons?.ringBottom ?? 150,
+                              rtl: layoutDirection == .rightToLeft)
     VStack(alignment: .leading, spacing: 8) {
       Label(title, systemImage: icon)                       // heading above the box
         .font(.subheadline.weight(.semibold))

@@ -32,6 +32,7 @@ struct MainView: View {
     var resultNote: LocalizedStringKey? = nil                          // tutorial only: highlighted line on the right/wrong screen
     @State private var reportingWord: WordModel?                       // the answered word in WordReportSheet; nil = closed
     @Environment(\.foldLayout) private var foldLayout                 // opened iPhone Duo (RootView), for the result pop-up
+    @Environment(\.layoutDirection) private var layoutDirection       // the opened Duo's side column stays on the physical right
     @Environment(\.topButtonsPadding) private var topButtons          // .isFolded = the folded iPhone Duo (RootView)
     private let minTile: CGFloat = 40                                  // smallest tray tile (the size every tile used to be)
     private let maxTile: CGFloat = 52                                  // short words get bigger, easier tiles
@@ -167,17 +168,24 @@ struct MainView: View {
         let sideBySide = fold == .sideBySide
         let halfWidth = sideBySide ? size.width / 2 : size.width
         let halfHeight = sideBySide ? size.height : size.height / 2
-        let answerWidth = halfWidth - horizontalPadding * 2 - (sideBySide ? foldGap : 0)
+        // The side column (clock, Wi-Fi ring, back and speaker) is on the physical right: the half there keeps its room.
+        // That's the answer half, or the picture half in right-to-left languages (the halves swap sides).
+        let columnRoom = sideBySide && topButtons?.isFolded == true ? FoldedDuo.columnRoom : 0
+        let rtl = layoutDirection == .rightToLeft
+        let answerRoom = rtl ? 0 : columnRoom, pictureRoom = rtl ? columnRoom : 0
+        let answerWidth = halfWidth - horizontalPadding * 2 - (sideBySide ? foldGap : 0) - answerRoom
         let pictureSide = sideBySide
-            ? min(halfWidth - horizontalPadding * 2 - foldGap, halfHeight - topInset - 12)
+            ? min(halfWidth - horizontalPadding * 2 - foldGap - pictureRoom, halfHeight - topInset - 12)
             : min(halfWidth - buttonRoom * 2, halfHeight - foldGap - 8)
         let pictureHalf = picture(maxSide: pictureSide)
             .padding(.horizontal, horizontalPadding)
             .padding(.top, sideBySide ? topInset : 8)                    // room for RootView's top button row; stacked: level with it
             .padding(sideBySide ? .trailing : .bottom, foldGap)
+            .padding(.leading, pictureRoom)                              // right-to-left: the picture half is beside the column
             .frame(width: halfWidth, height: halfHeight)
         let answerHalf = answerSection(width: answerWidth, answerDirection: answerDirection)
             .padding(.horizontal, horizontalPadding)
+            .padding(.trailing, answerRoom)                              // clear of the side column
             .padding(sideBySide ? .leading : .top, foldGap)
             .padding(.top, sideBySide ? topInset : 0)
             .padding(.bottom, 12)

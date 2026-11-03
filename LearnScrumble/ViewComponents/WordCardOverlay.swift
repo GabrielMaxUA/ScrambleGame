@@ -69,7 +69,8 @@ struct WordCardOverlay: View {
   var onReport: (SwiftDataWordModel) async -> RequestModel.ReportResult
   var onReportWord: (SwiftDataWordModel, RequestModel.WordCorrection) async -> RequestModel.ReportResult
   var onClose: () -> Void
-  @Environment(\.topButtonsPadding) private var topButtons   // .isFolded: the folded iPhone Duo (FoldLayout.swift)
+  @Environment(\.topButtonsPadding) private var topButtons   // .isFolded: the side-column layout (FoldLayout.swift)
+  @Environment(\.foldLayout) private var foldLayout     // nil with isFolded: the folded Duo's outer screen
 
   @State private var report: PictureReport = .idle       // the front word's report; back to idle on the next word
   @State private var reportingWord: SwiftDataWordModel?  // the word in WordReportSheet; nil = closed
@@ -138,8 +139,8 @@ struct WordCardOverlay: View {
 
   var body: some View {
     GeometryReader { geo in
-      let cardWidth = topButtons?.isFolded == true        // folded Duo: the side column's room on both sides (as the
-        ? min(geo.size.width - (FoldedDuo.columnRoom + 20) * 2, 340)   // game's picture), clear of the clock column
+      let cardWidth = topButtons?.isFolded == true && foldLayout == nil   // folded Duo: the side column's room on both
+        ? min(geo.size.width - (FoldedDuo.columnRoom + 20) * 2, 340)    // sides (as the game's picture), clear of the clock
         : min(geo.size.width - 72, 340)                  // room for the side cards to peek out
       let spacing = cardWidth * CarouselCard.sideShift   // one word further = this far to the side
 
@@ -164,13 +165,6 @@ struct WordCardOverlay: View {
             }
           }
           .frame(maxWidth: .infinity)
-          .mask {                                        // folded Duo: only the front card's lane (the side column's room
-            if topButtons?.isFolded == true {            // on both sides), so no neighbour peeks out under the clock;
-              Rectangle().frame(width: cardWidth + 8)    // they slide in and out within it
-            } else {
-              Rectangle()
-            }
-          }
           .contentShape(Rectangle())
           .gesture(                                      // test all: no swiping, the wheel turns by itself
             DragGesture(minimumDistance: 12)
