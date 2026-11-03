@@ -49,6 +49,8 @@ struct EntryView: View {
   }
   private var raccoonOffscreen: CGFloat { buttonWidth / 2 + 140 }  // far enough that the whole raccoon (and its arm) is past the screen edge
   
+  @Environment(\.topButtonsPadding) private var topButtons
+
   var body: some View {
     ScrollView {
       VStack(spacing: 32) {
@@ -136,7 +138,7 @@ struct EntryView: View {
         }
       }
       .padding(.horizontal, 20)
-      .padding(.top, 42)                                        // room for the top button row RootView places above
+      .padding(.top, isFolded ? 16 : 42)                       // room for the top button row RootView places above; folded Duo: from the top, the cards flow around the clock
       .padding(.bottom, 24)
     }
     .scrollDismissesKeyboard(.interactively)
@@ -169,6 +171,8 @@ struct EntryView: View {
   
   // MARK: - Sections
   
+  private var isFolded: Bool { topButtons?.isFolded == true }
+
   private var header: some View {                                      // welcome title + subtitle
     VStack(spacing: 8) {
       Text("Welcome to LearnScrumble")
@@ -179,6 +183,7 @@ struct EntryView: View {
         .foregroundStyle(.white.opacity(0.7))
     }
     .multilineTextAlignment(.center)
+    .foldedTitle(isFolded)                                              // folded Duo: centred, clear of the clock column
   }
   
   private var footer: some View {                                      // Start button (with the raccoon) + AI / privacy note

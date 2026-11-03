@@ -22,6 +22,7 @@ struct ResultWordRow: View {
       HStack(alignment: .top, spacing: 0) {
         Color.clear
           .frame(width: buttonColumn, height: 1)  // mirrors the button column, keeps the text centred
+          .padding(.leading)                      // and its padding: both sides equal
         Text(result)
           .font(.title)
           .fontWeight(.bold)

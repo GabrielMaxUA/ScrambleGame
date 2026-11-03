@@ -45,13 +45,10 @@ struct JobProgressCard: View {
         number(progress.incorrect, title: "Wrong", icon: "xmark.circle.fill", tint: .red)
       }
     }
+    .clearsSideColumn()                                     // folded Duo: flows with the card's edge
     .padding(16)
     .frame(maxWidth: .infinity)
-    .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
-    .overlay {
-      RoundedRectangle(cornerRadius: 14)
-        .stroke(.white.opacity(0.2), lineWidth: 1)
-    }
+    .flowCard(.white.opacity(0.08), radius: 14, stroke: .white.opacity(0.2))   // folded Duo: flows around the side column
   }
 
   // MARK: - number(_:title:icon:tint:)

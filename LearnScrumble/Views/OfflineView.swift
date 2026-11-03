@@ -25,6 +25,7 @@ struct OfflineView: View {
   var onExit: () -> Void                              // back to the welcome screen
   
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @Environment(\.topButtonsPadding) private var topButtons
   @State private var isOnline: Bool?                // nil until the monitor reports the first state
   @State private var backOnline = false             // connection came back while this screen was open
   private var isConnected: Bool { isOnline == true } // drives the whole middle: offline text vs. status only
@@ -32,6 +33,20 @@ struct OfflineView: View {
     reduceMotion ? .opacity : .scale.combined(with: .opacity)
   }
   
+  // MARK: - backButton(size:)
+  // The chevron back to the welcome screen: top corner, or the side column on the folded iPhone Duo.
+  private func backButton(size: CGFloat) -> some View {
+    Button {
+      onExit()
+    } label: {
+      Image(systemName: direction ? "chevron.left" : "chevron.right")
+        .frame(width: size, height: size)
+        .foregroundStyle(.white)
+    }
+    .glassCompat(in: .circle)
+  }
+  private var isFolded: Bool { topButtons?.isFolded == true }
+
   var body: some View {
     ZStack(alignment: .topLeading) {
       Color.black.opacity(0.92)
@@ -42,18 +57,15 @@ struct OfflineView: View {
         .allowsHitTesting(false)                    // never blocks the buttons
         .accessibilityHidden(true)                  // decoration only
       
-      HStack {
-        Button {
-          onExit()
-        } label: {
-          Image(systemName: direction ? "chevron.left" : "chevron.right")
-            .frame(width: 50, height: 50)
-            .foregroundStyle(.white)
+      if isFolded {                                // back button: top corner, or the side column
+        SideButtons { backButton(size: FoldedDuo.buttonSize) }
+      } else {
+        HStack {
+          backButton(size: 50)
+          Spacer()
         }
-        .glassCompat(in: .circle)
-        Spacer()
+        .padding(.horizontal)
       }
-      .padding(.horizontal)
       
       VStack(spacing: 16) {
         Color.clear

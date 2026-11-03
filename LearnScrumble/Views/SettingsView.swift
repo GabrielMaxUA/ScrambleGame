@@ -38,6 +38,7 @@ struct SettingsView: View {
   @Environment(\.scenePhase) private var scenePhase                // back from iOS Settings -> re-check the notification permission
   @Environment(\.openURL) private var openURL                      // opens the app's page in iOS Settings
   @Environment(\.locale) private var locale                       // app language: region names next to voices
+  @Environment(\.topButtonsPadding) private var topButtons         // .isFolded = the folded iPhone Duo (RootView)
   
   @State private var showLockedAlert = false                       // "Premium feature" alert (learning block lock, currently unused)
   @State private var showResetAlert = false                        // "Reset progress?" confirmation
@@ -76,18 +77,22 @@ struct SettingsView: View {
         //deleteSection
         #if DEBUG || TESTFLIGHT_TOOLS
         debugSection                                               // testing tools: Debug and tester builds, never in App Store builds
+          .clearsSideColumn()
         #endif
         
         Text(verbatim: "LearnScrumble \(appVersion)")              // verbatim: not looked up for translation
           .font(.footnote)
           .foregroundStyle(.white.opacity(0.4))
           .frame(maxWidth: .infinity)
+          .clearsSideColumn()
       }
       .padding(.horizontal, 20)
-      .padding(.top, 42)
+      .padding(.top, isFolded ? 16 : 42)                           // folded Duo: from the top; what's beside the column gets narrower
+      .environment(\.foldedSideButtons, 1)                         // the ✓
       .padding(.bottom, 24)
     }
     .scrollDismissesKeyboard(.interactively)
+    .overlay { if isFolded { SideButtons { foldedDone } } }
     .background(.black)
     .onChange(of: requestModel.nativeLanguage) { _, new in nativeLanguage = new.rawValue }      // same saved keys as EntryView
     .onChange(of: requestModel.selectedLanguage) { _, new in pickedLanguage = new.rawValue }
@@ -112,7 +117,16 @@ struct SettingsView: View {
   
   // MARK: - Sections
   
+  @ViewBuilder
   private var header: some View {                                  // title + Done (disabled until the setup is usable)
+    if isFolded {                                                  // folded Duo: Done is in the side column (body)
+      Text("Settings")
+        .font(.largeTitle.bold())
+        .foregroundStyle(.white)
+        .singleLine()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .clearsSideColumn()                                        // clear of the camera and clock beside it
+    } else {
     HStack {
       Text("Settings")
         .font(.largeTitle.bold())
@@ -131,7 +145,24 @@ struct SettingsView: View {
       .disabled(!canClose)
       .opacity(canClose ? 1 : 0.5)
     }
+    }
   }
+
+  // Folded Duo: Done as a round ✓ button in the side column, like the other screens' buttons.
+  private var foldedDone: some View {
+    Button(action: onDone) {
+      Image(systemName: "checkmark")
+        .font(.title3.weight(.semibold))
+        .foregroundStyle(.white)
+        .frame(width: FoldedDuo.buttonSize, height: FoldedDuo.buttonSize)
+    }
+    .glassCompat(in: .circle, interactive: true)
+    .disabled(!canClose)
+    .opacity(canClose ? 1 : 0.5)
+    .accessibilityLabel(Text("Done"))
+  }
+
+  private var isFolded: Bool { topButtons?.isFolded == true }   // the folded iPhone Duo's outer screen
   
   private var learningSection: some View {                         // languages + profession, with a hint under them
     VStack(alignment: .leading, spacing: 12) {
@@ -139,6 +170,7 @@ struct SettingsView: View {
         languageCard(title: "I speak", icon: "person.wave.2", selection: $requestModel.nativeLanguage)
         FieldCard(title: "My profession", icon: "briefcase") {
           ProfessionPicker(requestModel: requestModel, isFocused: $professionFocused)
+            .clearsSideColumn()
         }
         languageCard(title: "I want to learn", icon: "character.book.closed", selection: $requestModel.selectedLanguage)
       }
@@ -148,6 +180,7 @@ struct SettingsView: View {
           .font(.footnote)
           .foregroundStyle(.orange)
           .frame(maxWidth: .infinity, alignment: .leading)
+          .clearsSideColumn()
       }
 //MARK: - need to decide on making it accessable to everyone or only to paid users
       
@@ -170,10 +203,12 @@ struct SettingsView: View {
         Label("Pick two different languages.", systemImage: "exclamationmark.circle")
           .font(.footnote)
           .foregroundStyle(.orange)
+          .clearsSideColumn()
       } else {
         Text("Progress is saved separately for each language you learn. Switching keeps your old progress.")
           .font(.footnote)
           .foregroundStyle(.white.opacity(0.6))
+          .clearsSideColumn()
       }
     }
   }
@@ -220,12 +255,14 @@ struct SettingsView: View {
             }
           }
         }
+        .clearsSideColumn()
         
         divider
         
         Text("Speech speed")
           .foregroundStyle(.white)
           .singleLine()
+          .clearsSideColumn()
         HStack(spacing: 12) {
           Image(systemName: "tortoise.fill")
           Slider(value: $speechRate, in: 0.3...0.6)
@@ -234,6 +271,7 @@ struct SettingsView: View {
         }
         .foregroundStyle(.white.opacity(0.7))
         .environment(\.layoutDirection, .leftToRight)
+        .clearsSideColumn()
         
         divider
         
@@ -244,6 +282,7 @@ struct SettingsView: View {
         Text("More voices can be downloaded in the iPhone's Settings › Accessibility › Spoken Content › Voices.")
           .font(.footnote)
           .foregroundStyle(.white.opacity(0.5))
+          .clearsSideColumn()
       }
     }
     .onAppear { loadVoice() }                                     // show this language's saved voice
@@ -283,6 +322,7 @@ struct SettingsView: View {
         Toggle("Remind me every day", isOn: $reminderEnabled)
           .foregroundStyle(.white)
           .singleLine()
+          .clearsSideColumn()
         
         if reminderEnabled {                                       // time and details only while it's on
           divider
@@ -290,14 +330,17 @@ struct SettingsView: View {
             .foregroundStyle(.white)
             .singleLine()
             .environment(\.colorScheme, .dark)                     // white time pill on the black screen
+            .clearsSideColumn()
           Text("We'll remind you once a day, only if you haven't played yet.")
             .font(.footnote)
             .foregroundStyle(.white.opacity(0.6))
+            .clearsSideColumn()
           
           if notificationsDenied {                                 // iOS blocks it: explain and offer the way out
             Label("Notifications are off for LearnScrumble in the iPhone's Settings.", systemImage: "bell.slash")
               .font(.footnote)
               .foregroundStyle(.orange)
+              .clearsSideColumn()
             row("Open Settings", icon: "gear") {
               if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
             }
@@ -367,12 +410,14 @@ struct SettingsView: View {
         Toggle("Share usage statistics to help improve the app", isOn: $shareStatistics)   // Firebase Analytics on/off
           .foregroundStyle(.white)                                // a whole sentence: may wrap (one line cut off its meaning)
           .onChange(of: shareStatistics) { _, on in AnalyticsConsent.apply(on) }
+          .clearsSideColumn()
         divider
         Text(AIConsent.message)                                   // what goes to OpenAI, agreed to on setup (AIConsent)
           .font(.footnote)
           .foregroundStyle(.white.opacity(0.6))
           .frame(maxWidth: .infinity, alignment: .leading)
           .fixedSize(horizontal: false, vertical: true)
+          .clearsSideColumn()
       }
     }
   }
@@ -391,6 +436,7 @@ struct SettingsView: View {
       .pickerStyle(.menu)
       .tint(.white)
       .labelsHidden()
+      .clearsSideColumn()
     }
   }
   
@@ -474,12 +520,14 @@ struct SettingsView: View {
         .foregroundStyle(.white.opacity(0.4))
     }
     .contentShape(Rectangle())
+    .clearsSideColumn()                                           // folded Duo: flows around the side column, row by row
   }
   
   private var divider: some View {                                 // thin line between rows
     Rectangle()
       .fill(.white.opacity(0.15))
       .frame(height: 1)
+      .clearsSideColumn()
   }
   
   // MARK: - Actions

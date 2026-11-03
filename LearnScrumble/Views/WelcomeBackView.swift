@@ -34,7 +34,6 @@ import SwiftUI
 
 struct WelcomeBackView: View {
   @Environment(\.topButtonsPadding) private var topButtons          // iPhone Duo: where the gear sits (RootView)
-  @Environment(\.layoutDirection) private var layoutDirection     // kept for everything but the folded Duo's gear
   let cabinet: CabinetVM                         // the cards, the open section and what a tap does
   let targetLanguage: String                     // current language being learned — the owl's mood
   var onOpen: (CabinetVM.Card) -> Void           // a card was opened (RootView -> CabinetVM.select)
@@ -85,7 +84,9 @@ struct WelcomeBackView: View {
         }
       }
       .multilineTextAlignment(.center)
-      .padding(.top, isFolded ? 16 : 48)         // below the gear (folded Duo: the gear is in the side column)
+      .foldedTitle(isFolded)                            // folded Duo: centred, clear of the clock column
+      // Below the gear; folded Duo: from the top, the cards below flow around the column.
+      .padding(.top, isFolded ? 16 : 48)
 
       if all.isEmpty {
         Spacer()
@@ -99,15 +100,22 @@ struct WelcomeBackView: View {
           .id(section)                          // a fresh stack (and scroll position) per section
           .transition(.opacity)
       } else {
-        sections(all)
-          .transition(.opacity)
+        Group {
+          if isFolded {                          // folded Duo: the header stays, the cards scroll if they don't fit
+            ScrollView { sections(all) }
+              .scrollIndicators(.hidden)
+          } else {
+            sections(all)
+          }
+        }
+        .transition(.opacity)
       }
     }
     .padding(.horizontal, 20)
     .padding(.bottom, 8)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .ignoresSafeArea(.container, edges: isFolded ? .horizontal : [])   // folded Duo: under the side column too
     .overlay { topButton(inSection: hasSections && section != nil) }
+    .environment(\.foldedSideButtons, 1)                 // the gear (or back)
     .background(Color.black.opacity(0.92))
   }
 
@@ -212,9 +220,10 @@ struct WelcomeBackView: View {
   // Top left: the gear (top level, or no sections), or the back arrow to the top level inside a section.
   private var isFolded: Bool { topButtons?.isFolded == true }
 
+  @ViewBuilder
   private func topButton(inSection: Bool) -> some View {
-    let size: CGFloat = topButtons?.isFolded == true ? 40 : 44     // folded Duo: smaller
-    return Button {
+    let size: CGFloat = isFolded ? FoldedDuo.buttonSize : 44     // folded Duo: smaller
+    let button = Button {
       if inSection { open(nil) } else { onSettings() }
     } label: {
       Image(systemName: inSection ? "chevron.backward" : "gear")
@@ -225,17 +234,15 @@ struct WelcomeBackView: View {
     }
     .glassCompat(in: .circle, interactive: true)
     .accessibilityLabel(Text(inSection ? "Back" : "Settings"))
-    .padding(.horizontal, isFolded ? Self.foldedColumnInset : (topButtons?.horizontal ?? 20))   // iPhone Duo: like the in-game button
-    .padding(.top, isFolded ? Self.foldedColumnTop : (topButtons?.top ?? 8))
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isFolded ? .topTrailing : .topLeading)
-    .ignoresSafeArea(.container, edges: isFolded ? .all : [])
-    .environment(\.layoutDirection, isFolded ? .leftToRight : layoutDirection)   // the column is on the physical right
+    if isFolded {
+      SideButtons { button }                     // folded Duo: in the side column, under the Wi-Fi ring
+    } else {
+      button
+        .padding(.horizontal, topButtons?.horizontal ?? 20)   // iPhone Duo: like the in-game button
+        .padding(.top, topButtons?.top ?? 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
   }
-
-  // Folded Duo: the gear sits in the side column, centred under the camera and the Wi-Fi ring (whose bottom is about
-  // 150 pt down; the column's centre is about 48 pt in from the right edge, so 48 − 40 / 2).
-  private static let foldedColumnInset: CGFloat = 28
-  private static let foldedColumnTop: CGFloat = 162
 }
 
 // MARK: - SectionCard
@@ -279,12 +286,11 @@ private struct SectionCard: View {
           .font(.footnote.weight(.bold))
           .foregroundStyle(.white.opacity(0.5))
       }
+      .clearsSideColumn()                               // folded Duo: the row flows with the card's edge
       .padding(18)
-      .background(LinearGradient(colors: [tint.mix(with: .black, by: 0.45), tint.mix(with: .black, by: 0.72)],
-                                 startPoint: .topLeading, endPoint: .bottomTrailing),
-                  in: RoundedRectangle(cornerRadius: 20))
-      .overlay { RoundedRectangle(cornerRadius: 20).stroke(.white.opacity(0.2), lineWidth: 1) }
-      .contentShape(RoundedRectangle(cornerRadius: 20))
+      .flowCard(LinearGradient(colors: [tint.mix(with: .black, by: 0.45), tint.mix(with: .black, by: 0.72)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing),
+                radius: 20, stroke: .white.opacity(0.2))      // folded Duo: flows around the side column
     }
     .buttonStyle(.plain)
     .accessibilityElement(children: .combine)

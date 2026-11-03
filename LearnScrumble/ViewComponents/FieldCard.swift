@@ -25,21 +25,29 @@ struct FieldCard<Content: View>: View {
     self.content = content()
   }
   
+  @Environment(\.topButtonsPadding) private var topButtons  // .isFolded: the folded iPhone Duo (FoldLayout.swift)
+  @Environment(\.foldedSideButtons) private var sideButtons
+  @Environment(\.layoutDirection) private var layoutDirection
+  @State private var boxTop: CGFloat = .greatestFiniteMagnitude   // the box's top on screen (folded Duo only)
+
   var body: some View {
+    let folded = topButtons?.isFolded == true
+    let shape = FlowCardShape(top: folded ? boxTop : nil, buttons: sideButtons, rtl: layoutDirection == .rightToLeft)
     VStack(alignment: .leading, spacing: 8) {
       Label(title, systemImage: icon)                       // heading above the box
         .font(.subheadline.weight(.semibold))
         .singleLine()                                       // long translations shrink instead of wrapping
         .foregroundStyle(.white.opacity(0.7))
-      content                                               // the box itself
+        .clearsSideColumn()                                 // folded iPhone Duo: gives way beside the clock and buttons
+      content                                               // the box itself (folded Duo: its rows flow, clearsSideColumn)
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+        .background(.white.opacity(0.08), in: shape)
         .overlay {
-          RoundedRectangle(cornerRadius: 14)
-            .stroke(.white.opacity(0.2), lineWidth: 1)      // thin border
+          shape.stroke(.white.opacity(0.2), lineWidth: 1)   // thin border
         }
+        .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { if folded { boxTop = $0 } }
     }
   }
 }

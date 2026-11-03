@@ -52,11 +52,8 @@ struct CabinetCardView: View {
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(background, in: RoundedRectangle(cornerRadius: 18))
-    .overlay {
-      RoundedRectangle(cornerRadius: 18)
-        .stroke(.white.opacity(card.isCurrent ? 0.55 : 0.18), lineWidth: card.isCurrent ? 1.5 : 1)
-    }
+    .flowCard(background, radius: 18, stroke: .white.opacity(card.isCurrent ? 0.55 : 0.18),
+              lineWidth: card.isCurrent ? 1.5 : 1)           // folded Duo: flows around the side column
     .shadow(color: .black.opacity(0.55), radius: 10, y: -4)   // the edge of the card in front shows on the one behind
   }
 
@@ -108,6 +105,7 @@ struct CabinetCardView: View {
         .accessibilityLabel(Text("Learned: \(card.learned)"))
       }
     }
+    .clearsSideColumn()                                  // folded Duo: the rows flow around the side column, one by one
     .padding(.horizontal, 16)
     .padding(.top, 14)
     .padding(.bottom, isOpen ? 12 : 0)
@@ -137,17 +135,20 @@ struct CabinetCardView: View {
       }
       .padding(.vertical, 10)
       .background(.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 12))
+      .clearsSideColumn()
 
       if card.played > 0 {
         Label { Text("My words: \(card.played)") } icon: { Image(systemName: "list.bullet.rectangle") }
           .singleLine()
           .font(.footnote.weight(.semibold))
           .foregroundStyle(.white.opacity(0.8))
+        .clearsSideColumn()
         button("Practise pronunciation", icon: "mic.fill", prominent: true, action: onSpeech)
       } else {
         Text("Play a few words first, then come back to say them.")
           .font(.footnote)
           .foregroundStyle(.white.opacity(0.75))
+          .clearsSideColumn()
       }
     }
   }
@@ -163,11 +164,13 @@ struct CabinetCardView: View {
       }
       .padding(.vertical, 10)
       .background(.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 12))
+      .clearsSideColumn()
 
       Label { Text("My words: \(card.listening.words)") } icon: { Image(systemName: "list.bullet.rectangle") }
         .singleLine()
         .font(.footnote.weight(.semibold))
         .foregroundStyle(.white.opacity(0.8))
+      .clearsSideColumn()
       button("Practise listening", icon: "headphones", prominent: true, action: onListening)
     }
   }
@@ -182,6 +185,7 @@ struct CabinetCardView: View {
       }
       .padding(.vertical, 10)
       .background(.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 12))
+      .clearsSideColumn()
 
       HStack {
         Label { Text("My words: \(card.played)") } icon: { Image(systemName: "list.bullet.rectangle") }
@@ -195,6 +199,7 @@ struct CabinetCardView: View {
       }
       .font(.footnote.weight(.semibold))
       .foregroundStyle(.white.opacity(0.8))
+      .clearsSideColumn()
 
       VStack(spacing: 8) {                               // one under the other, full width: the main one on top
         if card.isLocked {
@@ -245,6 +250,7 @@ struct CabinetCardView: View {
         .background(prominent ? AnyShapeStyle(.white) : AnyShapeStyle(.white.opacity(0.15)), in: Capsule())
     }
     .buttonStyle(.plain)
+    .clearsSideColumn()
   }
 
   // MARK: - background

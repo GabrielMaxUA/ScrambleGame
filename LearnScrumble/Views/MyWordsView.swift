@@ -33,6 +33,7 @@ import SwiftData
 
 struct MyWordsView: View {
   @Environment(\.locale) private var locale              // the app's language, for the language's name
+  @Environment(\.topButtonsPadding) private var topButtons   // .isFolded = the folded iPhone Duo (RootView)
   let job: Occupation?                                   // the job whose words are listed
   let targetLanguage: String                             // the language being learned (Languages.rawValue)
   let mode: CabinetVM.Section                            // .vocabulary: My words; .speech / .listening: the tests
@@ -92,6 +93,7 @@ struct MyWordsView: View {
       }
       .multilineTextAlignment(.center)
       .padding(.top, 8)
+      .foldedTitle(isFolded)                            // folded Duo: centred, clear of the clock and back button
 
       if words.isEmpty {
         Spacer()
@@ -107,6 +109,7 @@ struct MyWordsView: View {
           .font(.footnote)
           .foregroundStyle(.white.opacity(0.6))
           .multilineTextAlignment(.center)
+          .foldedTitle(isFolded)                        // folded Duo: still beside the column, keep clear of it
 
         ScrollView {
           LazyVStack(spacing: 10) {
@@ -152,21 +155,19 @@ struct MyWordsView: View {
     }
     .padding(.horizontal, 20)
     .padding(.bottom, 8)
-    .padding(.top, 52)                                   // room for the back button
+    .padding(.top, isFolded ? 8 : 52)                    // room for the back button; folded Duo: from the top (+ the title's 8)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .overlay(alignment: .topLeading) {                   // same place as the gear on the welcome screen
-      Button(action: onBack) {
-        Image(systemName: "chevron.backward")
-          .font(.title3)
-          .foregroundStyle(.white)
-          .frame(width: 44, height: 44)
+      if isFolded {
+        SideButtons { backButton(size: FoldedDuo.buttonSize) }   // folded Duo: in the side column
+      } else {
+        backButton(size: 44)
+          .padding(.horizontal, 20)
+          .padding(.top, 8)
       }
-      .glassCompat(in: .circle, interactive: true)
-      .accessibilityLabel(Text("Back"))
-      .padding(.horizontal, 20)
-      .padding(.top, 8)
     }
     .background(Color.black.opacity(0.92))
+    .environment(\.foldedSideButtons, 1)                 // the back button
     .overlay {                                           // the open word, over everything (also the back button)
       if let index = openIndex, words.indices.contains(index) {
         WordCardOverlay(words: words,
@@ -210,6 +211,20 @@ struct MyWordsView: View {
     heroID = mode == .listening ? nil : words[index].persistentModelID
     withAnimation(.spring(duration: 0.35)) { openIndex = index }
   }
+
+  // MARK: - backButton(size:)
+  private func backButton(size: CGFloat) -> some View {
+    Button(action: onBack) {
+      Image(systemName: "chevron.backward")
+        .font(.title3)
+        .foregroundStyle(.white)
+        .frame(width: size, height: size)
+    }
+    .glassCompat(in: .circle, interactive: true)
+    .accessibilityLabel(Text("Back"))
+  }
+
+  private var isFolded: Bool { topButtons?.isFolded == true }   // the folded iPhone Duo's outer screen
 
   // MARK: - closeCard
   // The front word becomes the hero and the list scrolls to its row, without animation (both are behind the dark
@@ -261,7 +276,7 @@ struct MyWordsView: View {
             }
           }
           .frame(width: 52, height: 52)
-          .background(.white.opacity(0.9), in: RoundedRectangle(cornerRadius: 10))
+          .background(.pictureBackdrop, in: RoundedRectangle(cornerRadius: 10))   // white and black objects both show
           .matchedGeometryEffect(id: word.persistentModelID, in: pictures)
         }
       }
@@ -301,8 +316,9 @@ struct MyWordsView: View {
         }
       }
     }
+    .clearsSideColumn()                                  // folded Duo: flows with the card's edge
     .padding(10)
-    .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+    .flowCard(.white.opacity(0.08), radius: 14)          // folded Duo: flows around the side column
     .accessibilityElement(children: .combine)
   }
 

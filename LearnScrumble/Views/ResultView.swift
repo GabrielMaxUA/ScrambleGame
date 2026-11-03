@@ -55,6 +55,7 @@ struct ResultView: View {
                                 .alignmentGuide(.top) { $0[.bottom] - 4 }  // feet rest on the card
                         }
                     Text("Share of words you answered correctly")
+                        .clearsSideColumn()                          // folded Duo: clear of the clock column
                         .font(.footnote)
                         .foregroundStyle(.white.opacity(0.6))
                         .multilineTextAlignment(.center)
@@ -143,12 +144,9 @@ struct ResultView: View {
             .contentTransition(.numericText())
         }
         .frame(maxWidth: .infinity)
+        .clearsSideColumn()                                        // folded Duo: the text flows with the card's edge
         .padding(.vertical, 18)
-        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(.white.opacity(0.2), lineWidth: 1)
-        }
+        .flowCard(.white.opacity(0.08), radius: 14, stroke: .white.opacity(0.2))   // folded Duo: flows around the side column
         .accessibilityElement(children: .combine)
     }
 }

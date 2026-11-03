@@ -50,6 +50,8 @@ struct MainView: View {
                     LoadingView(progress: manager.requestModel.progress)                                        // next word not ready yet
                 } else if let fold = FoldLayout.from(geo.size) {
                     splitLayout(size: geo.size, fold: fold, answerDirection: answerDirection)   // iPhone Duo opened: one half each side of the fold
+                } else if topButtons?.isFolded == true, let tiles = fittingTiles(height: geo.size.height, width: contentWidth) {
+                    foldedLayout(size: geo.size, tiles: tiles, answerDirection: answerDirection)   // folded iPhone Duo's outer screen
                 } else if let tiles = fittingTiles(height: geo.size.height, width: contentWidth) {
                     VStack(spacing: 20) {
                         picture()
@@ -187,6 +189,37 @@ struct MainView: View {
                 VStack(spacing: 0) { pictureHalf; answerHalf }
             }
         }
+    }
+
+    // MARK: - foldedLayout
+    // The folded iPhone Duo's outer screen (FoldLayout.swift, FoldedDuo). One centre line and one control column:
+    //   - back and speaker are in the side column on the physical right; ↻ (in the typed answer's row) ends on the
+    //     same line
+    //   - the picture is centred, with the side column's room on both sides (its gap to the screen edge, a button, the
+    //     same gap again: FoldedDuo.columnRoom), from the top; as big as the height allows once the rest is counted
+    //   - the letters sit at the bottom, like a keyboard, in reach of the thumb
+    //   - the typed answer and the slots are centred in the space between them: the same gap above and below
+    private func foldedLayout(size: CGSize, tiles: (size: CGFloat, perRow: Int), answerDirection: LayoutDirection) -> some View {
+        let gap: CGFloat = 16
+        let width = size.width - horizontalPadding * 2
+        let typedRow: CGFloat = 35                                       // ResultWordRow's height
+        let middle = typedRow + gap + GuessedLettersRow.height(segments: vm.segmentRanges, width: width)
+        let side = max(minPicture, min(width - FoldedDuo.columnRoom * 2,   // the column's room on both sides
+                                       size.height - topInset - 12 - middle - trayHeight(tiles) - gap * 2))
+        return VStack(spacing: 0) {
+            picture(maxSide: side)
+                .frame(width: side, height: side)
+            Spacer(minLength: gap)
+            VStack(spacing: gap) {
+                typedAnswer(answerDirection: answerDirection)
+                slots(width: width, answerDirection: answerDirection)
+            }
+            Spacer(minLength: gap)
+            letterTray(width: width - trayPadding * 2, tiles: tiles)
+        }
+        .padding(.horizontal, horizontalPadding)
+        .padding(.top, topInset)
+        .padding(.bottom, 12)
     }
 
     // MARK: - fittingTiles(height:width:)

@@ -13,14 +13,18 @@ import SwiftUI
 //   On appear: the logo fades in, and that change also starts its little wobble animation.
 
 struct LaunchScreen: View {
+  @Environment(\.topButtonsPadding) private var topButtons         // folded iPhone Duo: the clock column sits at the top right
   @State private var imageOpacity: Double = 0                       // logo starts invisible, fades to 1 on appear
   @State private var rotationAngle: Angle = .degrees(0)             // base rotation of the logo (the wobble is added on top)
+    private var folded: Bool { topButtons?.isFolded == true }
+    private var side: CGFloat { FoldedDuo.columnRoom + 20 }         // folded Duo: the side column's room (96 pt), on both sides
+
     var body: some View {
       ZStack{
         Color(.black)
           .ignoresSafeArea()
         VStack{
-          Spacer()
+          if !folded { Spacer() }                                   // folded Duo: the tagline from the top
           VStack(spacing: 8) {                                      // tagline
             Text("Feel at home at work.")
               .font(.title)
@@ -32,6 +36,8 @@ struct LaunchScreen: View {
               .multilineTextAlignment(.center)
           }
           .foregroundStyle(.white)
+          .padding(.horizontal, folded ? side : 0)                  // folded Duo: centred, clear of the clock column
+          if folded { Spacer() }                                    // folded Duo: the logo in the middle of the rest
           Image(.launchScreen)                                      // the logo
             .resizable()
             .aspectRatio(1, contentMode: .fit)
@@ -51,10 +57,12 @@ struct LaunchScreen: View {
               CubicKeyframe(5, duration: 0.6)
             }
           }
+          .padding(.horizontal, folded ? side : 0)                  // folded Duo: as wide as the game's picture
           Spacer()
           Text("v 1.0.0")                                           // app version at the bottom
             .foregroundStyle(.white)
         }
+        .padding(.top, folded ? side / 2 : 0)                       // folded Duo: half the side room, as the game's picture
       }
       .onAppear {                                                   // fade the logo in (also triggers the wobble)
         withAnimation(.easeInOut(duration: 0.3)) {

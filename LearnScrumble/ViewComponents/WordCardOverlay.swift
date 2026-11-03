@@ -69,6 +69,7 @@ struct WordCardOverlay: View {
   var onReport: (SwiftDataWordModel) async -> RequestModel.ReportResult
   var onReportWord: (SwiftDataWordModel, RequestModel.WordCorrection) async -> RequestModel.ReportResult
   var onClose: () -> Void
+  @Environment(\.topButtonsPadding) private var topButtons   // .isFolded: the folded iPhone Duo (FoldLayout.swift)
 
   @State private var report: PictureReport = .idle       // the front word's report; back to idle on the next word
   @State private var reportingWord: SwiftDataWordModel?  // the word in WordReportSheet; nil = closed
@@ -137,7 +138,9 @@ struct WordCardOverlay: View {
 
   var body: some View {
     GeometryReader { geo in
-      let cardWidth = min(geo.size.width - 72, 340)      // room for the side cards to peek out
+      let cardWidth = topButtons?.isFolded == true        // folded Duo: the side column's room on both sides (as the
+        ? min(geo.size.width - (FoldedDuo.columnRoom + 20) * 2, 340)   // game's picture), clear of the clock column
+        : min(geo.size.width - 72, 340)                  // room for the side cards to peek out
       let spacing = cardWidth * CarouselCard.sideShift   // one word further = this far to the side
 
       ZStack {
@@ -161,6 +164,13 @@ struct WordCardOverlay: View {
             }
           }
           .frame(maxWidth: .infinity)
+          .mask {                                        // folded Duo: only the front card's lane (the side column's room
+            if topButtons?.isFolded == true {            // on both sides), so no neighbour peeks out under the clock;
+              Rectangle().frame(width: cardWidth + 8)    // they slide in and out within it
+            } else {
+              Rectangle()
+            }
+          }
           .contentShape(Rectangle())
           .gesture(                                      // test all: no swiping, the wheel turns by itself
             DragGesture(minimumDistance: 12)
@@ -309,12 +319,12 @@ struct WordCardOverlay: View {
   @ViewBuilder
   private func picture(_ word: SwiftDataWordModel, flag: Bool, width: CGFloat) -> some View {
     if flag {
-      ImageComponent(image: images.image(for: word), hint: word.originWord, showsHint: false, framed: false,
+      ImageComponent(image: images.image(for: word), hint: word.originWord, showsHint: false, framed: false, backdrop: true,
                      report: report, onReport: { Task { await sendReport(for: word) } },
                      onReportWord: { reportingWord = word },
                      maxSide: width - 32)
     } else {
-      ImageComponent(image: images.image(for: word), hint: word.originWord, showsHint: false, framed: false,
+      ImageComponent(image: images.image(for: word), hint: word.originWord, showsHint: false, framed: false, backdrop: true,
                      maxSide: width - 32)
     }
   }
@@ -537,7 +547,7 @@ struct WordCardOverlay: View {
         }
       }
       .frame(width: side, height: side)
-      .background(.white.opacity(0.9), in: RoundedRectangle(cornerRadius: 16))   // light, as the list's rows
+      .background(.pictureBackdrop, in: RoundedRectangle(cornerRadius: 16))   // mid grey, as the list's rows: white and black objects both show
       .overlay {
         RoundedRectangle(cornerRadius: 16)
           .stroke(tint ?? .white.opacity(0.18), lineWidth: tint == nil ? 1 : 3)

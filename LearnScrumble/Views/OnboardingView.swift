@@ -35,7 +35,11 @@ struct OnboardingView: View {
   @State private var service: OnboardingService            // tasks + the practice game
   @State private var testPage: TutorialTestPage.Kind?      // after the practice word: the test pages; nil = the game
 
-  private let topInset: CGFloat = 140                       // room above the picture: header + the game's top row
+  @Environment(\.topButtonsPadding) private var topButtons
+  private var isFolded: Bool { topButtons?.isFolded == true }  // the folded iPhone Duo's outer screen
+  private var topInset: CGFloat {                           // room above the picture: header + the game's top row
+    isFolded ? 4 + TutorialTitleRow.height + 8 : 140        // folded Duo: the game's buttons are in the side column, only the title row
+  }
   private let fingerSize: CGFloat = 46                      // the pointer's size
 
   // MARK: - init
@@ -80,29 +84,29 @@ struct OnboardingView: View {
 
   // MARK: - Sections
 
+  @ViewBuilder
   private var header: some View {                           // title + Skip, then the game's top row
-    VStack(spacing: 8) {
-      ZStack {
-        Text("How to play")
-          .font(.headline)
-          .foregroundStyle(.white)
-        HStack {
+    if isFolded {                                           // folded Duo: the title row left of the camera, the buttons in the side column
+      TutorialTitleRow(onSkip: finish, folded: true)
+        .padding(.horizontal, 20)
+        .padding(.top, 4)
+      SideButtons {
+        gameButton("chevron.backward", target: .settings, label: "Back", size: FoldedDuo.buttonSize, action: service.settingsTapped)
+        gameButton("speaker.wave.2.fill", target: .speaker, label: "Hear the word", size: FoldedDuo.buttonSize, action: service.speakWord)
+      }
+    } else {
+      VStack(spacing: 8) {
+        TutorialTitleRow(onSkip: finish)
+
+        HStack {                                            // same buttons, same places as the game's top row
+          gameButton("chevron.backward", target: .settings, label: "Back", action: service.settingsTapped)
           Spacer()
-          Button("Skip") { finish() }
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(.white.opacity(0.7))
-            .frame(minWidth: 44, minHeight: 44)
+          gameButton("speaker.wave.2.fill", target: .speaker, label: "Hear the word", action: service.speakWord)
         }
       }
-
-      HStack {                                              // same buttons, same places as the game's top row
-        gameButton("chevron.backward", target: .settings, label: "Back", action: service.settingsTapped)
-        Spacer()
-        gameButton("speaker.wave.2.fill", target: .speaker, label: "Hear the word", action: service.speakWord)
-      }
+      .padding(.horizontal, 20)
+      .padding(.top, 4)
     }
-    .padding(.horizontal, 20)
-    .padding(.top, 4)
   }
 
   // MARK: - tooltipText(for:)
@@ -182,11 +186,11 @@ struct OnboardingView: View {
 
   // MARK: - gameButton(_:target:label:action:)
   // A round 50×50 glass button like the game's top row, reporting its place for the pointer.
-  private func gameButton(_ icon: String, target: TutorialTarget, label: LocalizedStringKey,
+  private func gameButton(_ icon: String, target: TutorialTarget, label: LocalizedStringKey, size: CGFloat = 50,
                           action: @escaping () -> Void) -> some View {
     Button(action: action) {
       Image(systemName: icon)
-        .frame(width: 50, height: 50)
+        .frame(width: size, height: size)
         .foregroundStyle(.white)
     }
     .glassCompat(in: .circle)
@@ -203,11 +207,40 @@ struct OnboardingView: View {
   }
 }
 
+// MARK: - TutorialTitleRow
+// "How to play" with Skip on the trailing side. Folded iPhone Duo: the title stays on the screen's centre line with the
+// side column's margin on both sides (like the other screens' titles) and Skip moves to the leading side, away from
+// the camera.
+private struct TutorialTitleRow: View {
+  static let height: CGFloat = 44                           // Skip's tap target
+  var onSkip: () -> Void
+  var folded = false
+
+  var body: some View {
+    ZStack {
+      Text("How to play")
+        .font(.headline)
+        .foregroundStyle(.white)
+      HStack {
+        if !folded { Spacer() }
+        Button("Skip", action: onSkip)
+          .font(.subheadline.weight(.semibold))
+          .foregroundStyle(.white.opacity(0.7))
+          .frame(minWidth: 44, minHeight: Self.height)
+        if folded { Spacer() }
+      }
+    }
+    .foldedTitle(folded)                                    // the title on the screen's centre line, Skip clear of the camera
+  }
+}
+
 // MARK: - TutorialTestPage
 // One of the two pages after the practice word (see the flow above): the test's name and what it's for, a mini card
 // that works like the real one (speech: a demo without the microphone), a tooltip with the pointer under the card
 // while there's something to tap, the line about where the tests are, and Next / Let's go!. Skip on top.
 private struct TutorialTestPage: View {
+  @Environment(\.topButtonsPadding) private var topButtons
+  private var isFolded: Bool { topButtons?.isFolded == true }  // the folded iPhone Duo's outer screen
   enum Kind { case speech, listening }
   let kind: Kind
   let word: String                                          // the practice word ("cat" in the language being learned)
@@ -229,20 +262,10 @@ private struct TutorialTestPage: View {
 
   var body: some View {
     GeometryReader { geo in
-      let width = min(geo.size.width - 40, 340)
+      let width = isFolded ? min(geo.size.width - (FoldedDuo.columnRoom + 20) * 2, 340)   // folded Duo: the game's picture width
+                           : min(geo.size.width - 40, 340)
       VStack(spacing: 16) {
-        ZStack {
-          Text("How to play")
-            .font(.headline)
-            .foregroundStyle(.white)
-          HStack {
-            Spacer()
-            Button("Skip", action: onSkip)
-              .font(.subheadline.weight(.semibold))
-              .foregroundStyle(.white.opacity(0.7))
-              .frame(minWidth: 44, minHeight: 44)
-          }
-        }
+        TutorialTitleRow(onSkip: onSkip, folded: isFolded)
 
         VStack(spacing: 4) {
           Label(kind == .speech ? "Pronunciation test" : "Listening test",
@@ -254,6 +277,7 @@ private struct TutorialTestPage: View {
             .foregroundStyle(.white.opacity(0.7))
         }
         .multilineTextAlignment(.center)
+        .foldedTitle(isFolded)                              // folded Duo: centred, clear of the clock column
 
         Spacer(minLength: 0)
         Group {

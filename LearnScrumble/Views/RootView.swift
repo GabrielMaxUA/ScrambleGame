@@ -86,7 +86,7 @@ struct RootView: View {
             case .generating:                                    // words/images loading
                 LoadingView(progress: manager.requestModel.progress)
             case .playing(let vm):                               // the game
-                MainView(vm: vm, manager: manager, topInset: topButtons?.isFolded == true ? 60 : 72)   // folded Duo: below the 40 pt buttons (12 + 40 + 8)
+                MainView(vm: vm, manager: manager, topInset: isFolded ? (FoldedDuo.columnRoom + 20) / 2 : 72)   // folded Duo: the buttons are in the side column; the picture starts half its side room (48 pt) down
             case .failed(let error):                             // something broke — ErrorView picks the useful button
               ZStack {                                           // opened iPhone Duo: dims everything, the message on the right / top half
                 Color.black.ignoresSafeArea()
@@ -157,8 +157,10 @@ struct RootView: View {
             }
           }
           .accessibilityHidden(showTutorial)                     // VoiceOver reads only the tutorial while it's on top
+          .foldedFullWidth(isFolded)                             // folded iPhone Duo: every screen uses the full width
           if launching {                                         // intro over everything for the first 2s
             LaunchScreen()
+              .foldedFullWidth(isFolded)
               .transition(.opacity)
               .zIndex(10)
           }
@@ -170,6 +172,7 @@ struct RootView: View {
                 withConsent { Task { await manager.startGame() } }
               }                                                  // after Start the game is already loading behind it; from Settings: back to Settings
             }
+            .foldedFullWidth(isFolded)
             .transition(.opacity)
             .zIndex(5)
           }
@@ -238,7 +241,15 @@ struct RootView: View {
   // Builds ButtonsTopRow for the current screen and wires its buttons to AppManager:
   //   word -> speaker button reads it (nil = no speaker); buttons -> which glass buttons show
   //   back arrow -> manager.exitToWelcome()
+  @ViewBuilder
   private func row(word: String?, buttons: MenuButtonsEnum, manager: AppManager) -> some View {
+    if isFolded {                                                // folded Duo: one below the other, in the side column
+      SideButtons {
+        ButtonsTopRow(speechManager: speechManager, requestModel: manager.requestModel, word: word,
+                      onBack: { manager.exitToWelcome() }, buttons: buttons,
+                      buttonSize: FoldedDuo.buttonSize, vertical: true)
+      }
+    } else {
     ButtonsTopRow(
       speechManager: speechManager,
       requestModel: manager.requestModel,
@@ -249,6 +260,9 @@ struct RootView: View {
         .padding(.horizontal, topButtons?.horizontal ?? 16)      // iPhone Duo: clear of its corners and edges
         .padding(.top, topButtons?.top ?? 0)
     }
+  }
+
+  private var isFolded: Bool { topButtons?.isFolded == true }   // the folded iPhone Duo's outer screen
 
   // MARK: - withConsent(_:)
   // Runs `action` right away if the user already agreed to OpenAI (AIConsent.key).

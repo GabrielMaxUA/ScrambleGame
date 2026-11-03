@@ -25,6 +25,7 @@ struct ImageComponent: View {
     let hint: String                            // the word in the user's native language
     var showsHint: Bool = true                  // the lightbulb; off on My words' card (WordCardOverlay), where the hint is written
     var framed: Bool = true                     // the light box and outline; off on My words' black card (WordCardOverlay)
+    var backdrop = false                        // the mid-grey picture backdrop (the tests' cards): white and black objects both show
     var onHintToggled: (Bool) -> Void = { _ in }   // tutorial only: tells OnboardingService the hint opened (true) / closed (false)
     var report: PictureReport = .idle           // where this word's picture report stands
     var onReport: (() -> Void)? = nil           // sends the report; nil = no flag (tutorial)
@@ -52,7 +53,8 @@ struct ImageComponent: View {
         }
         .frame(maxWidth: maxSide, maxHeight: maxSide)
         .aspectRatio(1, contentMode: .fit)                              // always a square card, shrinks on small screens
-        .background(.white.opacity(framed ? 0.08 : 0), in: RoundedRectangle(cornerRadius: 20))
+        .background(backdrop ? AnyShapeStyle(.pictureBackdrop) : AnyShapeStyle(.white.opacity(framed ? 0.08 : 0)),
+                    in: RoundedRectangle(cornerRadius: 20))
         .overlay {
             RoundedRectangle(cornerRadius: 20)
                 .stroke(.white.opacity(framed ? 0.2 : 0), lineWidth: 1)
@@ -150,4 +152,14 @@ struct ImageComponent: View {
     ImageComponent(image: nil, hint: "Word")
         .padding()
         .background(.black)
+}
+
+// MARK: - pictureBackdrop
+// A soft mid grey, a little lighter at the top, behind the words' pictures in the tests and the lists. The pictures
+// have no background of their own: on white a white apron or jug almost disappears, on the black cards black gloves
+// do; on this grey both stand out.
+extension ShapeStyle where Self == LinearGradient {
+  static var pictureBackdrop: LinearGradient {
+    LinearGradient(colors: [Color(white: 0.64), Color(white: 0.48)], startPoint: .top, endPoint: .bottom)
+  }
 }

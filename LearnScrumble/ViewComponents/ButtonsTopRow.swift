@@ -14,6 +14,7 @@ struct ButtonsTopRow: View {
     let onBack: () -> Void                             // back to WelcomeBackView (was the gear -> Settings)
     let buttons: MenuButtonsEnum                       // which buttons to show
     var buttonSize: CGFloat = 50                       // 40 on the folded iPhone Duo (FoldLayout.swift)
+    var vertical = false                               // folded Duo: back above speaker, in the side column (SideButtons)
     
     var body: some View {
         row
@@ -21,7 +22,14 @@ struct ButtonsTopRow: View {
 
     // MARK: - row
     // Back arrow left, speaker right.
+    @ViewBuilder
     private var row: some View {
+        if vertical {
+            VStack(spacing: FoldedDuo.buttonGap) {
+                backButton
+                speakerButton
+            }
+        } else {
         HStack {
             GlassContainer {                           // left group: their glass can blend on iOS 26
                 HStack {
@@ -33,6 +41,7 @@ struct ButtonsTopRow: View {
             }//glass Container
             Spacer()
             speakerButton                              // speaker on the right, only while a word is on screen
+        }
         }
     }
 
